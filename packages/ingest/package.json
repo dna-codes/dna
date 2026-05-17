@@ -33,7 +33,7 @@
     "test": "node --experimental-vm-modules ../../node_modules/.bin/jest"
   },
   "dependencies": {
-    "@dna-codes/dna-core": "^0.7.0"
+    "@dna-codes/dna-core": "^0.8.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

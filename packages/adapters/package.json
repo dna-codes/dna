@@ -84,9 +84,9 @@
     "test": "node --experimental-vm-modules ../../node_modules/.bin/jest"
   },
   "dependencies": {
-    "@dna-codes/dna-core": "^0.7.0",
+    "@dna-codes/dna-core": "^0.8.0",
     "@dna-codes/dna-ingest": "^0.7.0",
-    "@dna-codes/dna-schemas": "^0.5.0",
+    "@dna-codes/dna-schemas": "^0.6.0",
     "@apidevtools/swagger-parser": "^10.1.0",
     "js-yaml": "^4.1.0"
   },
