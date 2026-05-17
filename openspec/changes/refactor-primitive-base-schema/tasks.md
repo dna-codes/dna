@@ -61,5 +61,6 @@
 
 ## 7. Release
 
-- [ ] 7.1 Bump `@dna-codes/dna-core` minor version
-- [ ] 7.2 Tag and push (pause before this — triggers publish workflow)
+- [ ] 7.1 Bump `@dna-codes/dna-schemas` minor version — introducing `version: "1"` on all primitives is a new schema minor version; any future primitive field shape change that increments `version` MUST be at least a minor bump (breaking field changes → major)
+- [ ] 7.2 Bump `@dna-codes/dna-core` minor version
+- [ ] 7.3 Tag and push (pause before this — triggers publish workflow)

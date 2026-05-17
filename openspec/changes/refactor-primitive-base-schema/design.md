@@ -76,7 +76,7 @@ Each per-primitive schema constrains `type` to a single `const` value. This make
 
 The field is named `version` (not `schema_version` or `type_version`). Alongside `type`, it reads unambiguously: `{ type: "resource", version: "1" }` means "version 1 of the resource type schema." No redundancy (`type_version` would repeat the concept already conveyed by `type`), no false breadth (`schema_version` implies the overall DNA schema rather than this specific primitive type's version).
 
-### D4: `version` is a migration enabler, not a query compatibility layer
+### D4: `version` is a migration enabler, not a query compatibility layer; increments are semantic minor bumps at minimum
 
 `version` does not make cross-version queries transparent. If `resource` v1 stores `active: true` (boolean) and v2 stores `status: "active"` (enum), a query for "active resources" must target one version's field shape — there is no automatic bridging.
 
@@ -85,7 +85,8 @@ The intended lifecycle:
 ```
 author primitives under version "1"
     ↓
-field shape changes → bump to version "2"
+field shape changes → bump primitive version to "2"
+                    → bump @dna-codes/dna-schemas minor version (or major if breaking)
     ↓
 migration: MATCH (n:Resource) WHERE n.version = '1'
            SET n.status = CASE WHEN n.active THEN 'active' ELSE 'inactive' END
@@ -94,6 +95,8 @@ migration: MATCH (n:Resource) WHERE n.version = '1'
     ↓
 all nodes are version "2" — queries work uniformly
 ```
+
+**Versioning rule:** any increment to a primitive's `version` value MUST be accompanied by at least a semantic minor version bump to `@dna-codes/dna-schemas`. If the field shape change is breaking (removing a field, changing a field type, renaming a field), it MUST be a major version bump. This creates a direct, auditable link between primitive-level `version` values and package semver — consumers can determine from the package version alone whether any stored primitives need migration.
 
 `version` is the handle migration scripts use to find nodes that need transformation. Mixed-version state is a transitional window, not a permanent coexistence model.
 
