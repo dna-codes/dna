@@ -78,4 +78,5 @@ export type { ParseResult, Unit, Style, StyleMap } from './types/adapters';
 export { DEFAULT_STYLES } from './types/adapters';
 export type { Action, ActionType, Attribute, AttributeType, Domain, Group, Membership, Operation, OperationChange, Person, Process, ProcessStep, Relationship, RelationshipCardinality, Resource, Role, RoleScope, Rule, RuleAllowEntry, RuleCondition, RuleConditionOperator, RuleType, Task, Trigger, TriggerSource, } from './types/operational';
 export { bookshopInput } from './fixtures/bookshop';
+export { getResource, getResources, getPerson, getPersons, getRole, getRoles, getGroup, getGroups, getMembership, getMemberships, getOperation, getOperations, getOperationsForResource, getProcess, getProcesses, getTriggersForProcess, getTask, getTasks, getTasksForOperation, getTriggers, getTriggersForOperation, getRule, getRules, getRulesForOperation, getActorsForOperation, getMembershipsForRole, getMembershipsForPerson, } from './queries';
 //# sourceMappingURL=index.d.ts.map

@@ -1,0 +1,1 @@
+{"version":3,"file":"group.d.ts","sourceRoot":"","sources":["../../src/queries/group.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,cAAc,EAAE,MAAM,gBAAgB,CAAA;AACpD,OAAO,KAAK,EAAE,KAAK,EAAE,MAAM,sBAAsB,CAAA;AAMjD,wBAAgB,SAAS,CAAC,GAAG,EAAE,cAAc,GAAG,KAAK,EAAE,CAEtD;AAED,wBAAgB,QAAQ,CAAC,GAAG,EAAE,cAAc,EAAE,IAAI,EAAE,MAAM,GAAG,KAAK,GAAG,IAAI,CAExE"}

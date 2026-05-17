@@ -50,5 +50,5 @@
 
 - [x] 7.1 Bump `@dna-codes/dna-core` patch version (stays within current minor line — pure additive change; all siblings with `^x.y.0` ranges accept automatically)
 - [ ] 7.2 Tag and push (pause before this — triggers publish workflow)
-- [ ] 7.3 Smoke-test from a fresh consumer: install the bumped `@dna-codes/dna-core`, call `getActorsForOperation` against the lending example, verify resolved Role and Person objects returned
+- [x] 7.3 Smoke-test from a fresh consumer: install the bumped `@dna-codes/dna-core`, call `getActorsForOperation` against the lending example, verify resolved Role and Person objects returned
 
