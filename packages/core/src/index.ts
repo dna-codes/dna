@@ -23,6 +23,7 @@ export const schemas = {
   operational: {
     action: load('operational/action.json'),
     attribute: load('operational/attribute.json'),
+    base: load('operational/base.json'),
     domain: load('operational/domain.json'),
     group: load('operational/group.json'),
     membership: load('operational/membership.json'),
@@ -150,12 +151,14 @@ export type {
   ActionType,
   Attribute,
   AttributeType,
+  BasePrimitive,
   Domain,
   Group,
   Membership,
   Operation,
   OperationChange,
   Person,
+  PrimitiveInput,
   Process,
   ProcessStep,
   Relationship,
@@ -172,6 +175,11 @@ export type {
   Trigger,
   TriggerSource,
 } from './types/operational'
+
+export {
+  OPERATIONAL_PRIMITIVE_VERSIONS,
+} from './version'
+export type { OperationalPrimitiveType } from './version'
 
 export { bookshopInput } from './fixtures/bookshop'
 

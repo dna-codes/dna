@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Every Operational primitive carries a universal base contract
-Every Operational DNA primitive (Resource, Person, Role, Group, Membership, Operation, Trigger, Rule, Task, Process, Relationship) SHALL include the following base-level fields: `id` (UUID v4 string), `type` (primitive discriminator string), `name` (string), `version` (semver string). The `description` field SHALL be optional at the base level. These fields SHALL be declared in a shared `base-primitive.json` JSON Schema that all per-primitive schemas extend via `allOf`.
+Every Operational DNA primitive (Resource, Person, Role, Group, Membership, Operation, Trigger, Rule, Task, Process, Relationship) SHALL include the following base-level fields: `id` (UUID v4 string), `type` (primitive discriminator string), `name` (string), `version` (semver string). The `description` field SHALL be optional at the base level. These fields SHALL be declared in a shared `base.json` JSON Schema that all per-primitive schemas extend via `allOf`.
 
 #### Scenario: Primitive has all required base fields
 - **WHEN** a primitive document is validated against its schema

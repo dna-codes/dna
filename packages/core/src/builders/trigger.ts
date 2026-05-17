@@ -1,5 +1,5 @@
 import type { OperationalDNA } from '../types/merge'
-import type { Trigger } from '../types/operational'
+import type { PrimitiveInput, Trigger } from '../types/operational'
 import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
 
 /**
@@ -9,7 +9,7 @@ import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
  */
 export function addTrigger(
   dna: OperationalDNA,
-  trigger: Trigger,
+  trigger: PrimitiveInput<Trigger>,
   opts?: BuilderOptions,
 ): BuilderResult {
   return composeInto(dna, trigger, 'triggers', 'operational/trigger', opts)

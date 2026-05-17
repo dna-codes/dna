@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DnaValidator = void 0;
 const _2020_1 = __importDefault(require("ajv/dist/2020"));
+const ajv_formats_1 = __importDefault(require("ajv-formats"));
 const index_1 = require("./index");
 const CHARACTERISTICS = {
     resource: new Set(['targetable']),
@@ -91,6 +92,7 @@ class DnaValidator {
     constructor() {
         this.validators = new Map();
         this.ajv = new _2020_1.default({ strict: false, allErrors: true });
+        (0, ajv_formats_1.default)(this.ajv);
         this.registerSchemas();
     }
     registerSchemas() {
@@ -306,7 +308,7 @@ class DnaValidator {
                         message: `Rule "${ruleId}" governs Operation "${rule.operation}" which is not declared; ${availability('operations', operationNames)}`,
                     });
                 }
-                if (rule.type === 'access') {
+                if (rule.subtype === 'access') {
                     if (actorablePool.size > 0) {
                         for (const entry of rule.allow ?? []) {
                             if (entry.role && !actorablePool.has(entry.role)) {

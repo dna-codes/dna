@@ -1,1 +1,1 @@
-{"version":3,"file":"bookshop.d.ts","sourceRoot":"","sources":["../../src/fixtures/bookshop.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAA;AAElC;;;;GAIG;AACH,eAAO,MAAM,aAAa,EAAE,QAiO3B,CAAA"}
+{"version":3,"file":"bookshop.d.ts","sourceRoot":"","sources":["../../src/fixtures/bookshop.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAA;AA4BlC;;;;GAIG;AACH,eAAO,MAAM,aAAa,EAAE,QA0R3B,CAAA"}

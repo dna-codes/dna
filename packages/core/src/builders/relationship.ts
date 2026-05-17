@@ -1,5 +1,5 @@
 import type { OperationalDNA } from '../types/merge'
-import type { Relationship } from '../types/operational'
+import type { PrimitiveInput, Relationship } from '../types/operational'
 import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
 
 /**
@@ -9,7 +9,7 @@ import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
  */
 export function addRelationship(
   dna: OperationalDNA,
-  relationship: Relationship,
+  relationship: PrimitiveInput<Relationship>,
   opts?: BuilderOptions,
 ): BuilderResult {
   return composeInto(dna, relationship, 'relationships', 'operational/relationship', opts)

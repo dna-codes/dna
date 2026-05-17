@@ -1,6 +1,91 @@
 import { DnaValidator } from './validator'
 
-const validator = new DnaValidator()
+const TEST_UUID = '550e8400-e29b-41d4-a716-446655440000'
+
+const rawValidator = new DnaValidator()
+
+/**
+ * Test-only validator wrapper: when validating against a per-primitive
+ * operational schema, auto-injects the base contract (`id`, `type`,
+ * `version`) on the document so tests can keep their concise inline
+ * fixtures. The base contract is exercised explicitly in a dedicated
+ * test block — see "operational base-primitive contract" below.
+ */
+const validator = {
+  validate(doc: unknown, schemaId: string) {
+    if (
+      doc &&
+      typeof doc === 'object' &&
+      !Array.isArray(doc) &&
+      schemaId.startsWith('operational/') &&
+      schemaId !== 'operational' &&
+      schemaId !== 'operational/base'
+    ) {
+      const type = schemaId.split('/').pop()!
+      const obj = doc as Record<string, unknown>
+      doc = {
+        id: obj.id ?? TEST_UUID,
+        type: obj.type ?? type,
+        version: obj.version ?? '1',
+        // Some primitives didn't previously require `name` (Trigger, Operation, Rule).
+        // The base contract now does. Synthesize one for fixtures that omit it so
+        // tests stay focused on the per-primitive shape they're exercising.
+        name: obj.name ?? `${type}TestName`,
+        ...obj,
+      }
+    }
+    return rawValidator.validate(doc, schemaId)
+  },
+  validateCrossLayer: rawValidator.validateCrossLayer.bind(rawValidator),
+  availableSchemas: rawValidator.availableSchemas.bind(rawValidator),
+  // Forwarded so the schema-introspection tests can reach into the private map.
+  validators: (rawValidator as unknown as { validators: Map<string, unknown> }).validators,
+}
+
+/**
+ * Walks an Operational DNA shape and stamps every primitive with the base
+ * contract (`id`, `type`, `version`, and a synthesized `name` when absent).
+ * Used so the long-lived inline fixtures stay readable while still satisfying
+ * the post-base-contract schema. Mutates a fresh copy and returns it.
+ */
+function stampOperationalBase<T extends Record<string, any>>(doc: T): T {
+  const synthName = (type: string) => `${type}TestName`
+  const stamp = (type: string, p: any) => {
+    if (!p || typeof p !== 'object') return p
+    return {
+      id: p.id ?? TEST_UUID,
+      type: p.type ?? type,
+      version: p.version ?? '1',
+      name: p.name ?? synthName(type),
+      ...p,
+    }
+  }
+  const stampList = (type: string, arr: any) =>
+    Array.isArray(arr) ? arr.map(p => stamp(type, p)) : arr
+  const walkDomain = (d: any) => {
+    if (!d || typeof d !== 'object') return d
+    const out: any = { ...d }
+    if (d.resources) out.resources = stampList('resource', d.resources)
+    if (d.persons) out.persons = stampList('person', d.persons)
+    if (d.roles) out.roles = stampList('role', d.roles)
+    if (d.groups) out.groups = stampList('group', d.groups)
+    if (Array.isArray(d.domains)) out.domains = d.domains.map(walkDomain)
+    return out
+  }
+  const out: any = { ...doc }
+  if ((doc as any).domain) out.domain = walkDomain((doc as any).domain)
+  // Some layers (product/core) keep resources at the top level
+  if ((doc as any).resources && !((doc as any).domain?.resources))
+    out.resources = stampList('resource', (doc as any).resources)
+  if ((doc as any).memberships) out.memberships = stampList('membership', (doc as any).memberships)
+  if ((doc as any).operations) out.operations = stampList('operation', (doc as any).operations)
+  if ((doc as any).triggers) out.triggers = stampList('trigger', (doc as any).triggers)
+  if ((doc as any).rules) out.rules = stampList('rule', (doc as any).rules)
+  if ((doc as any).relationships) out.relationships = stampList('relationship', (doc as any).relationships)
+  if ((doc as any).tasks) out.tasks = stampList('task', (doc as any).tasks)
+  if ((doc as any).processes) out.processes = stampList('process', (doc as any).processes)
+  return out
+}
 
 // Shared inline fixtures for cross-layer tests. Intentionally minimal but
 // wired end-to-end so the baseline "passes for valid DNA" case holds; each
@@ -141,7 +226,8 @@ describe('DnaValidator — operational/resource', () => {
   })
 
   it('rejects a Resource missing required name field', () => {
-    const result = validator.validate({ domain: 'acme.finance' }, 'operational/resource')
+    // Use rawValidator so the helper doesn't auto-inject `name`.
+    const result = rawValidator.validate({ id: TEST_UUID, type: 'resource', version: '1', domain: 'acme.finance' }, 'operational/resource')
     expect(result.valid).toBe(false)
     expect(result.errors.some(e => e.params?.missingProperty === 'name')).toBe(true)
   })
@@ -673,7 +759,7 @@ describe('DnaValidator — operational/relationship', () => {
 
 describe('DnaValidator — composite: operational', () => {
   it('validates the inline operational fixture', () => {
-    const result = validator.validate(operationalFixture, 'operational')
+    const result = validator.validate(stampOperationalBase(operationalFixture), 'operational')
     expect(result.valid).toBe(true)
     expect(result.errors).toHaveLength(0)
   })
@@ -709,7 +795,9 @@ describe('DnaValidator — operational schemas reject undeclared properties', ()
   function expectAdditionalPropertiesError(result: { valid: boolean; errors: any[] }, prop: string) {
     expect(result.valid).toBe(false)
     const offending = result.errors.find(
-      e => e.keyword === 'additionalProperties' && e.params?.additionalProperty === prop
+      e =>
+        (e.keyword === 'additionalProperties' && e.params?.additionalProperty === prop) ||
+        (e.keyword === 'unevaluatedProperties' && e.params?.unevaluatedProperty === prop),
     )
     expect(offending).toBeDefined()
   }
@@ -760,7 +848,9 @@ describe('DnaValidator — operational schemas reject undeclared properties', ()
 
 describe('DnaValidator — composite: product/core', () => {
   it('validates a minimal product core document', () => {
-    const doc = {
+    // Product Core reuses `operational/resource` for its resources[] items,
+    // so the base contract applies. Stamp before validating.
+    const doc = stampOperationalBase({
       domain: { name: 'lending', path: 'acme.finance.lending' },
       resources: [
         {
@@ -776,7 +866,7 @@ describe('DnaValidator — composite: product/core', () => {
         { resource: 'Loan', action: 'Apply', name: 'Loan.Apply' },
         { resource: 'Loan', action: 'Approve', name: 'Loan.Approve' }
       ]
-    }
+    })
     const result = validator.validate(doc, 'product/core')
     expect(result.valid).toBe(true)
     expect(result.errors).toHaveLength(0)
@@ -1368,7 +1458,7 @@ describe('DnaValidator — cross-layer validation', () => {
     const badOp = {
       ...operational,
       rules: [
-        { operation: 'Loan.Approve', type: 'access', allow: [{ role: 'PhantomRole' }] },
+        { operation: 'Loan.Approve', subtype: 'access', allow: [{ role: 'PhantomRole' }] },
       ],
     }
     const result = validator.validateCrossLayer({ operational: badOp })

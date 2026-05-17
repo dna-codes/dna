@@ -1,5 +1,5 @@
 import type { OperationalDNA } from '../types/merge';
-import type { Resource } from '../types/operational';
+import type { PrimitiveInput, Resource } from '../types/operational';
 import { type BuilderOptions, type BuilderResult } from './shared';
 /**
  * Add a Resource to the DNA's `domain.resources`.
@@ -10,5 +10,5 @@ import { type BuilderOptions, type BuilderResult } from './shared';
  * entries via the v1 recommendation policy. Returns the new DNA plus any
  * conflicts produced.
  */
-export declare function addResource(dna: OperationalDNA, resource: Resource, opts?: BuilderOptions): BuilderResult;
+export declare function addResource(dna: OperationalDNA, resource: PrimitiveInput<Resource>, opts?: BuilderOptions): BuilderResult;
 //# sourceMappingURL=resource.d.ts.map

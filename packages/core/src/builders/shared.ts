@@ -1,6 +1,30 @@
+import { randomUUID } from 'node:crypto'
 import { merge } from '../merge'
 import type { Conflict, OperationalDNA } from '../types/merge'
+import { OPERATIONAL_PRIMITIVE_VERSIONS, type OperationalPrimitiveType } from '../version'
 import { DnaValidator } from '../validator'
+
+/** Generates a UUID v4. Wrapped here so builder tests can stub identity. */
+export function generateId(): string {
+  return randomUUID()
+}
+
+/**
+ * Stamp the universal base contract (`id`, `type`, `version`) onto a
+ * primitive when not already supplied. Caller values win; idempotent.
+ */
+export function stampBaseFields<T extends object>(
+  primitive: T,
+  type: OperationalPrimitiveType,
+): T & { id: string; type: OperationalPrimitiveType; version: string } {
+  const p = primitive as Record<string, unknown>
+  return {
+    ...primitive,
+    id: typeof p.id === 'string' ? p.id : generateId(),
+    type: typeof p.type === 'string' ? (p.type as OperationalPrimitiveType) : type,
+    version: typeof p.version === 'string' ? p.version : OPERATIONAL_PRIMITIVE_VERSIONS[type],
+  } as T & { id: string; type: OperationalPrimitiveType; version: string }
+}
 
 let cachedValidator: DnaValidator | null = null
 
@@ -49,6 +73,25 @@ export type BuilderCollection = NounCollection | ActivityCollection
  * - Drops the provenance map — builders don't carry source info; `merge()`
  *   handles provenance for the multi-source case directly.
  */
+/**
+ * Map from builder collection name (plural) to the primitive type literal
+ * stamped as `type` on each primitive. Derived from the schema id segment
+ * for `operations`/`relationships`/etc.
+ */
+const COLLECTION_TO_TYPE: Record<BuilderCollection, OperationalPrimitiveType> = {
+  resources: 'resource',
+  persons: 'person',
+  roles: 'role',
+  groups: 'group',
+  memberships: 'membership',
+  operations: 'operation',
+  triggers: 'trigger',
+  rules: 'rule',
+  tasks: 'task',
+  processes: 'process',
+  relationships: 'relationship',
+}
+
 export function composeInto(
   dna: OperationalDNA,
   primitive: unknown,
@@ -56,8 +99,13 @@ export function composeInto(
   schemaId: string,
   opts: BuilderOptions = {},
 ): BuilderResult {
+  const stamped =
+    primitive && typeof primitive === 'object'
+      ? stampBaseFields(primitive as object, COLLECTION_TO_TYPE[collection])
+      : primitive
+
   if (opts.validate !== false) {
-    const result = validator().validate(primitive, schemaId)
+    const result = validator().validate(stamped, schemaId)
     if (!result.valid) {
       const message = result.errors
         .map((e) => `${e.instancePath || '/'} ${e.message ?? '(no message)'}`)
@@ -69,11 +117,11 @@ export function composeInto(
   const domainName = dna.domain.name
   const wrapper: OperationalDNA = NOUN_COLLECTIONS.has(collection as NounCollection)
     ? {
-        domain: { name: domainName, [collection]: [primitive] },
+        domain: { name: domainName, [collection]: [stamped] },
       }
     : {
         domain: { name: domainName },
-        [collection]: [primitive],
+        [collection]: [stamped],
       }
 
   const result = merge([dna, wrapper])

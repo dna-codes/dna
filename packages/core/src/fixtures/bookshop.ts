@@ -1,6 +1,32 @@
 import { DnaInput } from './types'
 
 /**
+ * Stable per-primitive UUIDs for the bookshop fixture. Keyed by an opaque
+ * label so adapters that compare fixture renders across runs stay
+ * deterministic. (The bookshop is a renderer fixture, not a schema fixture
+ * — these ids are convenience, not part of any contract.)
+ */
+const ID = {
+  book: '11111111-1111-4111-8111-000000000001',
+  author: '11111111-1111-4111-8111-000000000002',
+  employee: '11111111-1111-4111-8111-000000000003',
+  shop: '11111111-1111-4111-8111-000000000004',
+  editor: '11111111-1111-4111-8111-000000000005',
+  employeeEditor: '11111111-1111-4111-8111-000000000006',
+  bookPublish: '11111111-1111-4111-8111-000000000007',
+  bookRetire: '11111111-1111-4111-8111-000000000008',
+  publishFlowStart: '11111111-1111-4111-8111-000000000009',
+  publishAccess: '11111111-1111-4111-8111-000000000010',
+  bookIsDraft: '11111111-1111-4111-8111-000000000011',
+  publishTrigger: '11111111-1111-4111-8111-000000000012',
+  bookAuthorRel: '11111111-1111-4111-8111-000000000013',
+  reviewBook: '11111111-1111-4111-8111-000000000014',
+  approveBook: '11111111-1111-4111-8111-000000000015',
+  rejectBook: '11111111-1111-4111-8111-000000000016',
+  publishFlow: '11111111-1111-4111-8111-000000000017',
+}
+
+/**
  * Canonical bookshop domain used across adapter tests. Populates every
  * operational primitive any adapter currently consumes so renderers can
  * be asserted against the same input.
@@ -13,6 +39,9 @@ export const bookshopInput: DnaInput = {
       description: 'Tiny bookshop domain — canonical fixture for adapter tests.',
       resources: [
         {
+          id: ID.book,
+          type: 'resource',
+          version: '1',
           name: 'Book',
           description: 'A book for sale.',
           attributes: [
@@ -32,6 +61,9 @@ export const bookshopInput: DnaInput = {
           ],
         },
         {
+          id: ID.author,
+          type: 'resource',
+          version: '1',
           name: 'Author',
           description: "A book's author.",
           attributes: [
@@ -42,18 +74,27 @@ export const bookshopInput: DnaInput = {
       ],
       persons: [
         {
+          id: ID.employee,
+          type: 'person',
+          version: '1',
           name: 'Employee',
           description: 'Internal worker at the shop.',
         },
       ],
       groups: [
         {
+          id: ID.shop,
+          type: 'group',
+          version: '1',
           name: 'Shop',
           description: 'The bookshop itself — the work-unit Editors are scoped to.',
         },
       ],
       roles: [
         {
+          id: ID.editor,
+          type: 'role',
+          version: '1',
           name: 'Editor',
           description: 'Reviews and publishes books within a Shop.',
           scope: 'Shop',
@@ -62,6 +103,9 @@ export const bookshopInput: DnaInput = {
     },
     memberships: [
       {
+        id: ID.employeeEditor,
+        type: 'membership',
+        version: '1',
         name: 'EmployeeEditor',
         description: 'Employees may hold the Editor role within a Shop.',
         person: 'Employee',
@@ -70,6 +114,9 @@ export const bookshopInput: DnaInput = {
     ],
     operations: [
       {
+        id: ID.bookPublish,
+        type: 'operation',
+        version: '1',
         name: 'Book.Publish',
         target: 'Book',
         action: 'Publish',
@@ -77,12 +124,18 @@ export const bookshopInput: DnaInput = {
         changes: [{ attribute: 'status', set: 'active' }],
       },
       {
+        id: ID.bookRetire,
+        type: 'operation',
+        version: '1',
         name: 'Book.Retire',
         target: 'Book',
         action: 'Retire',
         description: 'Remove an active book from sale.',
       },
       {
+        id: ID.publishFlowStart,
+        type: 'operation',
+        version: '1',
         name: 'PublishFlow.Start',
         target: 'PublishFlow',
         action: 'Start',
@@ -90,16 +143,31 @@ export const bookshopInput: DnaInput = {
       },
     ],
     rules: [
-      { operation: 'Book.Publish', type: 'access', allow: [{ role: 'Editor' }] },
       {
+        id: ID.publishAccess,
+        type: 'rule',
+        version: '1',
+        name: 'BookPublishAccess',
+        operation: 'Book.Publish',
+        subtype: 'access',
+        allow: [{ role: 'Editor' }],
+      },
+      {
+        id: ID.bookIsDraft,
+        type: 'rule',
+        version: '1',
         name: 'BookIsDraft',
         operation: 'Book.Publish',
-        type: 'condition',
+        subtype: 'condition',
         conditions: [{ attribute: 'book.status', operator: 'eq', value: 'draft' }],
       },
     ],
     triggers: [
       {
+        id: ID.publishTrigger,
+        type: 'trigger',
+        version: '1',
+        name: 'BookPublishUser',
         operation: 'Book.Publish',
         source: 'user',
         description: 'Editor publishes a book.',
@@ -107,6 +175,9 @@ export const bookshopInput: DnaInput = {
     ],
     relationships: [
       {
+        id: ID.bookAuthorRel,
+        type: 'relationship',
+        version: '1',
         name: 'Book.author',
         from: 'Book',
         to: 'Author',
@@ -116,18 +187,27 @@ export const bookshopInput: DnaInput = {
     ],
     tasks: [
       {
+        id: ID.reviewBook,
+        type: 'task',
+        version: '1',
         name: 'review-book',
         actor: 'Editor',
         operation: 'Book.Publish',
         description: 'Editor reviews the draft.',
       },
       {
+        id: ID.approveBook,
+        type: 'task',
+        version: '1',
         name: 'approve-book',
         actor: 'Editor',
         operation: 'Book.Publish',
         description: 'Editor approves and publishes.',
       },
       {
+        id: ID.rejectBook,
+        type: 'task',
+        version: '1',
         name: 'reject-book',
         actor: 'Editor',
         operation: 'Book.Retire',
@@ -136,6 +216,9 @@ export const bookshopInput: DnaInput = {
     ],
     processes: [
       {
+        id: ID.publishFlow,
+        type: 'process',
+        version: '1',
         name: 'PublishFlow',
         description: 'How a draft book becomes live.',
         operator: 'Editor',

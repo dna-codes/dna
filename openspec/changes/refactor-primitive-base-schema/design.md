@@ -10,7 +10,7 @@ Affected packages: `@dna-codes/dna-schemas`, `@dna-codes/dna-core` (types, build
 
 **Goals:**
 - Every Operational primitive carries `id` (UUID v4), `type` (primitive discriminator), `name` (required, base-level), `version` (integer or semver string identifying the type's schema version), and optionally `description` at the base level.
-- A single `base-primitive.json` schema in `@dna-codes/dna-schemas` is the authoritative source for these five fields; all per-primitive schemas extend it via `allOf`.
+- A single `base.json` schema in `@dna-codes/dna-schemas` is the authoritative source for these five fields; all per-primitive schemas extend it via `allOf`.
 - Builders auto-assign `id`, `type`, and `version` when not supplied.
 - TypeScript types are updated so every primitive is typed with the base fields as required.
 - All existing examples and fixtures are migrated.
@@ -29,10 +29,10 @@ Affected packages: `@dna-codes/dna-schemas`, `@dna-codes/dna-core` (types, build
 ### D1: `allOf` + `unevaluatedProperties: false` for base schema composition
 
 ```json
-// operational/base-primitive.json
+// operational/base.json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://dna.codes/schemas/operational/base-primitive",
+  "$id": "https://dna.codes/schemas/operational/base",
   "type": "object",
   "required": ["id", "type", "name", "version"],
   "properties": {
@@ -46,7 +46,7 @@ Affected packages: `@dna-codes/dna-schemas`, `@dna-codes/dna-core` (types, build
 
 // operational/resource.json (after)
 {
-  "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base-primitive" }],
+  "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "properties": {
     "type":       { "const": "resource" },
     "attributes": { ... },
@@ -60,6 +60,21 @@ Affected packages: `@dna-codes/dna-schemas`, `@dna-codes/dna-core` (types, build
 `unevaluatedProperties: false` (Draft 2020-12) considers properties from all `allOf` / `$ref` branches as "evaluated," so base fields are not rejected. `additionalProperties: false` is unaware of `allOf` branches and would reject them.
 
 **Alternative considered:** Copy base fields into every schema (no `allOf`). Rejected — single source of truth is worth the `unevaluatedProperties` migration cost. Any future base field addition would otherwise require touching 10+ schemas.
+
+### D1a: Existing `Rule.type` is renamed to `Rule.subtype`
+
+The current `Rule` primitive already declares a `type` field constrained to `"access" | "condition"`. The base contract reclaims `type` as the primitive discriminator (`"rule"` for every Rule). The existing field is renamed to `subtype` — chosen over `kind` because it reads as "sub-classifier within this primitive type" alongside the now-base `type`. All schemas, examples, validator code, fixtures, and tests update accordingly.
+
+```json
+// before
+{ "operation": "Loan.Approve", "type": "access", "allow": [...] }
+
+// after
+{ "id": "...", "type": "rule", "name": "...", "version": "1",
+  "operation": "Loan.Approve", "subtype": "access", "allow": [...] }
+```
+
+This is the only field collision among Operational primitives — no other primitive declares its own `type` field, so the base discriminator drops in cleanly elsewhere.
 
 ### D2: `type` values are the lowercase primitive names
 
@@ -165,7 +180,7 @@ export interface Resource extends BasePrimitive {
 
 ## Migration Plan
 
-1. Update `@dna-codes/dna-schemas` — add `base-primitive.json`, update all 11 Operational primitive schemas (`allOf` + `unevaluatedProperties`), bump minor version.
+1. Update `@dna-codes/dna-schemas` — add `base.json`, update all 11 Operational primitive schemas (`allOf` + `unevaluatedProperties`), bump minor version.
 2. Update `@dna-codes/dna-core` types — add `BasePrimitive` interface, extend all per-primitive interfaces.
 3. Update `@dna-codes/dna-core` builders — add auto-assignment of `id`, `type`, `version`; add `src/version.ts` constant.
 4. Migrate `examples/` JSON documents — add `id`, `type`, `version` to every primitive in all 6 example domains.
@@ -178,4 +193,4 @@ Rollback: revert commits to both packages; no runtime state to undo.
 ## Open Questions
 
 - **Q1**: Should `id` use `format: "uuid"` validation in AJV (requires `ajv-formats`)? Leaning yes — the format check is meaningful and `ajv-formats` is a small dep.
-- **Q2**: Should `name` keep its per-primitive pattern constraints (e.g., `^[A-Z][a-zA-Z0-9]*$` for Resource) in the per-primitive schema? Leaning yes — `name` patterns differ by primitive (kebab-case for Task, PascalCase for Resource) so they can't be unified in base-primitive.json.
+- **Q2**: Should `name` keep its per-primitive pattern constraints (e.g., `^[A-Z][a-zA-Z0-9]*$` for Resource) in the per-primitive schema? Leaning yes — `name` patterns differ by primitive (kebab-case for Task, PascalCase for Resource) so they can't be unified in base.json.

@@ -5,136 +5,635 @@
     "description": "Discrete-manufacturing assembly line. WorkOrders flow through machines (system Roles) and human inspectors with parallel paint+stamp Steps converging at quality inspection.",
     "resources": [
       {
+        "id": "2a94ce87-16b5-48d6-bdb4-dd559ed86170",
+        "type": "resource",
+        "version": "1",
         "name": "WorkOrder",
         "description": "A production order for a batch of parts.",
         "attributes": [
-          { "name": "id",          "type": "string", "required": true },
-          { "name": "part_number", "type": "string", "required": true },
-          { "name": "quantity",    "type": "number", "required": true },
-          { "name": "status",      "type": "enum",   "required": true, "values": ["queued", "cutting", "in_progress", "inspection", "passed", "failed", "completed"] }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "part_number",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "queued",
+              "cutting",
+              "in_progress",
+              "inspection",
+              "passed",
+              "failed",
+              "completed"
+            ]
+          }
         ],
         "actions": [
-          { "name": "Release",  "type": "write" },
-          { "name": "Cut",      "type": "write" },
-          { "name": "Stamp",    "type": "write" },
-          { "name": "Paint",    "type": "write" },
-          { "name": "Inspect",  "type": "write" },
-          { "name": "Reject",   "type": "destructive" },
-          { "name": "Complete", "type": "write" }
+          {
+            "name": "Release",
+            "type": "write"
+          },
+          {
+            "name": "Cut",
+            "type": "write"
+          },
+          {
+            "name": "Stamp",
+            "type": "write"
+          },
+          {
+            "name": "Paint",
+            "type": "write"
+          },
+          {
+            "name": "Inspect",
+            "type": "write"
+          },
+          {
+            "name": "Reject",
+            "type": "destructive"
+          },
+          {
+            "name": "Complete",
+            "type": "write"
+          }
         ]
       },
       {
+        "id": "79bce36d-9560-4d3c-8041-42b320efced7",
+        "type": "resource",
+        "version": "1",
         "name": "DefectReport",
         "description": "A QC failure record tied to a WorkOrder.",
         "attributes": [
-          { "name": "id",            "type": "string", "required": true },
-          { "name": "work_order_id", "type": "reference", "resource": "WorkOrder", "required": true },
-          { "name": "defect_kind",   "type": "enum",   "required": true, "values": ["dimensional", "surface", "alignment", "other"] },
-          { "name": "noted_at",      "type": "datetime" }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "work_order_id",
+            "type": "reference",
+            "resource": "WorkOrder",
+            "required": true
+          },
+          {
+            "name": "defect_kind",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "dimensional",
+              "surface",
+              "alignment",
+              "other"
+            ]
+          },
+          {
+            "name": "noted_at",
+            "type": "datetime"
+          }
         ],
         "actions": [
-          { "name": "File", "type": "write" }
+          {
+            "name": "File",
+            "type": "write"
+          }
         ]
       },
       {
+        "id": "f029e1a3-9247-4219-a2f6-a1548c4bd82d",
+        "type": "resource",
+        "version": "1",
         "name": "MachineRecord",
         "description": "Resource template for the system actors backing the machine Roles (used for Role.resource link).",
         "attributes": [
-          { "name": "id",        "type": "string", "required": true },
-          { "name": "model",     "type": "string" },
-          { "name": "installed", "type": "date" }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "model",
+            "type": "string"
+          },
+          {
+            "name": "installed",
+            "type": "date"
+          }
         ]
       }
     ],
     "persons": [
-      { "name": "FloorWorker",     "description": "Production floor staff; eligible for ShiftSupervisor or QualityInspector Roles." }
+      {
+        "id": "97950ac7-5feb-4821-bfb9-31f8108aa0cc",
+        "type": "person",
+        "version": "1",
+        "name": "FloorWorker",
+        "description": "Production floor staff; eligible for ShiftSupervisor or QualityInspector Roles."
+      }
     ],
     "groups": [
       {
+        "id": "14555168-9772-4843-bfea-644320e1b34c",
+        "type": "group",
+        "version": "1",
         "name": "Shift",
         "description": "A production shift. Scopes ShiftSupervisor and QualityInspector Memberships.",
-        "attributes": [{ "name": "name", "type": "string", "required": true }]
+        "attributes": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          }
+        ]
       }
     ],
     "roles": [
-      { "name": "ShiftSupervisor",      "description": "Human supervisor responsible for a Shift's WorkOrders.",                                                "scope": "Shift", "cardinality": "one" },
-      { "name": "QualityInspector",     "description": "Inspects post-finish WorkOrders.",                                                                     "scope": "Shift" },
-      { "name": "CncMachine",           "description": "System Role: CNC milling machine that performs the Cut step on every WorkOrder.",                     "system": true, "resource": "MachineRecord" },
-      { "name": "StampingPress",        "description": "System Role: hydraulic press that performs Stamp.",                                                     "system": true, "resource": "MachineRecord" },
-      { "name": "PaintRobot",           "description": "System Role: robotic paint cell that performs Paint.",                                                  "system": true, "resource": "MachineRecord" },
-      { "name": "MaintenanceScheduler", "description": "System Role: nightly job that flags machines needing service. Scheduled, doesn't act on WorkOrders.",  "system": true }
+      {
+        "id": "6c543936-1364-483e-9d36-a1a16fbfc032",
+        "type": "role",
+        "version": "1",
+        "name": "ShiftSupervisor",
+        "description": "Human supervisor responsible for a Shift's WorkOrders.",
+        "scope": "Shift",
+        "cardinality": "one"
+      },
+      {
+        "id": "9770f1f4-fa0b-44a8-9ea2-b83616d8d5d3",
+        "type": "role",
+        "version": "1",
+        "name": "QualityInspector",
+        "description": "Inspects post-finish WorkOrders.",
+        "scope": "Shift"
+      },
+      {
+        "id": "f4353185-fa2c-4fda-9ad0-7f832d36bbb6",
+        "type": "role",
+        "version": "1",
+        "name": "CncMachine",
+        "description": "System Role: CNC milling machine that performs the Cut step on every WorkOrder.",
+        "system": true,
+        "resource": "MachineRecord"
+      },
+      {
+        "id": "6ba579d4-21af-4b72-b086-a6f9b3c4dc8a",
+        "type": "role",
+        "version": "1",
+        "name": "StampingPress",
+        "description": "System Role: hydraulic press that performs Stamp.",
+        "system": true,
+        "resource": "MachineRecord"
+      },
+      {
+        "id": "9c037fc8-7838-444d-a08c-31bd15fbc130",
+        "type": "role",
+        "version": "1",
+        "name": "PaintRobot",
+        "description": "System Role: robotic paint cell that performs Paint.",
+        "system": true,
+        "resource": "MachineRecord"
+      },
+      {
+        "id": "83a54ba3-9479-4ff7-8994-3e078bca195f",
+        "type": "role",
+        "version": "1",
+        "name": "MaintenanceScheduler",
+        "description": "System Role: nightly job that flags machines needing service. Scheduled, doesn't act on WorkOrders.",
+        "system": true
+      }
     ]
   },
   "memberships": [
-    { "name": "FloorWorkerShiftSupervisor",  "person": "FloorWorker", "role": "ShiftSupervisor" },
-    { "name": "FloorWorkerQualityInspector", "person": "FloorWorker", "role": "QualityInspector" }
+    {
+      "id": "feea5da0-2541-4b6f-996e-0f153205f97c",
+      "type": "membership",
+      "version": "1",
+      "name": "FloorWorkerShiftSupervisor",
+      "person": "FloorWorker",
+      "role": "ShiftSupervisor"
+    },
+    {
+      "id": "955c319e-9d28-403e-99b3-9c36dc68828f",
+      "type": "membership",
+      "version": "1",
+      "name": "FloorWorkerQualityInspector",
+      "person": "FloorWorker",
+      "role": "QualityInspector"
+    }
   ],
   "operations": [
-    { "target": "WorkOrder",    "action": "Release",  "name": "WorkOrder.Release",  "changes": [{ "attribute": "status", "set": "queued" }] },
-    { "target": "WorkOrder",    "action": "Cut",      "name": "WorkOrder.Cut",      "changes": [{ "attribute": "status", "set": "in_progress" }] },
-    { "target": "WorkOrder",    "action": "Stamp",    "name": "WorkOrder.Stamp" },
-    { "target": "WorkOrder",    "action": "Paint",    "name": "WorkOrder.Paint" },
-    { "target": "WorkOrder",    "action": "Inspect",  "name": "WorkOrder.Inspect",  "changes": [{ "attribute": "status", "set": "passed" }] },
-    { "target": "WorkOrder",    "action": "Reject",   "name": "WorkOrder.Reject",   "changes": [{ "attribute": "status", "set": "failed" }] },
-    { "target": "WorkOrder",    "action": "Complete", "name": "WorkOrder.Complete", "changes": [{ "attribute": "status", "set": "completed" }] },
-    { "target": "DefectReport", "action": "File",     "name": "DefectReport.File" }
+    {
+      "id": "f0c41f01-4510-47a6-9c57-b19fb20eb3bb",
+      "type": "operation",
+      "version": "1",
+      "target": "WorkOrder",
+      "action": "Release",
+      "name": "WorkOrder.Release",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "queued"
+        }
+      ]
+    },
+    {
+      "id": "f8dc8939-c993-43a2-a903-b42874f73b13",
+      "type": "operation",
+      "version": "1",
+      "target": "WorkOrder",
+      "action": "Cut",
+      "name": "WorkOrder.Cut",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "in_progress"
+        }
+      ]
+    },
+    {
+      "id": "cc0f7d70-17e1-475a-a866-f4124908e5a3",
+      "type": "operation",
+      "version": "1",
+      "target": "WorkOrder",
+      "action": "Stamp",
+      "name": "WorkOrder.Stamp"
+    },
+    {
+      "id": "7bbe69be-6864-4752-b533-d407d18ac2f8",
+      "type": "operation",
+      "version": "1",
+      "target": "WorkOrder",
+      "action": "Paint",
+      "name": "WorkOrder.Paint"
+    },
+    {
+      "id": "623ac378-5b44-4d1b-9c1b-31893286c7b7",
+      "type": "operation",
+      "version": "1",
+      "target": "WorkOrder",
+      "action": "Inspect",
+      "name": "WorkOrder.Inspect",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "passed"
+        }
+      ]
+    },
+    {
+      "id": "92e1abab-ca74-4ecd-90f6-54516046540b",
+      "type": "operation",
+      "version": "1",
+      "target": "WorkOrder",
+      "action": "Reject",
+      "name": "WorkOrder.Reject",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "failed"
+        }
+      ]
+    },
+    {
+      "id": "b6f2f3f7-9d0b-47bb-b3cb-5549b550bd44",
+      "type": "operation",
+      "version": "1",
+      "target": "WorkOrder",
+      "action": "Complete",
+      "name": "WorkOrder.Complete",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "completed"
+        }
+      ]
+    },
+    {
+      "id": "289ee507-a214-4fa7-94ff-2302bab9ed14",
+      "type": "operation",
+      "version": "1",
+      "target": "DefectReport",
+      "action": "File",
+      "name": "DefectReport.File"
+    }
   ],
   "triggers": [
-    { "operation": "WorkOrder.Release", "source": "user", "description": "ShiftSupervisor releases a WorkOrder to the line." },
-    { "process":   "AssemblyFlow",      "source": "operation", "after": "WorkOrder.Release" },
-    { "operation": "WorkOrder.Reject",  "source": "operation", "after": "DefectReport.File", "description": "Filing a defect auto-rejects the WorkOrder." },
-    { "operation": "WorkOrder.Cut",     "source": "schedule", "schedule": "*/15 * * * *", "description": "CncMachine polls the queue every 15 minutes for cuttable WorkOrders." }
+    {
+      "id": "00575f2f-0fd3-4a67-bc2a-9bd90eb922c4",
+      "type": "trigger",
+      "version": "1",
+      "operation": "WorkOrder.Release",
+      "source": "user",
+      "description": "ShiftSupervisor releases a WorkOrder to the line.",
+      "name": "WorkOrderReleaseUser"
+    },
+    {
+      "id": "2f76232c-8d70-466e-9d1d-364467852eeb",
+      "type": "trigger",
+      "version": "1",
+      "process": "AssemblyFlow",
+      "source": "operation",
+      "after": "WorkOrder.Release",
+      "name": "AssemblyFlowOperation"
+    },
+    {
+      "id": "c654fad6-1de3-4024-9d95-2f5db3909bc5",
+      "type": "trigger",
+      "version": "1",
+      "operation": "WorkOrder.Reject",
+      "source": "operation",
+      "after": "DefectReport.File",
+      "description": "Filing a defect auto-rejects the WorkOrder.",
+      "name": "WorkOrderRejectOperation"
+    },
+    {
+      "id": "ceee1b2b-2556-4951-b392-b518a5aaac39",
+      "type": "trigger",
+      "version": "1",
+      "operation": "WorkOrder.Cut",
+      "source": "schedule",
+      "schedule": "*/15 * * * *",
+      "description": "CncMachine polls the queue every 15 minutes for cuttable WorkOrders.",
+      "name": "WorkOrderCutSchedule"
+    }
   ],
   "rules": [
-    { "operation": "WorkOrder.Release",  "type": "access", "allow": [{ "role": "ShiftSupervisor" }] },
-    { "operation": "WorkOrder.Cut",      "type": "access", "allow": [{ "role": "CncMachine" }] },
-    { "operation": "WorkOrder.Stamp",    "type": "access", "allow": [{ "role": "StampingPress" }] },
-    { "operation": "WorkOrder.Paint",    "type": "access", "allow": [{ "role": "PaintRobot" }] },
-    { "operation": "WorkOrder.Inspect",  "type": "access", "allow": [{ "role": "QualityInspector" }] },
-    { "operation": "WorkOrder.Reject",   "type": "access", "allow": [{ "role": "QualityInspector" }] },
-    { "operation": "WorkOrder.Complete", "type": "access", "allow": [{ "role": "ShiftSupervisor" }] },
-    { "operation": "DefectReport.File",  "type": "access", "allow": [{ "role": "QualityInspector" }] },
     {
+      "id": "492bbbad-736c-47ad-b9ab-dc61e877b9f4",
+      "type": "rule",
+      "version": "1",
+      "operation": "WorkOrder.Release",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "ShiftSupervisor"
+        }
+      ],
+      "name": "WorkOrderReleaseAccess"
+    },
+    {
+      "id": "b321ed30-de25-4669-b6db-f0e46ae52bce",
+      "type": "rule",
+      "version": "1",
+      "operation": "WorkOrder.Cut",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "CncMachine"
+        }
+      ],
+      "name": "WorkOrderCutAccess"
+    },
+    {
+      "id": "b9700301-814b-4a39-9a46-86ab9ef75c44",
+      "type": "rule",
+      "version": "1",
+      "operation": "WorkOrder.Stamp",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "StampingPress"
+        }
+      ],
+      "name": "WorkOrderStampAccess"
+    },
+    {
+      "id": "740a08d7-6e53-4e6c-ab0f-a09ee718a9c9",
+      "type": "rule",
+      "version": "1",
+      "operation": "WorkOrder.Paint",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "PaintRobot"
+        }
+      ],
+      "name": "WorkOrderPaintAccess"
+    },
+    {
+      "id": "11e07b04-3d6a-48d4-baae-d08890e042c4",
+      "type": "rule",
+      "version": "1",
+      "operation": "WorkOrder.Inspect",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "QualityInspector"
+        }
+      ],
+      "name": "WorkOrderInspectAccess"
+    },
+    {
+      "id": "de2835e9-c311-4450-94bf-746b0d1da7a3",
+      "type": "rule",
+      "version": "1",
+      "operation": "WorkOrder.Reject",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "QualityInspector"
+        }
+      ],
+      "name": "WorkOrderRejectAccess"
+    },
+    {
+      "id": "653a97a6-014e-437a-82e7-442cba545d07",
+      "type": "rule",
+      "version": "1",
+      "operation": "WorkOrder.Complete",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "ShiftSupervisor"
+        }
+      ],
+      "name": "WorkOrderCompleteAccess"
+    },
+    {
+      "id": "706c55d0-ba65-4d0b-8736-679f20b7ce07",
+      "type": "rule",
+      "version": "1",
+      "operation": "DefectReport.File",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "QualityInspector"
+        }
+      ],
+      "name": "DefectReportFileAccess"
+    },
+    {
+      "id": "999e2f4c-104d-4ee8-8b86-ea446d59e94b",
+      "type": "rule",
+      "version": "1",
       "name": "WorkOrderIsQueued",
       "operation": "WorkOrder.Cut",
-      "type": "condition",
-      "conditions": [{ "attribute": "work_order.status", "operator": "eq", "value": "queued" }]
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "work_order.status",
+          "operator": "eq",
+          "value": "queued"
+        }
+      ]
     },
     {
+      "id": "59c77ce5-16ce-469b-8437-1f3952dc58a4",
+      "type": "rule",
+      "version": "1",
       "name": "WorkOrderIsCut",
       "operation": "WorkOrder.Stamp",
-      "type": "condition",
-      "conditions": [{ "attribute": "work_order.status", "operator": "in", "value": ["cutting", "in_progress"] }]
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "work_order.status",
+          "operator": "in",
+          "value": [
+            "cutting",
+            "in_progress"
+          ]
+        }
+      ]
     },
     {
+      "id": "8065893c-59a9-42dc-acbd-40b4f77c21d5",
+      "type": "rule",
+      "version": "1",
       "name": "InspectionPassed",
       "operation": "WorkOrder.Complete",
-      "type": "condition",
-      "conditions": [{ "attribute": "work_order.status", "operator": "eq", "value": "passed" }]
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "work_order.status",
+          "operator": "eq",
+          "value": "passed"
+        }
+      ]
     }
   ],
   "relationships": [
-    { "name": "DefectReport.work_order", "from": "DefectReport", "to": "WorkOrder", "cardinality": "many-to-one", "attribute": "work_order_id" }
+    {
+      "id": "a0563500-b3c8-46f8-8f26-22e1cd3adf72",
+      "type": "relationship",
+      "version": "1",
+      "name": "DefectReport.work_order",
+      "from": "DefectReport",
+      "to": "WorkOrder",
+      "cardinality": "many-to-one",
+      "attribute": "work_order_id"
+    }
   ],
   "tasks": [
-    { "name": "cut-part",       "actor": "CncMachine",       "operation": "WorkOrder.Cut" },
-    { "name": "stamp-part",     "actor": "StampingPress",    "operation": "WorkOrder.Stamp" },
-    { "name": "paint-part",     "actor": "PaintRobot",       "operation": "WorkOrder.Paint" },
-    { "name": "inspect-part",   "actor": "QualityInspector", "operation": "WorkOrder.Inspect" },
-    { "name": "complete-order", "actor": "ShiftSupervisor",  "operation": "WorkOrder.Complete" }
+    {
+      "id": "64fcaa45-669f-407c-a921-e851274121be",
+      "type": "task",
+      "version": "1",
+      "name": "cut-part",
+      "actor": "CncMachine",
+      "operation": "WorkOrder.Cut"
+    },
+    {
+      "id": "078d3342-4af3-4e08-b9ff-3ba156bcadd4",
+      "type": "task",
+      "version": "1",
+      "name": "stamp-part",
+      "actor": "StampingPress",
+      "operation": "WorkOrder.Stamp"
+    },
+    {
+      "id": "2103896d-5e56-4c61-a4c8-bc0a6d5dcf5a",
+      "type": "task",
+      "version": "1",
+      "name": "paint-part",
+      "actor": "PaintRobot",
+      "operation": "WorkOrder.Paint"
+    },
+    {
+      "id": "94d00c00-ce4d-43e1-8c33-1c0586434052",
+      "type": "task",
+      "version": "1",
+      "name": "inspect-part",
+      "actor": "QualityInspector",
+      "operation": "WorkOrder.Inspect"
+    },
+    {
+      "id": "e45dd6de-974b-4d93-a801-25d785e83921",
+      "type": "task",
+      "version": "1",
+      "name": "complete-order",
+      "actor": "ShiftSupervisor",
+      "operation": "WorkOrder.Complete"
+    }
   ],
   "processes": [
     {
+      "id": "bc426d06-6520-441a-b7c6-b1d381bc9452",
+      "type": "process",
+      "version": "1",
       "name": "AssemblyFlow",
       "description": "Cut → (Stamp || Paint) → Inspect → Complete. Stamp and Paint run in parallel after Cut and converge at Inspect.",
       "operator": "ShiftSupervisor",
       "startStep": "cut",
       "steps": [
-        { "id": "cut",      "task": "cut-part",       "conditions": ["WorkOrderIsQueued"] },
-        { "id": "stamp",    "task": "stamp-part",     "depends_on": ["cut"], "conditions": ["WorkOrderIsCut"] },
-        { "id": "paint",    "task": "paint-part",     "depends_on": ["cut"], "conditions": ["WorkOrderIsCut"] },
-        { "id": "inspect",  "task": "inspect-part",   "depends_on": ["stamp", "paint"] },
-        { "id": "complete", "task": "complete-order", "depends_on": ["inspect"], "conditions": ["InspectionPassed"], "else": "abort" }
+        {
+          "id": "cut",
+          "task": "cut-part",
+          "conditions": [
+            "WorkOrderIsQueued"
+          ]
+        },
+        {
+          "id": "stamp",
+          "task": "stamp-part",
+          "depends_on": [
+            "cut"
+          ],
+          "conditions": [
+            "WorkOrderIsCut"
+          ]
+        },
+        {
+          "id": "paint",
+          "task": "paint-part",
+          "depends_on": [
+            "cut"
+          ],
+          "conditions": [
+            "WorkOrderIsCut"
+          ]
+        },
+        {
+          "id": "inspect",
+          "task": "inspect-part",
+          "depends_on": [
+            "stamp",
+            "paint"
+          ]
+        },
+        {
+          "id": "complete",
+          "task": "complete-order",
+          "depends_on": [
+            "inspect"
+          ],
+          "conditions": [
+            "InspectionPassed"
+          ],
+          "else": "abort"
+        }
       ]
     }
   ]

@@ -6,123 +6,599 @@
     "resources": [],
     "persons": [
       {
+        "id": "40fa5122-8fa7-4921-932d-a1bf97062ed8",
+        "type": "person",
+        "version": "1",
         "name": "Member",
         "description": "Anyone on the platform. Person template — eligible for both Host and Guest Roles via Memberships. The same Member instance can simultaneously hold Host on one Listing and Guest on a Booking elsewhere; that simultaneity is runtime data.",
         "attributes": [
-          { "name": "id",           "type": "string", "required": true },
-          { "name": "display_name", "type": "string", "required": true },
-          { "name": "email",        "type": "string" },
-          { "name": "joined_at",    "type": "datetime" }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "display_name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "email",
+            "type": "string"
+          },
+          {
+            "name": "joined_at",
+            "type": "datetime"
+          }
         ]
       },
       {
+        "id": "278c7ea3-d879-474e-ba52-d7c13ffceb49",
+        "type": "person",
+        "version": "1",
         "name": "PlatformStaff",
         "description": "Internal worker; eligible for the global SupportAgent Role."
       }
     ],
     "groups": [
       {
+        "id": "a9b22a31-8f8c-486c-bf98-3b42c9280b9f",
+        "type": "group",
+        "version": "1",
         "name": "Listing",
         "description": "A property for rent. Group that scopes the Host Role; also has its own lifecycle and attributes.",
         "attributes": [
-          { "name": "id",            "type": "string", "required": true },
-          { "name": "title",         "type": "string", "required": true },
-          { "name": "host_id",       "type": "reference", "resource": "Member", "required": true },
-          { "name": "status",        "type": "enum",   "required": true, "values": ["draft", "active", "paused", "delisted"] },
-          { "name": "nightly_rate",  "type": "number", "required": true }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "host_id",
+            "type": "reference",
+            "resource": "Member",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "draft",
+              "active",
+              "paused",
+              "delisted"
+            ]
+          },
+          {
+            "name": "nightly_rate",
+            "type": "number",
+            "required": true
+          }
         ],
         "actions": [
-          { "name": "Publish", "description": "Host publishes a draft listing.", "type": "write" },
-          { "name": "Pause",   "type": "write" },
-          { "name": "Delist",  "type": "destructive" }
+          {
+            "name": "Publish",
+            "description": "Host publishes a draft listing.",
+            "type": "write"
+          },
+          {
+            "name": "Pause",
+            "type": "write"
+          },
+          {
+            "name": "Delist",
+            "type": "destructive"
+          }
         ]
       },
       {
+        "id": "4ff141dd-be37-44a5-b064-865b64f39598",
+        "type": "group",
+        "version": "1",
         "name": "Booking",
         "description": "A reservation against a Listing for a Guest. Group that scopes the Guest Role; also has its own lifecycle.",
         "attributes": [
-          { "name": "id",         "type": "string", "required": true },
-          { "name": "listing_id", "type": "reference", "resource": "Listing", "required": true },
-          { "name": "guest_id",   "type": "reference", "resource": "Member",  "required": true },
-          { "name": "checkin",    "type": "date",   "required": true },
-          { "name": "checkout",   "type": "date",   "required": true },
-          { "name": "status",     "type": "enum",   "required": true, "values": ["requested", "approved", "declined", "cancelled", "completed"] }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "listing_id",
+            "type": "reference",
+            "resource": "Listing",
+            "required": true
+          },
+          {
+            "name": "guest_id",
+            "type": "reference",
+            "resource": "Member",
+            "required": true
+          },
+          {
+            "name": "checkin",
+            "type": "date",
+            "required": true
+          },
+          {
+            "name": "checkout",
+            "type": "date",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "requested",
+              "approved",
+              "declined",
+              "cancelled",
+              "completed"
+            ]
+          }
         ],
         "actions": [
-          { "name": "Request", "description": "Guest requests a booking.",          "type": "write" },
-          { "name": "Approve", "description": "Host approves a pending booking.",   "type": "write" },
-          { "name": "Decline", "type": "write" },
-          { "name": "Cancel",  "type": "destructive" }
+          {
+            "name": "Request",
+            "description": "Guest requests a booking.",
+            "type": "write"
+          },
+          {
+            "name": "Approve",
+            "description": "Host approves a pending booking.",
+            "type": "write"
+          },
+          {
+            "name": "Decline",
+            "type": "write"
+          },
+          {
+            "name": "Cancel",
+            "type": "destructive"
+          }
         ]
       }
     ],
     "roles": [
-      { "name": "Host",         "description": "A Member who has published a Listing. Scoped to the Listing they own.", "scope": "Listing", "cardinality": "one", "required": true },
-      { "name": "Guest",        "description": "A Member on a Booking they requested. Scoped to that Booking.",         "scope": "Booking", "cardinality": "one", "required": true },
-      { "name": "SupportAgent", "description": "Platform staff handling disputes. Unscoped — global across all Listings and Bookings." }
+      {
+        "id": "cafa64cd-2a82-4aeb-b21d-b70ba0aaa55a",
+        "type": "role",
+        "version": "1",
+        "name": "Host",
+        "description": "A Member who has published a Listing. Scoped to the Listing they own.",
+        "scope": "Listing",
+        "cardinality": "one",
+        "required": true
+      },
+      {
+        "id": "4e4cee2a-625c-4389-9ecf-34ff68282022",
+        "type": "role",
+        "version": "1",
+        "name": "Guest",
+        "description": "A Member on a Booking they requested. Scoped to that Booking.",
+        "scope": "Booking",
+        "cardinality": "one",
+        "required": true
+      },
+      {
+        "id": "44d4a659-c3bd-4e49-93c0-b23f441d91e3",
+        "type": "role",
+        "version": "1",
+        "name": "SupportAgent",
+        "description": "Platform staff handling disputes. Unscoped — global across all Listings and Bookings."
+      }
     ]
   },
   "memberships": [
-    { "name": "MemberHost",            "person": "Member",        "role": "Host",         "description": "Members may hold the Host role on Listings they own." },
-    { "name": "MemberGuest",           "person": "Member",        "role": "Guest",        "description": "Members may hold the Guest role on Bookings they place." },
-    { "name": "PlatformStaffSupport",  "person": "PlatformStaff", "role": "SupportAgent", "description": "Platform staff may hold the global SupportAgent role." }
-  ],
-  "operations": [
-    { "target": "Listing", "action": "Publish", "name": "Listing.Publish", "changes": [{ "attribute": "status", "set": "active" }] },
-    { "target": "Listing", "action": "Pause",   "name": "Listing.Pause",   "changes": [{ "attribute": "status", "set": "paused" }] },
-    { "target": "Listing", "action": "Delist",  "name": "Listing.Delist",  "changes": [{ "attribute": "status", "set": "delisted" }] },
-    { "target": "Booking", "action": "Request", "name": "Booking.Request", "changes": [{ "attribute": "status", "set": "requested" }] },
-    { "target": "Booking", "action": "Approve", "name": "Booking.Approve", "changes": [{ "attribute": "status", "set": "approved" }] },
-    { "target": "Booking", "action": "Decline", "name": "Booking.Decline", "changes": [{ "attribute": "status", "set": "declined" }] },
-    { "target": "Booking", "action": "Cancel",  "name": "Booking.Cancel",  "changes": [{ "attribute": "status", "set": "cancelled" }] }
-  ],
-  "triggers": [
-    { "operation": "Listing.Publish", "source": "user" },
-    { "operation": "Booking.Request", "source": "user" },
-    { "operation": "Booking.Approve", "source": "user" },
-    { "process":   "BookingFlow",     "source": "operation", "after": "Booking.Request", "description": "Booking request kicks off the host-approval SOP." }
-  ],
-  "rules": [
-    { "operation": "Listing.Publish", "type": "access", "allow": [{ "role": "Host", "ownership": true }] },
-    { "operation": "Listing.Pause",   "type": "access", "allow": [{ "role": "Host", "ownership": true }, { "role": "SupportAgent" }] },
-    { "operation": "Listing.Delist",  "type": "access", "allow": [{ "role": "Host", "ownership": true }, { "role": "SupportAgent" }] },
-    { "operation": "Booking.Request", "type": "access", "allow": [{ "role": "Guest" }] },
-    { "operation": "Booking.Approve", "type": "access", "allow": [{ "role": "Host", "ownership": true }] },
-    { "operation": "Booking.Decline", "type": "access", "allow": [{ "role": "Host", "ownership": true }] },
-    { "operation": "Booking.Cancel",  "type": "access", "allow": [{ "role": "Guest", "ownership": true }, { "role": "Host", "ownership": true }, { "role": "SupportAgent" }] },
     {
-      "name": "ListingIsActive",
-      "operation": "Booking.Request",
-      "type": "condition",
-      "conditions": [{ "attribute": "listing.status", "operator": "eq", "value": "active" }]
+      "id": "11a6ed50-1842-4c81-a8c7-5754b5218c1c",
+      "type": "membership",
+      "version": "1",
+      "name": "MemberHost",
+      "person": "Member",
+      "role": "Host",
+      "description": "Members may hold the Host role on Listings they own."
     },
     {
+      "id": "b6802b0b-b582-4f28-a568-b5b30ca682f4",
+      "type": "membership",
+      "version": "1",
+      "name": "MemberGuest",
+      "person": "Member",
+      "role": "Guest",
+      "description": "Members may hold the Guest role on Bookings they place."
+    },
+    {
+      "id": "e57635b8-c7fe-41bc-9b8b-91b611a32bf0",
+      "type": "membership",
+      "version": "1",
+      "name": "PlatformStaffSupport",
+      "person": "PlatformStaff",
+      "role": "SupportAgent",
+      "description": "Platform staff may hold the global SupportAgent role."
+    }
+  ],
+  "operations": [
+    {
+      "id": "43b975f3-36e0-4cb1-b4d5-1a94f24c812e",
+      "type": "operation",
+      "version": "1",
+      "target": "Listing",
+      "action": "Publish",
+      "name": "Listing.Publish",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "active"
+        }
+      ]
+    },
+    {
+      "id": "d9514f1f-088a-4612-b1c5-7fd7a2054cb3",
+      "type": "operation",
+      "version": "1",
+      "target": "Listing",
+      "action": "Pause",
+      "name": "Listing.Pause",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "paused"
+        }
+      ]
+    },
+    {
+      "id": "c1910f1f-2bac-4880-9af8-3742c99817fe",
+      "type": "operation",
+      "version": "1",
+      "target": "Listing",
+      "action": "Delist",
+      "name": "Listing.Delist",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "delisted"
+        }
+      ]
+    },
+    {
+      "id": "dc59e257-f5cd-4708-8deb-1ead5ab3b6e6",
+      "type": "operation",
+      "version": "1",
+      "target": "Booking",
+      "action": "Request",
+      "name": "Booking.Request",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "requested"
+        }
+      ]
+    },
+    {
+      "id": "2350d341-e96a-48ff-bb68-6640b4d92335",
+      "type": "operation",
+      "version": "1",
+      "target": "Booking",
+      "action": "Approve",
+      "name": "Booking.Approve",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "approved"
+        }
+      ]
+    },
+    {
+      "id": "d2310847-7791-45c9-8077-6ce7178577ab",
+      "type": "operation",
+      "version": "1",
+      "target": "Booking",
+      "action": "Decline",
+      "name": "Booking.Decline",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "declined"
+        }
+      ]
+    },
+    {
+      "id": "f942a74e-d929-45c0-be37-a003390bd245",
+      "type": "operation",
+      "version": "1",
+      "target": "Booking",
+      "action": "Cancel",
+      "name": "Booking.Cancel",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "cancelled"
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "dbfb0c7e-07e5-42d0-a867-867e6c226ff4",
+      "type": "trigger",
+      "version": "1",
+      "operation": "Listing.Publish",
+      "source": "user",
+      "name": "ListingPublishUser"
+    },
+    {
+      "id": "1e566e1b-b379-4a14-951c-323a04f74dc1",
+      "type": "trigger",
+      "version": "1",
+      "operation": "Booking.Request",
+      "source": "user",
+      "name": "BookingRequestUser"
+    },
+    {
+      "id": "081c1996-7de7-4ff8-b637-752b31d82edc",
+      "type": "trigger",
+      "version": "1",
+      "operation": "Booking.Approve",
+      "source": "user",
+      "name": "BookingApproveUser"
+    },
+    {
+      "id": "7576715a-48c6-4aa4-a1fa-6b802f78554f",
+      "type": "trigger",
+      "version": "1",
+      "process": "BookingFlow",
+      "source": "operation",
+      "after": "Booking.Request",
+      "description": "Booking request kicks off the host-approval SOP.",
+      "name": "BookingFlowOperation"
+    }
+  ],
+  "rules": [
+    {
+      "id": "e7b18afb-3ae9-4d56-b366-af66ee385101",
+      "type": "rule",
+      "version": "1",
+      "operation": "Listing.Publish",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Host",
+          "ownership": true
+        }
+      ],
+      "name": "ListingPublishAccess"
+    },
+    {
+      "id": "a66317f4-08b5-472a-a349-228d36b4fa6e",
+      "type": "rule",
+      "version": "1",
+      "operation": "Listing.Pause",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Host",
+          "ownership": true
+        },
+        {
+          "role": "SupportAgent"
+        }
+      ],
+      "name": "ListingPauseAccess"
+    },
+    {
+      "id": "85c5e7e7-9887-4ca9-a4c6-fc76c6a6c4b4",
+      "type": "rule",
+      "version": "1",
+      "operation": "Listing.Delist",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Host",
+          "ownership": true
+        },
+        {
+          "role": "SupportAgent"
+        }
+      ],
+      "name": "ListingDelistAccess"
+    },
+    {
+      "id": "94e529af-758f-41d4-a450-03afb151e6e8",
+      "type": "rule",
+      "version": "1",
+      "operation": "Booking.Request",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Guest"
+        }
+      ],
+      "name": "BookingRequestAccess"
+    },
+    {
+      "id": "963424ba-2da6-452e-be61-29b5cb7d40cc",
+      "type": "rule",
+      "version": "1",
+      "operation": "Booking.Approve",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Host",
+          "ownership": true
+        }
+      ],
+      "name": "BookingApproveAccess"
+    },
+    {
+      "id": "c97def36-2121-43c6-80a1-93cdf9784b1d",
+      "type": "rule",
+      "version": "1",
+      "operation": "Booking.Decline",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Host",
+          "ownership": true
+        }
+      ],
+      "name": "BookingDeclineAccess"
+    },
+    {
+      "id": "07805454-f423-4631-83b6-a431a158b124",
+      "type": "rule",
+      "version": "1",
+      "operation": "Booking.Cancel",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Guest",
+          "ownership": true
+        },
+        {
+          "role": "Host",
+          "ownership": true
+        },
+        {
+          "role": "SupportAgent"
+        }
+      ],
+      "name": "BookingCancelAccess"
+    },
+    {
+      "id": "6ac84df5-fd84-44cb-a622-1a7aa75fe7ca",
+      "type": "rule",
+      "version": "1",
+      "name": "ListingIsActive",
+      "operation": "Booking.Request",
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "listing.status",
+          "operator": "eq",
+          "value": "active"
+        }
+      ]
+    },
+    {
+      "id": "77648b3f-6de0-43cd-bdf2-8840e6920150",
+      "type": "rule",
+      "version": "1",
       "name": "BookingIsRequested",
       "operation": "Booking.Approve",
-      "type": "condition",
-      "conditions": [{ "attribute": "booking.status", "operator": "eq", "value": "requested" }]
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "booking.status",
+          "operator": "eq",
+          "value": "requested"
+        }
+      ]
     }
   ],
   "relationships": [
-    { "name": "Listing.host",     "from": "Listing", "to": "Member",  "cardinality": "many-to-one", "attribute": "host_id",    "inverse": "listings" },
-    { "name": "Booking.listing",  "from": "Booking", "to": "Listing", "cardinality": "many-to-one", "attribute": "listing_id" },
-    { "name": "Booking.guest",    "from": "Booking", "to": "Member",  "cardinality": "many-to-one", "attribute": "guest_id",   "inverse": "bookings" }
+    {
+      "id": "9f53fbfd-20e4-4bfa-b5ad-6b76a2f15cd0",
+      "type": "relationship",
+      "version": "1",
+      "name": "Listing.host",
+      "from": "Listing",
+      "to": "Member",
+      "cardinality": "many-to-one",
+      "attribute": "host_id",
+      "inverse": "listings"
+    },
+    {
+      "id": "64e370d0-d17f-461b-bb5d-63ee84514442",
+      "type": "relationship",
+      "version": "1",
+      "name": "Booking.listing",
+      "from": "Booking",
+      "to": "Listing",
+      "cardinality": "many-to-one",
+      "attribute": "listing_id"
+    },
+    {
+      "id": "a316a533-5721-4ddc-a291-7df5c6afff85",
+      "type": "relationship",
+      "version": "1",
+      "name": "Booking.guest",
+      "from": "Booking",
+      "to": "Member",
+      "cardinality": "many-to-one",
+      "attribute": "guest_id",
+      "inverse": "bookings"
+    }
   ],
   "tasks": [
-    { "name": "request-booking", "actor": "Guest", "operation": "Booking.Request" },
-    { "name": "approve-booking", "actor": "Host",  "operation": "Booking.Approve" },
-    { "name": "decline-booking", "actor": "Host",  "operation": "Booking.Decline" }
+    {
+      "id": "a8a81487-1fbe-4ccf-9275-df92e4fed205",
+      "type": "task",
+      "version": "1",
+      "name": "request-booking",
+      "actor": "Guest",
+      "operation": "Booking.Request"
+    },
+    {
+      "id": "4e0d747d-6f83-4718-84c4-414368be660b",
+      "type": "task",
+      "version": "1",
+      "name": "approve-booking",
+      "actor": "Host",
+      "operation": "Booking.Approve"
+    },
+    {
+      "id": "a53c464a-709e-4440-b857-7843a647a71d",
+      "type": "task",
+      "version": "1",
+      "name": "decline-booking",
+      "actor": "Host",
+      "operation": "Booking.Decline"
+    }
   ],
   "processes": [
     {
+      "id": "171eb1c0-5403-4dbb-af35-2a13cc5e27af",
+      "type": "process",
+      "version": "1",
       "name": "BookingFlow",
       "description": "From a Guest's request through Host's approve-or-decline decision.",
       "operator": "SupportAgent",
       "startStep": "request",
       "steps": [
-        { "id": "request", "task": "request-booking", "conditions": ["ListingIsActive"], "else": "abort" },
-        { "id": "approve", "task": "approve-booking", "depends_on": ["request"], "conditions": ["BookingIsRequested"], "else": "decline" },
-        { "id": "decline", "task": "decline-booking", "depends_on": ["request"] }
+        {
+          "id": "request",
+          "task": "request-booking",
+          "conditions": [
+            "ListingIsActive"
+          ],
+          "else": "abort"
+        },
+        {
+          "id": "approve",
+          "task": "approve-booking",
+          "depends_on": [
+            "request"
+          ],
+          "conditions": [
+            "BookingIsRequested"
+          ],
+          "else": "decline"
+        },
+        {
+          "id": "decline",
+          "task": "decline-booking",
+          "depends_on": [
+            "request"
+          ]
+        }
       ]
     }
   ]

@@ -1,5 +1,5 @@
 import type { OperationalDNA } from '../types/merge'
-import type { Process } from '../types/operational'
+import type { PrimitiveInput, Process } from '../types/operational'
 import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
 
 /**
@@ -8,7 +8,7 @@ import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
  */
 export function addProcess(
   dna: OperationalDNA,
-  process: Process,
+  process: PrimitiveInput<Process>,
   opts?: BuilderOptions,
 ): BuilderResult {
   return composeInto(dna, process, 'processes', 'operational/process', opts)

@@ -1,5 +1,5 @@
 import type { OperationalDNA } from '../types/merge'
-import type { Role } from '../types/operational'
+import type { PrimitiveInput, Role } from '../types/operational'
 import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
 
 /**
@@ -8,7 +8,7 @@ import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
  */
 export function addRole(
   dna: OperationalDNA,
-  role: Role,
+  role: PrimitiveInput<Role>,
   opts?: BuilderOptions,
 ): BuilderResult {
   return composeInto(dna, role, 'roles', 'operational/role', opts)

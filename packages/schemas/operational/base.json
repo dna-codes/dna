@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/operational/base",
+  "title": "BasePrimitive",
+  "description": "The universal base contract shared by every Operational DNA primitive. All per-primitive schemas extend this via allOf.\n\nFields:\n- id: UUID v4 — stable identity for this definition across data stores.\n- type: lowercase primitive discriminator (e.g. 'resource', 'operation'). Constrained to a single const value by each per-primitive schema.\n- name: the human-readable definition name used for cross-references and authoring.\n- version: the version of this primitive type's schema that was in effect when the primitive was authored. Increment is a migration signal — see operational/versions.json for the current version per type.\n- description: optional human-readable explanation.",
+  "type": "object",
+  "required": ["id", "type", "name", "version"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID v4 identifier for this primitive definition. Stable across updates. Auto-assigned by builders when not supplied."
+    },
+    "type": {
+      "type": "string",
+      "description": "Lowercase primitive discriminator. Constrained to a single const value by each per-primitive schema."
+    },
+    "name": {
+      "type": "string",
+      "description": "The human-readable name of this definition, used for cross-references throughout the DNA document."
+    },
+    "version": {
+      "type": "string",
+      "description": "The version of this primitive type's schema in effect when the primitive was authored. A migration handle — see operational/versions.json for the current version per type. Any increment MUST be accompanied by at least a semantic minor bump to @dna-codes/dna-schemas."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable explanation of what this primitive represents."
+    }
+  }
+}

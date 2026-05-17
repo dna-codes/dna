@@ -4,9 +4,11 @@
   "title": "Role",
   "description": "A Role is a position/capacity template — the kind of organizational position Persons fill. Examples: Underwriter, Doctor, ChargeNurse, LeadCounsel, SuperAdmin. Roles are exercised within Groups (Underwriter operates within BankDepartment); the type-level Role-Group relationship is captured by `scope`.\n\nRole is one of four noun primitives (alongside Resource, Person, Group). All four share the noun base shape: name, optional attributes[], optional actions[], optional parent. Role adds: scope, system, and resource-link fields. Actions on a Role cover org-admin lifecycle (Underwriter.Activate, Doctor.Certify) — not 'what an Underwriter does' (those are Operations on other nouns, assigned via Tasks).",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "required": ["name"],
-  "additionalProperties": false,
+  "unevaluatedProperties": false,
   "properties": {
+    "type": { "const": "role" },
     "name": {
       "type": "string",
       "description": "The singular PascalCase name of the Role.",

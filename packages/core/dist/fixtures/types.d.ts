@@ -32,7 +32,17 @@ export interface OperationalDomain {
     groups?: Group[];
     domains?: OperationalDomain[];
 }
-export interface Resource {
+/**
+ * Universal base fields stamped on every Operational primitive. Optional
+ * in the loose fixture types so adapter fixtures stay readable; the strict
+ * shapes in `types/operational.ts` mark them required.
+ */
+interface BaseFields {
+    id?: string;
+    type?: string;
+    version?: string;
+}
+export interface Resource extends BaseFields {
     name: string;
     description?: string;
     domain?: string;
@@ -40,7 +50,7 @@ export interface Resource {
     actions?: Action[];
     parent?: string;
 }
-export interface Person {
+export interface Person extends BaseFields {
     name: string;
     description?: string;
     domain?: string;
@@ -49,7 +59,7 @@ export interface Person {
     parent?: string;
     resource?: string;
 }
-export interface Group {
+export interface Group extends BaseFields {
     name: string;
     description?: string;
     domain?: string;
@@ -57,7 +67,7 @@ export interface Group {
     actions?: Action[];
     parent?: string;
 }
-export interface Role {
+export interface Role extends BaseFields {
     name: string;
     description?: string;
     domain?: string;
@@ -68,7 +78,7 @@ export interface Role {
     attributes?: Attribute[];
     actions?: Action[];
 }
-export interface Membership {
+export interface Membership extends BaseFields {
     name: string;
     description?: string;
     domain?: string;
@@ -88,7 +98,7 @@ export interface Action {
     type?: 'read' | 'write' | 'destructive';
     idempotent?: boolean;
 }
-export interface Operation {
+export interface Operation extends BaseFields {
     name: string;
     target: string;
     action: string;
@@ -99,10 +109,10 @@ export interface OperationChange {
     attribute: string;
     set?: unknown;
 }
-export interface Rule {
+export interface Rule extends BaseFields {
     name?: string;
     operation: string;
-    type?: 'access' | 'condition';
+    subtype?: 'access' | 'condition';
     description?: string;
     allow?: RuleAllow[];
     conditions?: RuleCondition[];
@@ -117,7 +127,8 @@ export interface RuleCondition {
     operator: string;
     value?: unknown;
 }
-export interface Trigger {
+export interface Trigger extends BaseFields {
+    name?: string;
     operation?: string;
     process?: string;
     source: string;
@@ -132,7 +143,7 @@ export interface Field {
     required?: boolean;
     description?: string;
 }
-export interface Relationship {
+export interface Relationship extends BaseFields {
     name: string;
     from: string;
     to: string;
@@ -140,13 +151,13 @@ export interface Relationship {
     cardinality: string;
     description?: string;
 }
-export interface Task {
+export interface Task extends BaseFields {
     name: string;
     actor: string;
     operation: string;
     description?: string;
 }
-export interface Process {
+export interface Process extends BaseFields {
     name: string;
     description?: string;
     operator?: string;
@@ -165,4 +176,5 @@ export type ProductCoreDna = Record<string, unknown>;
 export type ProductApiDna = Record<string, unknown>;
 export type ProductUiDna = Record<string, unknown>;
 export type TechnicalDna = Record<string, unknown>;
+export {};
 //# sourceMappingURL=types.d.ts.map

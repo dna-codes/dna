@@ -182,7 +182,7 @@ describe('getRules — bookshop', () => {
     expect(getRules(bookshop).length).toBeGreaterThan(0)
   })
   it('found by name — returns value', () => {
-    expect(getRule(bookshop, 'BookIsDraft')).toMatchObject({ type: 'condition', operation: 'Book.Publish' })
+    expect(getRule(bookshop, 'BookIsDraft')).toMatchObject({ subtype: 'condition', operation: 'Book.Publish' })
   })
   it('not found — returns null', () => {
     expect(getRule(bookshop, 'Missing')).toBeNull()
@@ -287,7 +287,7 @@ describe('getActorsForOperation — lending', () => {
   it('dangling reference is silently omitted', () => {
     const dnaWithDangling: OperationalDNA = {
       domain: { name: 'test', roles: [], persons: [] },
-      rules: [{ operation: 'Thing.Do', type: 'access', allow: [{ role: 'GhostRole' }] }],
+      rules: [{ operation: 'Thing.Do', subtype: 'access', allow: [{ role: 'GhostRole' }] }],
     }
     expect(getActorsForOperation(dnaWithDangling, 'Thing.Do')).toEqual([])
   })
@@ -337,5 +337,34 @@ describe('return type semantics', () => {
     expect(Array.isArray(getTasks(emptyDna))).toBe(true)
     expect(Array.isArray(getTriggers(emptyDna))).toBe(true)
     expect(Array.isArray(getRules(emptyDna))).toBe(true)
+  })
+})
+
+describe('query getters surface base contract fields', () => {
+  // Loaded examples and the bookshop fixture all carry stamped base fields;
+  // queries return whatever the underlying primitive holds — verify each
+  // getter doesn't strip those fields on the way out.
+  it('getResource returns id, type, version, name on a known Resource', () => {
+    const loan = getResource(lending, 'Loan') as any
+    expect(loan).toBeTruthy()
+    expect(typeof loan.id).toBe('string')
+    expect(loan.type).toBe('resource')
+    expect(typeof loan.version).toBe('string')
+    expect(loan.name).toBe('Loan')
+  })
+
+  it('getOperation preserves base fields', () => {
+    const op = getOperation(lending, 'Loan.Approve') as any
+    expect(op).toBeTruthy()
+    expect(op.type).toBe('operation')
+    expect(typeof op.id).toBe('string')
+    expect(typeof op.version).toBe('string')
+  })
+
+  it('getTask preserves base fields', () => {
+    const tasks = getTasks(lending)
+    expect(tasks.length).toBeGreaterThan(0)
+    expect(typeof (tasks[0] as any).id).toBe('string')
+    expect((tasks[0] as any).type).toBe('task')
   })
 })

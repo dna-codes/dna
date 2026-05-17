@@ -4,9 +4,11 @@
   "title": "Group",
   "description": "A Group is a work-unit / container template — the kind of organizational unit Roles are scoped within. Examples: BankDepartment, Hospital, Ward, Case, Workspace, Family, CourseOffering. Groups have attributes and lifecycle (a Case can be Opened, Settled, Closed); they're entity-like, but their organizational primary purpose is to be the container Roles are exercised in.\n\nGroup is one of four noun primitives (alongside Resource, Person, Role). All four share the noun base shape: name, optional attributes[], optional actions[], optional parent.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "required": ["name"],
-  "additionalProperties": false,
+  "unevaluatedProperties": false,
   "properties": {
+    "type": { "const": "group" },
     "name": {
       "type": "string",
       "description": "The singular PascalCase name of the Group template.",

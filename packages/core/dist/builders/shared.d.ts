@@ -1,4 +1,16 @@
 import type { Conflict, OperationalDNA } from '../types/merge';
+import { type OperationalPrimitiveType } from '../version';
+/** Generates a UUID v4. Wrapped here so builder tests can stub identity. */
+export declare function generateId(): string;
+/**
+ * Stamp the universal base contract (`id`, `type`, `version`) onto a
+ * primitive when not already supplied. Caller values win; idempotent.
+ */
+export declare function stampBaseFields<T extends object>(primitive: T, type: OperationalPrimitiveType): T & {
+    id: string;
+    type: OperationalPrimitiveType;
+    version: string;
+};
 export interface BuilderOptions {
     /**
      * Validate the primitive against `@dna-codes/dna-schemas` before composing.
@@ -14,18 +26,6 @@ export interface BuilderResult {
 type NounCollection = 'resources' | 'persons' | 'roles' | 'groups';
 type ActivityCollection = 'memberships' | 'operations' | 'triggers' | 'rules' | 'tasks' | 'processes' | 'relationships';
 export type BuilderCollection = NounCollection | ActivityCollection;
-/**
- * Compose a single primitive into a DNA. Used by every `add*` builder.
- *
- * - Validates the primitive against its JSON Schema by default.
- * - Wraps the primitive in a single-primitive DNA chunk that inherits the
- *   target DNA's `domain.name` (so `merge()` doesn't surface a spurious
- *   conflict on the domain name itself).
- * - Calls `merge([dna, wrapper])`. Identity-by-name + conflict reporting +
- *   cross-reference resolution all flow from `merge()`'s existing logic.
- * - Drops the provenance map — builders don't carry source info; `merge()`
- *   handles provenance for the multi-source case directly.
- */
 export declare function composeInto(dna: OperationalDNA, primitive: unknown, collection: BuilderCollection, schemaId: string, opts?: BuilderOptions): BuilderResult;
 export {};
 //# sourceMappingURL=shared.d.ts.map

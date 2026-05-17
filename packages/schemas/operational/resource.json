@@ -4,9 +4,11 @@
   "title": "Resource",
   "description": "A Resource is an Entity the organization manages — a thing the system tracks, mutates, or operates on. Loans, Accounts, Products, Documents, Invoices.\n\nResources are one of four noun primitives (alongside Person, Role, and Group); all four share the noun base shape: name, optional attributes[], optional actions[], optional parent. People-specific concerns (scope, memberships, eligibility) live on Person/Role/Group/Membership, not on Resource.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "required": ["name"],
-  "additionalProperties": false,
+  "unevaluatedProperties": false,
   "properties": {
+    "type": { "const": "resource" },
     "name": {
       "type": "string",
       "description": "The singular PascalCase name of the Resource.",

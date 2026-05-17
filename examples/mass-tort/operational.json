@@ -5,141 +5,595 @@
     "description": "Mass-tort case management for the Marshall Fire Justice docket. Each Case Group scopes the legal team's Roles; Claimants file claims and receive settlements through the Process.",
     "resources": [
       {
+        "id": "2a2f127c-833d-4489-b155-8ebfa963bc57",
+        "type": "resource",
+        "version": "1",
         "name": "Filing",
         "description": "A document filed with the court for a specific Case.",
         "attributes": [
-          { "name": "id",         "type": "string", "required": true },
-          { "name": "case_id",    "type": "reference", "resource": "Case", "required": true },
-          { "name": "kind",       "type": "enum", "required": true, "values": ["complaint", "motion", "response", "settlement"] },
-          { "name": "filed_at",   "type": "datetime" }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "case_id",
+            "type": "reference",
+            "resource": "Case",
+            "required": true
+          },
+          {
+            "name": "kind",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "complaint",
+              "motion",
+              "response",
+              "settlement"
+            ]
+          },
+          {
+            "name": "filed_at",
+            "type": "datetime"
+          }
         ],
         "actions": [
-          { "name": "Submit", "description": "Submit a filing to the court.",       "type": "write" },
-          { "name": "Serve",  "description": "Serve a filing on opposing counsel.", "type": "write" }
+          {
+            "name": "Submit",
+            "description": "Submit a filing to the court.",
+            "type": "write"
+          },
+          {
+            "name": "Serve",
+            "description": "Serve a filing on opposing counsel.",
+            "type": "write"
+          }
         ]
       },
       {
+        "id": "aa5cdfa6-b844-4eb6-ab60-fbcebec13d03",
+        "type": "resource",
+        "version": "1",
         "name": "Settlement",
         "description": "A negotiated resolution amount for one or more Claimants in a Case.",
         "attributes": [
-          { "name": "id",      "type": "string", "required": true },
-          { "name": "case_id", "type": "reference", "resource": "Case", "required": true },
-          { "name": "amount",  "type": "number", "required": true },
-          { "name": "status",  "type": "enum",   "required": true, "values": ["proposed", "accepted", "disbursed"] }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "case_id",
+            "type": "reference",
+            "resource": "Case",
+            "required": true
+          },
+          {
+            "name": "amount",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "proposed",
+              "accepted",
+              "disbursed"
+            ]
+          }
         ],
         "actions": [
-          { "name": "Propose",  "type": "write" },
-          { "name": "Accept",   "type": "write" },
-          { "name": "Disburse", "type": "destructive" }
+          {
+            "name": "Propose",
+            "type": "write"
+          },
+          {
+            "name": "Accept",
+            "type": "write"
+          },
+          {
+            "name": "Disburse",
+            "type": "destructive"
+          }
         ]
       }
     ],
     "persons": [
       {
+        "id": "1645232d-9b96-42da-a96b-05dc9c743123",
+        "type": "person",
+        "version": "1",
         "name": "Claimant",
         "description": "A person harmed by the underlying event who has joined a Case. External actor — files claims directly.",
         "attributes": [
-          { "name": "id",      "type": "string", "required": true },
-          { "name": "name",    "type": "string", "required": true },
-          { "name": "case_id", "type": "reference", "resource": "Case", "required": true }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "case_id",
+            "type": "reference",
+            "resource": "Case",
+            "required": true
+          }
         ]
       },
       {
-        "name": "Partner",   "description": "Senior attorney; eligible for the LeadCounsel Role on Cases." },
+        "id": "8d318a93-e304-4c2c-b0f9-605029608822",
+        "type": "person",
+        "version": "1",
+        "name": "Partner",
+        "description": "Senior attorney; eligible for the LeadCounsel Role on Cases."
+      },
       {
-        "name": "Associate", "description": "Junior attorney; eligible for the CoCounsel Role on Cases." },
+        "id": "f195bc5b-a41d-4add-bf9d-5dab63dd4cb3",
+        "type": "person",
+        "version": "1",
+        "name": "Associate",
+        "description": "Junior attorney; eligible for the CoCounsel Role on Cases."
+      },
       {
-        "name": "Paraprofessional", "description": "Paralegal staff; eligible for the Paralegal Role on Cases." },
+        "id": "7e5b27c5-5088-4634-af0f-54cfdfd91ba3",
+        "type": "person",
+        "version": "1",
+        "name": "Paraprofessional",
+        "description": "Paralegal staff; eligible for the Paralegal Role on Cases."
+      },
       {
-        "name": "JudicialOfficer", "description": "Member of the judiciary; eligible for the Judge Role on Cases." }
+        "id": "748dfc1d-32d0-46db-9b54-d2e6d92fe805",
+        "type": "person",
+        "version": "1",
+        "name": "JudicialOfficer",
+        "description": "Member of the judiciary; eligible for the Judge Role on Cases."
+      }
     ],
     "groups": [
       {
+        "id": "58da4297-c007-4afb-bbe9-e6fde7639ef8",
+        "type": "group",
+        "version": "1",
         "name": "Case",
         "description": "A single mass-tort case — the Group that scopes the legal team's Roles (LeadCounsel of Case #42).",
         "attributes": [
-          { "name": "id",            "type": "string", "required": true },
-          { "name": "docket_number", "type": "string", "required": true },
-          { "name": "status",        "type": "enum",   "required": true, "values": ["intake", "discovery", "settlement", "closed"] },
-          { "name": "filed_at",      "type": "date" }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "docket_number",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "intake",
+              "discovery",
+              "settlement",
+              "closed"
+            ]
+          },
+          {
+            "name": "filed_at",
+            "type": "date"
+          }
         ]
       }
     ],
     "roles": [
-      { "name": "LeadCounsel", "description": "Lead attorney owning a Case.",                                         "scope": "Case", "cardinality": "one", "required": true, "excludes": ["CoCounsel"] },
-      { "name": "CoCounsel",   "description": "Partner attorney supporting Lead Counsel on a Case.",                  "scope": "Case" },
-      { "name": "Paralegal",   "description": "Paralegal assigned to a Case.",                                        "scope": "Case" },
-      { "name": "Judge",       "description": "Judge presiding over a Case.",                                          "scope": "Case", "cardinality": "one", "required": true }
+      {
+        "id": "e81d7b5d-ffed-4b95-9e0d-1e3c5fe406c3",
+        "type": "role",
+        "version": "1",
+        "name": "LeadCounsel",
+        "description": "Lead attorney owning a Case.",
+        "scope": "Case",
+        "cardinality": "one",
+        "required": true,
+        "excludes": [
+          "CoCounsel"
+        ]
+      },
+      {
+        "id": "6f2e087d-0c4d-4ebc-99ea-1a6f8c6e8d2d",
+        "type": "role",
+        "version": "1",
+        "name": "CoCounsel",
+        "description": "Partner attorney supporting Lead Counsel on a Case.",
+        "scope": "Case"
+      },
+      {
+        "id": "5369ee09-abb2-47d6-a6ed-5dbe3736dee7",
+        "type": "role",
+        "version": "1",
+        "name": "Paralegal",
+        "description": "Paralegal assigned to a Case.",
+        "scope": "Case"
+      },
+      {
+        "id": "13fb18cc-68fc-4af3-9b3f-77150406f5d2",
+        "type": "role",
+        "version": "1",
+        "name": "Judge",
+        "description": "Judge presiding over a Case.",
+        "scope": "Case",
+        "cardinality": "one",
+        "required": true
+      }
     ]
   },
   "memberships": [
-    { "name": "PartnerLeadCounsel",       "person": "Partner",          "role": "LeadCounsel" },
-    { "name": "PartnerCoCounsel",         "person": "Partner",          "role": "CoCounsel" },
-    { "name": "AssociateCoCounsel",       "person": "Associate",        "role": "CoCounsel" },
-    { "name": "ParaprofessionalParalegal","person": "Paraprofessional", "role": "Paralegal" },
-    { "name": "JudicialOfficerJudge",     "person": "JudicialOfficer",  "role": "Judge" }
-  ],
-  "operations": [
-    { "target": "Filing",     "action": "Submit",   "name": "Filing.Submit",       "changes": [{ "attribute": "filed_at", "set": "now" }] },
-    { "target": "Filing",     "action": "Serve",    "name": "Filing.Serve" },
-    { "target": "Settlement", "action": "Propose",  "name": "Settlement.Propose",  "changes": [{ "attribute": "status", "set": "proposed" }] },
-    { "target": "Settlement", "action": "Accept",   "name": "Settlement.Accept",   "changes": [{ "attribute": "status", "set": "accepted" }] },
-    { "target": "Settlement", "action": "Disburse", "name": "Settlement.Disburse", "changes": [{ "attribute": "status", "set": "disbursed" }] }
-  ],
-  "triggers": [
-    { "operation": "Filing.Submit",          "source": "user" },
-    { "process":   "ClaimantIntake",         "source": "user", "description": "Lead Counsel kicks off intake when a new Claimant retains the firm." },
-    { "process":   "SettlementDisbursement", "source": "operation", "after": "Settlement.Accept", "description": "Once a Settlement is Accepted, automatically run the disbursement SOP." }
-  ],
-  "rules": [
-    { "operation": "Filing.Submit",       "type": "access", "allow": [{ "role": "LeadCounsel" }, { "role": "CoCounsel" }, { "role": "Paralegal" }] },
-    { "operation": "Filing.Serve",        "type": "access", "allow": [{ "role": "Paralegal" }] },
-    { "operation": "Settlement.Propose",  "type": "access", "allow": [{ "role": "LeadCounsel" }] },
-    { "operation": "Settlement.Accept",   "type": "access", "allow": [{ "role": "LeadCounsel" }] },
-    { "operation": "Settlement.Disburse", "type": "access", "allow": [{ "role": "LeadCounsel" }] },
     {
-      "name": "CaseInDiscovery",
-      "operation": "Filing.Submit",
-      "type": "condition",
-      "conditions": [{ "attribute": "case.status", "operator": "in", "value": ["intake", "discovery"] }]
+      "id": "7ea44b8f-49c1-4200-9015-a712e037dd37",
+      "type": "membership",
+      "version": "1",
+      "name": "PartnerLeadCounsel",
+      "person": "Partner",
+      "role": "LeadCounsel"
     },
     {
+      "id": "83e77225-29df-40fa-acb2-868ad6979497",
+      "type": "membership",
+      "version": "1",
+      "name": "PartnerCoCounsel",
+      "person": "Partner",
+      "role": "CoCounsel"
+    },
+    {
+      "id": "2a4db7bc-96bc-4d8e-89c2-2aa293a3d592",
+      "type": "membership",
+      "version": "1",
+      "name": "AssociateCoCounsel",
+      "person": "Associate",
+      "role": "CoCounsel"
+    },
+    {
+      "id": "d8743126-5331-45c8-8aaa-ce709c019468",
+      "type": "membership",
+      "version": "1",
+      "name": "ParaprofessionalParalegal",
+      "person": "Paraprofessional",
+      "role": "Paralegal"
+    },
+    {
+      "id": "37e8774b-bc75-442b-8d97-0daa83beb6a4",
+      "type": "membership",
+      "version": "1",
+      "name": "JudicialOfficerJudge",
+      "person": "JudicialOfficer",
+      "role": "Judge"
+    }
+  ],
+  "operations": [
+    {
+      "id": "6f2f4139-bd3b-4e30-b749-c6240968c80e",
+      "type": "operation",
+      "version": "1",
+      "target": "Filing",
+      "action": "Submit",
+      "name": "Filing.Submit",
+      "changes": [
+        {
+          "attribute": "filed_at",
+          "set": "now"
+        }
+      ]
+    },
+    {
+      "id": "bdc1af5d-2e84-4153-ad2d-cafef2afa6cc",
+      "type": "operation",
+      "version": "1",
+      "target": "Filing",
+      "action": "Serve",
+      "name": "Filing.Serve"
+    },
+    {
+      "id": "9e3cdb6d-281d-4c01-a0ad-110c63595b5f",
+      "type": "operation",
+      "version": "1",
+      "target": "Settlement",
+      "action": "Propose",
+      "name": "Settlement.Propose",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "proposed"
+        }
+      ]
+    },
+    {
+      "id": "e575beda-9eae-400a-bf85-0879c6fcecb4",
+      "type": "operation",
+      "version": "1",
+      "target": "Settlement",
+      "action": "Accept",
+      "name": "Settlement.Accept",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "accepted"
+        }
+      ]
+    },
+    {
+      "id": "57a3157f-edf5-4099-ab28-662d45949f94",
+      "type": "operation",
+      "version": "1",
+      "target": "Settlement",
+      "action": "Disburse",
+      "name": "Settlement.Disburse",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "disbursed"
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "248b015b-41bd-4252-b2df-5d20c580520b",
+      "type": "trigger",
+      "version": "1",
+      "operation": "Filing.Submit",
+      "source": "user",
+      "name": "FilingSubmitUser"
+    },
+    {
+      "id": "2babdb75-e935-4fbb-b926-cee334b32cb8",
+      "type": "trigger",
+      "version": "1",
+      "process": "ClaimantIntake",
+      "source": "user",
+      "description": "Lead Counsel kicks off intake when a new Claimant retains the firm.",
+      "name": "ClaimantIntakeUser"
+    },
+    {
+      "id": "390f09c7-fafe-4ff1-8b6a-1edb42ff1215",
+      "type": "trigger",
+      "version": "1",
+      "process": "SettlementDisbursement",
+      "source": "operation",
+      "after": "Settlement.Accept",
+      "description": "Once a Settlement is Accepted, automatically run the disbursement SOP.",
+      "name": "SettlementDisbursementOperation"
+    }
+  ],
+  "rules": [
+    {
+      "id": "ee526f74-a579-4703-ac44-9721eb4019de",
+      "type": "rule",
+      "version": "1",
+      "operation": "Filing.Submit",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "LeadCounsel"
+        },
+        {
+          "role": "CoCounsel"
+        },
+        {
+          "role": "Paralegal"
+        }
+      ],
+      "name": "FilingSubmitAccess"
+    },
+    {
+      "id": "a4294d61-6b66-4d01-b699-513eb4d697d7",
+      "type": "rule",
+      "version": "1",
+      "operation": "Filing.Serve",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Paralegal"
+        }
+      ],
+      "name": "FilingServeAccess"
+    },
+    {
+      "id": "0c64d473-dc94-4c84-bf7e-44ab04a7623f",
+      "type": "rule",
+      "version": "1",
+      "operation": "Settlement.Propose",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "LeadCounsel"
+        }
+      ],
+      "name": "SettlementProposeAccess"
+    },
+    {
+      "id": "0c4ef503-28c4-4935-b8b8-7a4c6735399c",
+      "type": "rule",
+      "version": "1",
+      "operation": "Settlement.Accept",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "LeadCounsel"
+        }
+      ],
+      "name": "SettlementAcceptAccess"
+    },
+    {
+      "id": "c8335496-50cc-4d5f-8aa3-4962a4ccd583",
+      "type": "rule",
+      "version": "1",
+      "operation": "Settlement.Disburse",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "LeadCounsel"
+        }
+      ],
+      "name": "SettlementDisburseAccess"
+    },
+    {
+      "id": "d2d71bc0-d8ce-4e2c-975c-a5bdabe938b2",
+      "type": "rule",
+      "version": "1",
+      "name": "CaseInDiscovery",
+      "operation": "Filing.Submit",
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "case.status",
+          "operator": "in",
+          "value": [
+            "intake",
+            "discovery"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "19e083fc-c6a9-4ab9-9f3a-6ec136226338",
+      "type": "rule",
+      "version": "1",
       "name": "SettlementAccepted",
       "operation": "Settlement.Disburse",
-      "type": "condition",
-      "conditions": [{ "attribute": "settlement.status", "operator": "eq", "value": "accepted" }]
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "settlement.status",
+          "operator": "eq",
+          "value": "accepted"
+        }
+      ]
     }
   ],
   "relationships": [
-    { "name": "Claimant.case",   "from": "Claimant",   "to": "Case", "cardinality": "many-to-one", "attribute": "case_id" },
-    { "name": "Filing.case",     "from": "Filing",     "to": "Case", "cardinality": "many-to-one", "attribute": "case_id" },
-    { "name": "Settlement.case", "from": "Settlement", "to": "Case", "cardinality": "many-to-one", "attribute": "case_id" }
+    {
+      "id": "b7cd5e22-3eab-469d-8367-53b34347b584",
+      "type": "relationship",
+      "version": "1",
+      "name": "Claimant.case",
+      "from": "Claimant",
+      "to": "Case",
+      "cardinality": "many-to-one",
+      "attribute": "case_id"
+    },
+    {
+      "id": "be60dda9-7a08-4b24-9fd8-d8386c98fdef",
+      "type": "relationship",
+      "version": "1",
+      "name": "Filing.case",
+      "from": "Filing",
+      "to": "Case",
+      "cardinality": "many-to-one",
+      "attribute": "case_id"
+    },
+    {
+      "id": "cccc16b0-31a7-4103-9417-dfd584cb0e3a",
+      "type": "relationship",
+      "version": "1",
+      "name": "Settlement.case",
+      "from": "Settlement",
+      "to": "Case",
+      "cardinality": "many-to-one",
+      "attribute": "case_id"
+    }
   ],
   "tasks": [
-    { "name": "draft-complaint",     "actor": "LeadCounsel", "operation": "Filing.Submit" },
-    { "name": "serve-complaint",     "actor": "Paralegal",   "operation": "Filing.Serve" },
-    { "name": "propose-settlement",  "actor": "LeadCounsel", "operation": "Settlement.Propose" },
-    { "name": "accept-settlement",   "actor": "LeadCounsel", "operation": "Settlement.Accept" },
-    { "name": "disburse-settlement", "actor": "LeadCounsel", "operation": "Settlement.Disburse" }
+    {
+      "id": "1e07952d-d697-409a-aff4-045db73a4277",
+      "type": "task",
+      "version": "1",
+      "name": "draft-complaint",
+      "actor": "LeadCounsel",
+      "operation": "Filing.Submit"
+    },
+    {
+      "id": "0c3a98da-c2fb-438a-9d10-57f430d89f95",
+      "type": "task",
+      "version": "1",
+      "name": "serve-complaint",
+      "actor": "Paralegal",
+      "operation": "Filing.Serve"
+    },
+    {
+      "id": "3de8b7ad-263d-47f3-8817-7bfa2ffef928",
+      "type": "task",
+      "version": "1",
+      "name": "propose-settlement",
+      "actor": "LeadCounsel",
+      "operation": "Settlement.Propose"
+    },
+    {
+      "id": "adcbcf1b-16cc-401f-8cb9-d95ace8f9ce6",
+      "type": "task",
+      "version": "1",
+      "name": "accept-settlement",
+      "actor": "LeadCounsel",
+      "operation": "Settlement.Accept"
+    },
+    {
+      "id": "4f309f6f-f25d-4fd3-bc87-e8ef71d9b06a",
+      "type": "task",
+      "version": "1",
+      "name": "disburse-settlement",
+      "actor": "LeadCounsel",
+      "operation": "Settlement.Disburse"
+    }
   ],
   "processes": [
     {
+      "id": "86b087a0-62d0-47d2-8430-33256eb1e551",
+      "type": "process",
+      "version": "1",
       "name": "ClaimantIntake",
       "description": "Onboard a new Claimant: draft complaint, serve, await response.",
       "operator": "LeadCounsel",
       "startStep": "draft",
       "steps": [
-        { "id": "draft", "task": "draft-complaint" },
-        { "id": "serve", "task": "serve-complaint", "depends_on": ["draft"], "conditions": ["CaseInDiscovery"] }
+        {
+          "id": "draft",
+          "task": "draft-complaint"
+        },
+        {
+          "id": "serve",
+          "task": "serve-complaint",
+          "depends_on": [
+            "draft"
+          ],
+          "conditions": [
+            "CaseInDiscovery"
+          ]
+        }
       ]
     },
     {
+      "id": "a21d582a-ed60-46b8-93a4-418a3ca39f17",
+      "type": "process",
+      "version": "1",
       "name": "SettlementDisbursement",
       "description": "Once a Settlement is Accepted, disburse funds.",
       "operator": "LeadCounsel",
       "startStep": "disburse",
       "steps": [
-        { "id": "disburse", "task": "disburse-settlement", "conditions": ["SettlementAccepted"], "else": "abort" }
+        {
+          "id": "disburse",
+          "task": "disburse-settlement",
+          "conditions": [
+            "SettlementAccepted"
+          ],
+          "else": "abort"
+        }
       ]
     }
   ]

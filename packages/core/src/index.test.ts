@@ -11,11 +11,12 @@ import {
 
 describe('@dna-codes/dna-core', () => {
   describe('schemas', () => {
-    it('loads all 14 operational primitive schemas', () => {
+    it('loads all 15 operational primitive schemas', () => {
       const op = schemas.operational
       expect(Object.keys(op).sort()).toEqual([
         'action',
         'attribute',
+        'base',
         'domain',
         'group',
         'membership',
@@ -78,9 +79,9 @@ describe('@dna-codes/dna-core', () => {
       const ids = all.map((s) => s.$id)
       expect(new Set(ids).size).toBe(ids.length)
 
-      // 14 op + 4 product-core + 4 product-api + 4 product-web + 10 technical = 36 primitives
-      // + 5 aggregates = 41 schemas total
-      expect(all.length).toBe(41)
+      // 15 op + 4 product-core + 4 product-api + 4 product-web + 10 technical = 37 primitives
+      // + 5 aggregates = 42 schemas total
+      expect(all.length).toBe(42)
     })
   })
 

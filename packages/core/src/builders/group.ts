@@ -1,5 +1,5 @@
 import type { OperationalDNA } from '../types/merge'
-import type { Group } from '../types/operational'
+import type { Group, PrimitiveInput } from '../types/operational'
 import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
 
 /**
@@ -8,7 +8,7 @@ import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
  */
 export function addGroup(
   dna: OperationalDNA,
-  group: Group,
+  group: PrimitiveInput<Group>,
   opts?: BuilderOptions,
 ): BuilderResult {
   return composeInto(dna, group, 'groups', 'operational/group', opts)

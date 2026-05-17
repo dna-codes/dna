@@ -8,6 +8,36 @@
  * shapes consumed by the builder API.
  */
 
+// ── Universal base contract ────────────────────────────────────────────────
+
+/**
+ * Universal base contract carried by every Operational primitive. Builders
+ * auto-assign `id` (UUID v4), `type` (hardcoded per builder), and `version`
+ * (current per-type schema version from `@dna-codes/dna-schemas`'s
+ * `operational/versions.json`) when not supplied. See `src/version.ts`.
+ */
+export interface BasePrimitive {
+  /** UUID v4. Stable identity across data stores. */
+  id: string
+  /** Lowercase primitive discriminator (narrowed per primitive). */
+  type: string
+  /** Human-readable definition name; used for cross-references. */
+  name: string
+  /** Schema version of this primitive type in effect when authored. */
+  version: string
+  description?: string
+}
+
+/**
+ * Builder-input shape: the stored primitive shape, with `id`, `type`,
+ * `version` made optional. Callers may supply any of them; builders
+ * auto-stamp the rest. `name` stays required since merge-by-name identity
+ * needs it.
+ */
+export type PrimitiveInput<T extends BasePrimitive> =
+  Omit<T, 'id' | 'type' | 'version'> &
+  Partial<Pick<T, 'id' | 'type' | 'version'>>
+
 // ── Shared sub-shapes ──────────────────────────────────────────────────────
 
 export type AttributeType =
@@ -44,10 +74,8 @@ export interface Action {
 
 // ── Noun primitives ────────────────────────────────────────────────────────
 
-export interface Resource {
-  /** PascalCase singular name. */
-  name: string
-  description?: string
+export interface Resource extends BasePrimitive {
+  type: 'resource'
   /** Dot-separated domain path (informational; placement is via the DNA tree). */
   domain?: string
   attributes?: Attribute[]
@@ -58,9 +86,8 @@ export interface Resource {
   examples?: Record<string, unknown>[]
 }
 
-export interface Person {
-  name: string
-  description?: string
+export interface Person extends BasePrimitive {
+  type: 'person'
   domain?: string
   attributes?: Attribute[]
   actions?: Action[]
@@ -70,9 +97,8 @@ export interface Person {
   examples?: Record<string, unknown>[]
 }
 
-export interface Group {
-  name: string
-  description?: string
+export interface Group extends BasePrimitive {
+  type: 'group'
   domain?: string
   attributes?: Attribute[]
   actions?: Action[]
@@ -82,9 +108,8 @@ export interface Group {
 
 export type RoleScope = string | string[]
 
-export interface Role {
-  name: string
-  description?: string
+export interface Role extends BasePrimitive {
+  type: 'role'
   domain?: string
   /** Single Group name, an array of Group names, or omitted (global). */
   scope?: RoleScope
@@ -106,10 +131,8 @@ export interface Role {
 
 // ── People relationship ────────────────────────────────────────────────────
 
-export interface Membership {
-  /** PascalCase identifier. */
-  name: string
-  description?: string
+export interface Membership extends BasePrimitive {
+  type: 'membership'
   /** References a declared Person. */
   person: string
   /** References a declared Role. */
@@ -127,14 +150,14 @@ export interface OperationChange {
   set: unknown
 }
 
-export interface Operation {
+export interface Operation extends BasePrimitive {
+  type: 'operation'
+  /** Conventional shorthand: `${target}.${action}`. Base contract requires it. */
+  name: string
   /** PascalCase noun name — Resource, Person, Role, Group, or Process. */
   target: string
   /** PascalCase verb. */
   action: string
-  /** Conventional shorthand: `${target}.${action}`. */
-  name?: string
-  description?: string
   /** Domain path (informational). */
   domain?: string
   /** State mutations applied to the target Resource on completion. */
@@ -143,12 +166,12 @@ export interface Operation {
 
 export type TriggerSource = 'user' | 'schedule' | 'webhook' | 'operation'
 
-export interface Trigger {
+export interface Trigger extends BasePrimitive {
+  type: 'trigger'
   /** Mutually exclusive with `process` — exactly one must be set. */
   operation?: string
   /** Mutually exclusive with `operation`. */
   process?: string
-  description?: string
   source: TriggerSource
   /** Required when `source === 'schedule'`. Cron expression. */
   schedule?: string
@@ -188,24 +211,21 @@ export interface RuleCondition {
   value?: unknown
 }
 
-export interface Rule {
-  /** Required for condition rules referenced by `Step.conditions[]`. */
-  name?: string
-  /** Operation this rule applies to, expressed as Target.Action. */
+export interface Rule extends BasePrimitive {
+  type: 'rule'
+  /** The Operation this rule governs, expressed as Target.Action. */
   operation: string
-  description?: string
-  type?: RuleType
-  /** Used when `type === 'access'`. */
+  /** Subtype: `access` or `condition`. Re-exposed under `subtype` to avoid clashing with the base `type` discriminator. */
+  subtype?: RuleType
+  /** Used when `subtype === 'access'`. */
   allow?: RuleAllowEntry[]
-  /** Used when `type === 'condition'`. */
+  /** Used when `subtype === 'condition'`. */
   conditions?: RuleCondition[]
   domain?: string
 }
 
-export interface Task {
-  /** kebab-case stable identifier. */
-  name: string
-  description?: string
+export interface Task extends BasePrimitive {
+  type: 'task'
   /** References a declared Role (human or system). */
   actor: string
   /** Operation (Target.Action). */
@@ -227,9 +247,8 @@ export interface ProcessStep {
   else?: string
 }
 
-export interface Process {
-  name: string
-  description?: string
+export interface Process extends BasePrimitive {
+  type: 'process'
   domain?: string
   /** The Resource (acting as a Role) responsible for owning the workflow. */
   operator: string
@@ -243,9 +262,8 @@ export interface Process {
 
 export type RelationshipCardinality = 'one-to-one' | 'many-to-one' | 'one-to-many' | 'many-to-many'
 
-export interface Relationship {
-  /** Typically `From.to_resource` (e.g. `Loan.borrower`). */
-  name: string
+export interface Relationship extends BasePrimitive {
+  type: 'relationship'
   /** Resource that holds the reference Attribute. */
   from: string
   /** Resource being referenced. */
@@ -253,7 +271,6 @@ export interface Relationship {
   cardinality: RelationshipCardinality
   /** The reference Attribute on `from` that implements the relationship. */
   attribute: string
-  description?: string
   /** Optional name for the inverse direction. */
   inverse?: string
 }

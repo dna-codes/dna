@@ -5,8 +5,9 @@
   "description": "A Trigger is what initiates an Operation or a Process — from a user, an external system, or the passage of time. Triggers are the entry point to all behavior.\n\nA Trigger targets exactly one of: an Operation (ad-hoc invocation of a single Target.Action) or a Process (kick off the SOP from its startStep). The two are orthogonal — the same first-step Operation may have an Operation-level Trigger (standalone invocation) AND its containing Process may have a Process-level Trigger (full SOP kickoff).\n\nTrigger replaces the prior 'Cause' primitive. Renamed for clarity and industry alignment (GitHub Actions, EventBridge, Zapier, n8n all use 'trigger').",
   "type": "object",
   "required": ["source"],
-  "additionalProperties": false,
+  "unevaluatedProperties": false,
   "properties": {
+    "type": { "const": "trigger" },
     "operation": {
       "type": "string",
       "description": "The Operation this trigger initiates, expressed as Target.Action (Target is any noun primitive). Mutually exclusive with `process`.",
@@ -50,6 +51,7 @@
     { "required": ["process"] }
   ],
   "allOf": [
+    { "$ref": "https://dna.codes/schemas/operational/base" },
     {
       "if": { "properties": { "source": { "const": "schedule" } }, "required": ["source"] },
       "then": { "required": ["schedule"] }

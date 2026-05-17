@@ -1,5 +1,5 @@
 import type { OperationalDNA } from '../types/merge'
-import type { Resource } from '../types/operational'
+import type { PrimitiveInput, Resource } from '../types/operational'
 import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
 
 /**
@@ -13,7 +13,7 @@ import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
  */
 export function addResource(
   dna: OperationalDNA,
-  resource: Resource,
+  resource: PrimitiveInput<Resource>,
   opts?: BuilderOptions,
 ): BuilderResult {
   return composeInto(dna, resource, 'resources', 'operational/resource', opts)

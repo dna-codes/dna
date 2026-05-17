@@ -6,7 +6,7 @@ Every DNA primitive today has a unique shape with no shared identity contract, m
 
 - **BREAKING** All Operational DNA primitives gain four new base-level fields: `id` (UUID, required), `type` (primitive discriminator, required), `version` (semver string, required), and `name` is promoted to a required base-level field (already present on most primitives, enforced uniformly here).
 - **BREAKING** `description` is standardized as an optional base-level field across all primitives (it was already present informally; this makes it a declared contract field at the base schema level).
-- **NEW** `@dna-codes/dna-schemas` gains a shared `base-primitive` JSON Schema (`$defs` or standalone) that all per-primitive schemas extend via `allOf`.
+- **NEW** `@dna-codes/dna-schemas` gains a shared `base` JSON Schema (`$defs` or standalone) that all per-primitive schemas extend via `allOf`.
 - **NEW** `@dna-codes/dna-core` builders auto-assign `id` (UUID v4) and `type` on `add*` calls when not supplied by the caller; `version` defaults to the current schema version for that primitive.
 - **NEW** `@dna-codes/dna-core` queries updated to treat `id`, `type`, `name`, `version` as guaranteed present on every returned primitive.
 - The `domain` field that currently appears informally on most primitives is **not** part of the base contract — it becomes a graph relationship (`[:BELONGS_TO]`) in Neo4j consumers; no change to the JSON schema for `domain` in this refactor (deferred to a separate Neo4j adapter change).

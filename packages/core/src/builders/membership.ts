@@ -1,5 +1,5 @@
 import type { OperationalDNA } from '../types/merge'
-import type { Membership } from '../types/operational'
+import type { Membership, PrimitiveInput } from '../types/operational'
 import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
 
 /**
@@ -8,7 +8,7 @@ import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
  */
 export function addMembership(
   dna: OperationalDNA,
-  membership: Membership,
+  membership: PrimitiveInput<Membership>,
   opts?: BuilderOptions,
 ): BuilderResult {
   return composeInto(dna, membership, 'memberships', 'operational/membership', opts)

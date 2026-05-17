@@ -242,34 +242,44 @@ describe('merge()', () => {
 
   describe('schema validation regression', () => {
     it('a non-trivial merged DNA validates against the Operational schema', () => {
+      // Stamp the base contract directly on each primitive so the merged
+      // output validates. Use a fixed id on the Loan resource so both
+      // chunks land on the same identity.
+      const LOAN_ID = '11111111-1111-4111-8111-111111111111'
+      const baseR = (extra: Record<string, unknown>) => ({
+        id: LOAN_ID, type: 'resource', version: '1', ...extra,
+      })
+      const stamp = (type: string, p: Record<string, unknown>) => ({
+        id: '22222222-2222-4222-8222-222222222222', type, version: '1', ...p,
+      })
       const a: OperationalDNA = {
         domain: {
           name: 'acme',
           path: 'acme',
           resources: [
-            {
+            baseR({
               name: 'Loan',
               attributes: [
                 { name: 'amount', type: 'number', required: true },
                 { name: 'status', type: 'enum', values: ['pending', 'active'] },
               ],
               actions: [{ name: 'Approve', type: 'write' }],
-            },
+            }),
           ],
-          persons: [{ name: 'Employee' }],
-          roles: [{ name: 'Underwriter' }],
+          persons: [stamp('person', { name: 'Employee' })],
+          roles: [stamp('role', { name: 'Underwriter' })],
         },
-        operations: [{ name: 'Loan.Approve', target: 'Loan', action: 'Approve' }],
+        operations: [stamp('operation', { name: 'Loan.Approve', target: 'Loan', action: 'Approve' })],
       }
       const b: OperationalDNA = {
         domain: {
           name: 'acme',
           path: 'acme',
           resources: [
-            {
+            baseR({
               name: 'Loan',
               attributes: [{ name: 'borrower', type: 'reference' }],
-            },
+            }),
           ],
         },
       }

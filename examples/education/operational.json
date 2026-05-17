@@ -5,183 +5,819 @@
     "description": "University CS department academics. Course is the catalog Resource (stable); CourseOffering is the per-semester Group that scopes Instructor and Student Roles. The same Person template (FacultyMember) is eligible for the Instructor Role; the same Person template (UniversityMember) can hold either Instructor or Student.",
     "resources": [
       {
+        "id": "b15c3edf-f7b2-4361-8a48-06a572750c9c",
+        "type": "resource",
+        "version": "1",
         "name": "Course",
         "description": "A catalog course (e.g. CS101 'Intro to Programming'). Stable across semesters.",
         "attributes": [
-          { "name": "id",    "type": "string", "required": true },
-          { "name": "code",  "type": "string", "required": true, "description": "e.g. CS101" },
-          { "name": "title", "type": "string", "required": true },
-          { "name": "units", "type": "number", "required": true }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "code",
+            "type": "string",
+            "required": true,
+            "description": "e.g. CS101"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "units",
+            "type": "number",
+            "required": true
+          }
         ]
       },
       {
+        "id": "33ade451-d650-4e4c-bd38-23bd57bf8cc7",
+        "type": "resource",
+        "version": "1",
         "name": "Enrollment",
         "description": "A Student's enrollment in a CourseOffering.",
         "attributes": [
-          { "name": "id",          "type": "string", "required": true },
-          { "name": "offering_id", "type": "reference", "resource": "CourseOffering", "required": true },
-          { "name": "student_id",  "type": "string", "required": true },
-          { "name": "status",      "type": "enum",   "required": true, "values": ["enrolled", "waitlisted", "dropped", "completed"] }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "offering_id",
+            "type": "reference",
+            "resource": "CourseOffering",
+            "required": true
+          },
+          {
+            "name": "student_id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "enrolled",
+              "waitlisted",
+              "dropped",
+              "completed"
+            ]
+          }
         ],
         "actions": [
-          { "name": "Request",  "type": "write" },
-          { "name": "Confirm",  "type": "write" },
-          { "name": "Drop",     "type": "destructive" }
+          {
+            "name": "Request",
+            "type": "write"
+          },
+          {
+            "name": "Confirm",
+            "type": "write"
+          },
+          {
+            "name": "Drop",
+            "type": "destructive"
+          }
         ]
       },
       {
+        "id": "c3658e0c-ff02-44fd-8f64-fcf5b2397240",
+        "type": "resource",
+        "version": "1",
         "name": "Coursework",
         "description": "An assignment or exam in a CourseOffering.",
         "attributes": [
-          { "name": "id",          "type": "string", "required": true },
-          { "name": "offering_id", "type": "reference", "resource": "CourseOffering", "required": true },
-          { "name": "kind",        "type": "enum",   "required": true, "values": ["homework", "midterm", "final", "project"] },
-          { "name": "due_at",      "type": "datetime" }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "offering_id",
+            "type": "reference",
+            "resource": "CourseOffering",
+            "required": true
+          },
+          {
+            "name": "kind",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "homework",
+              "midterm",
+              "final",
+              "project"
+            ]
+          },
+          {
+            "name": "due_at",
+            "type": "datetime"
+          }
         ],
         "actions": [
-          { "name": "Submit", "type": "write" },
-          { "name": "Grade",  "type": "write" }
+          {
+            "name": "Submit",
+            "type": "write"
+          },
+          {
+            "name": "Grade",
+            "type": "write"
+          }
         ]
       },
       {
+        "id": "d666d700-5a7a-4192-8b3d-ee311588afaa",
+        "type": "resource",
+        "version": "1",
         "name": "GradeRecord",
         "description": "A grade assigned by an Instructor for a Student's Coursework submission.",
         "attributes": [
-          { "name": "id",            "type": "string", "required": true },
-          { "name": "coursework_id", "type": "reference", "resource": "Coursework", "required": true },
-          { "name": "student_id",    "type": "string", "required": true },
-          { "name": "score",         "type": "number", "required": true },
-          { "name": "letter",        "type": "enum",   "values": ["A", "B", "C", "D", "F", "P", "NP"] }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "coursework_id",
+            "type": "reference",
+            "resource": "Coursework",
+            "required": true
+          },
+          {
+            "name": "student_id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "letter",
+            "type": "enum",
+            "values": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "F",
+              "P",
+              "NP"
+            ]
+          }
         ]
       }
     ],
     "persons": [
-      { "name": "FacultyMember",   "description": "Faculty; eligible for Instructor and DepartmentChair Roles." },
-      { "name": "UniversityMember","description": "Anyone affiliated with the university; eligible for the Student Role (allows faculty to also enroll as students)." },
-      { "name": "RegistrarStaff",  "description": "Registrar's office staff; eligible for the global Registrar Role." }
+      {
+        "id": "ffecbb70-9c41-431a-b4e0-04bb8deb1531",
+        "type": "person",
+        "version": "1",
+        "name": "FacultyMember",
+        "description": "Faculty; eligible for Instructor and DepartmentChair Roles."
+      },
+      {
+        "id": "f442f970-561e-4f0b-bbd7-b712cc000738",
+        "type": "person",
+        "version": "1",
+        "name": "UniversityMember",
+        "description": "Anyone affiliated with the university; eligible for the Student Role (allows faculty to also enroll as students)."
+      },
+      {
+        "id": "ccd579a9-9dcc-4956-b9e8-967c7059c844",
+        "type": "person",
+        "version": "1",
+        "name": "RegistrarStaff",
+        "description": "Registrar's office staff; eligible for the global Registrar Role."
+      }
     ],
     "groups": [
       {
+        "id": "8eaf1f74-155a-4c5b-9a52-cef7be7b6377",
+        "type": "group",
+        "version": "1",
         "name": "CourseOffering",
         "description": "A specific instance of a Course in a specific semester (CS101 Spring 2026 Section 1). Group that scopes Instructor + Student Roles and has its own lifecycle.",
         "attributes": [
-          { "name": "id",        "type": "string", "required": true },
-          { "name": "course_id", "type": "reference", "resource": "Course", "required": true },
-          { "name": "semester",  "type": "string", "required": true, "description": "e.g. spring-2026" },
-          { "name": "section",   "type": "number" },
-          { "name": "capacity",  "type": "number" },
-          { "name": "status",    "type": "enum",   "required": true, "values": ["open", "closed", "in_session", "complete"] }
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "course_id",
+            "type": "reference",
+            "resource": "Course",
+            "required": true
+          },
+          {
+            "name": "semester",
+            "type": "string",
+            "required": true,
+            "description": "e.g. spring-2026"
+          },
+          {
+            "name": "section",
+            "type": "number"
+          },
+          {
+            "name": "capacity",
+            "type": "number"
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "open",
+              "closed",
+              "in_session",
+              "complete"
+            ]
+          }
         ],
         "actions": [
-          { "name": "Open",     "type": "write" },
-          { "name": "Close",    "type": "destructive" },
-          { "name": "Begin",    "type": "write" },
-          { "name": "Finalize", "type": "write" }
+          {
+            "name": "Open",
+            "type": "write"
+          },
+          {
+            "name": "Close",
+            "type": "destructive"
+          },
+          {
+            "name": "Begin",
+            "type": "write"
+          },
+          {
+            "name": "Finalize",
+            "type": "write"
+          }
         ]
       },
       {
+        "id": "c68c1922-1728-44a2-b974-88ce6fab8f6e",
+        "type": "group",
+        "version": "1",
         "name": "Department",
         "description": "The academic department (CS). Scopes DepartmentChair Memberships.",
-        "attributes": [{ "name": "name", "type": "string", "required": true }]
+        "attributes": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          }
+        ]
       }
     ],
     "roles": [
-      { "name": "Instructor",      "description": "Instructor of a CourseOffering.",                                                "scope": "CourseOffering" },
-      { "name": "Student",         "description": "Enrolled student in a CourseOffering.",                                          "scope": "CourseOffering" },
-      { "name": "DepartmentChair", "description": "Department chair (scoped to the Department, not a CourseOffering).",            "scope": "Department", "cardinality": "one" },
-      { "name": "Registrar",       "description": "Registrar's office staff. Unscoped — global across all CourseOfferings." }
+      {
+        "id": "6863b722-161d-4889-a5f4-86eb46b21836",
+        "type": "role",
+        "version": "1",
+        "name": "Instructor",
+        "description": "Instructor of a CourseOffering.",
+        "scope": "CourseOffering"
+      },
+      {
+        "id": "ef607189-e6e5-4d83-a768-ab5a5f816345",
+        "type": "role",
+        "version": "1",
+        "name": "Student",
+        "description": "Enrolled student in a CourseOffering.",
+        "scope": "CourseOffering"
+      },
+      {
+        "id": "43984e53-a891-4f7c-bbbf-02b7220a0dec",
+        "type": "role",
+        "version": "1",
+        "name": "DepartmentChair",
+        "description": "Department chair (scoped to the Department, not a CourseOffering).",
+        "scope": "Department",
+        "cardinality": "one"
+      },
+      {
+        "id": "4820aef7-fcda-4aff-9c73-a00997a41a23",
+        "type": "role",
+        "version": "1",
+        "name": "Registrar",
+        "description": "Registrar's office staff. Unscoped — global across all CourseOfferings."
+      }
     ]
   },
   "memberships": [
-    { "name": "FacultyInstructor",         "person": "FacultyMember",   "role": "Instructor" },
-    { "name": "FacultyDepartmentChair",    "person": "FacultyMember",   "role": "DepartmentChair" },
-    { "name": "UniversityMemberStudent",   "person": "UniversityMember","role": "Student" },
-    { "name": "RegistrarStaffRegistrar",   "person": "RegistrarStaff",  "role": "Registrar" }
+    {
+      "id": "3f9e5fde-c609-40d9-a676-edcfef5c03b9",
+      "type": "membership",
+      "version": "1",
+      "name": "FacultyInstructor",
+      "person": "FacultyMember",
+      "role": "Instructor"
+    },
+    {
+      "id": "f40314f7-93c5-46d9-ae5b-9eeaf2fa5ccf",
+      "type": "membership",
+      "version": "1",
+      "name": "FacultyDepartmentChair",
+      "person": "FacultyMember",
+      "role": "DepartmentChair"
+    },
+    {
+      "id": "b0cffa69-072c-426c-8a89-97ee8fcbacec",
+      "type": "membership",
+      "version": "1",
+      "name": "UniversityMemberStudent",
+      "person": "UniversityMember",
+      "role": "Student"
+    },
+    {
+      "id": "0f671f48-f890-4b0a-ad4c-9f25b0179964",
+      "type": "membership",
+      "version": "1",
+      "name": "RegistrarStaffRegistrar",
+      "person": "RegistrarStaff",
+      "role": "Registrar"
+    }
   ],
   "operations": [
-    { "target": "CourseOffering", "action": "Open",     "name": "CourseOffering.Open",     "changes": [{ "attribute": "status", "set": "open" }] },
-    { "target": "CourseOffering", "action": "Close",    "name": "CourseOffering.Close" },
-    { "target": "CourseOffering", "action": "Begin",    "name": "CourseOffering.Begin",    "changes": [{ "attribute": "status", "set": "in_session" }] },
-    { "target": "CourseOffering", "action": "Finalize", "name": "CourseOffering.Finalize", "changes": [{ "attribute": "status", "set": "complete" }] },
-    { "target": "Enrollment",     "action": "Request",  "name": "Enrollment.Request",      "changes": [{ "attribute": "status", "set": "waitlisted" }] },
-    { "target": "Enrollment",     "action": "Confirm",  "name": "Enrollment.Confirm",      "changes": [{ "attribute": "status", "set": "enrolled" }] },
-    { "target": "Enrollment",     "action": "Drop",     "name": "Enrollment.Drop",         "changes": [{ "attribute": "status", "set": "dropped" }] },
-    { "target": "Coursework",     "action": "Submit",   "name": "Coursework.Submit" },
-    { "target": "Coursework",     "action": "Grade",    "name": "Coursework.Grade" }
+    {
+      "id": "d26c5951-3b42-4b27-820d-80f86614a304",
+      "type": "operation",
+      "version": "1",
+      "target": "CourseOffering",
+      "action": "Open",
+      "name": "CourseOffering.Open",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "open"
+        }
+      ]
+    },
+    {
+      "id": "24265523-506d-4a1c-92bd-8b9ea4bc1449",
+      "type": "operation",
+      "version": "1",
+      "target": "CourseOffering",
+      "action": "Close",
+      "name": "CourseOffering.Close"
+    },
+    {
+      "id": "cc9207f2-1689-4ae7-b97f-e069cc3261a2",
+      "type": "operation",
+      "version": "1",
+      "target": "CourseOffering",
+      "action": "Begin",
+      "name": "CourseOffering.Begin",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "in_session"
+        }
+      ]
+    },
+    {
+      "id": "0f613625-f638-4190-8b9e-1518b44bae18",
+      "type": "operation",
+      "version": "1",
+      "target": "CourseOffering",
+      "action": "Finalize",
+      "name": "CourseOffering.Finalize",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "complete"
+        }
+      ]
+    },
+    {
+      "id": "b03e6faa-cd4b-4a3a-b170-9d37496107e1",
+      "type": "operation",
+      "version": "1",
+      "target": "Enrollment",
+      "action": "Request",
+      "name": "Enrollment.Request",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "waitlisted"
+        }
+      ]
+    },
+    {
+      "id": "ecb713df-1786-4701-9759-87aec5621b80",
+      "type": "operation",
+      "version": "1",
+      "target": "Enrollment",
+      "action": "Confirm",
+      "name": "Enrollment.Confirm",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "enrolled"
+        }
+      ]
+    },
+    {
+      "id": "b172da64-9723-49bf-9cd8-102ed44eb2c9",
+      "type": "operation",
+      "version": "1",
+      "target": "Enrollment",
+      "action": "Drop",
+      "name": "Enrollment.Drop",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "dropped"
+        }
+      ]
+    },
+    {
+      "id": "87001706-dcab-4b78-8025-fba1360b4865",
+      "type": "operation",
+      "version": "1",
+      "target": "Coursework",
+      "action": "Submit",
+      "name": "Coursework.Submit"
+    },
+    {
+      "id": "0a5d9b26-7f6c-45d5-8754-91262cdaf6ca",
+      "type": "operation",
+      "version": "1",
+      "target": "Coursework",
+      "action": "Grade",
+      "name": "Coursework.Grade"
+    }
   ],
   "triggers": [
-    { "operation": "CourseOffering.Open",  "source": "user" },
-    { "operation": "Enrollment.Request",   "source": "user" },
-    { "operation": "Coursework.Submit",    "source": "user" },
-    { "process":   "EnrollmentApproval",   "source": "operation", "after": "Enrollment.Request" },
-    { "operation": "CourseOffering.Begin", "source": "schedule",  "schedule": "0 0 * 1 *", "description": "January start-of-month opens spring offerings into in-session." },
-    { "process":   "SemesterFinalization", "source": "schedule",  "schedule": "0 0 15 5 *", "description": "Mid-May runs final-grade rollup for spring offerings." }
+    {
+      "id": "3b94f3d5-a1be-48cd-a123-ad9e543bd228",
+      "type": "trigger",
+      "version": "1",
+      "operation": "CourseOffering.Open",
+      "source": "user",
+      "name": "CourseOfferingOpenUser"
+    },
+    {
+      "id": "e9d08a0e-8b21-483e-ad3f-2b3556409e47",
+      "type": "trigger",
+      "version": "1",
+      "operation": "Enrollment.Request",
+      "source": "user",
+      "name": "EnrollmentRequestUser"
+    },
+    {
+      "id": "da8b6573-a5b4-4237-93f0-be3918479620",
+      "type": "trigger",
+      "version": "1",
+      "operation": "Coursework.Submit",
+      "source": "user",
+      "name": "CourseworkSubmitUser"
+    },
+    {
+      "id": "34ce72b9-c5b4-442a-8583-9a6ffd233ece",
+      "type": "trigger",
+      "version": "1",
+      "process": "EnrollmentApproval",
+      "source": "operation",
+      "after": "Enrollment.Request",
+      "name": "EnrollmentApprovalOperation"
+    },
+    {
+      "id": "55d061a4-77d6-4dfa-89fb-c97cc6a9c8b8",
+      "type": "trigger",
+      "version": "1",
+      "operation": "CourseOffering.Begin",
+      "source": "schedule",
+      "schedule": "0 0 * 1 *",
+      "description": "January start-of-month opens spring offerings into in-session.",
+      "name": "CourseOfferingBeginSchedule"
+    },
+    {
+      "id": "2bbf74d4-559c-4c0a-b114-d4708c9d9ce7",
+      "type": "trigger",
+      "version": "1",
+      "process": "SemesterFinalization",
+      "source": "schedule",
+      "schedule": "0 0 15 5 *",
+      "description": "Mid-May runs final-grade rollup for spring offerings.",
+      "name": "SemesterFinalizationSchedule"
+    }
   ],
   "rules": [
-    { "operation": "CourseOffering.Open",     "type": "access", "allow": [{ "role": "Registrar" }, { "role": "DepartmentChair" }] },
-    { "operation": "CourseOffering.Close",    "type": "access", "allow": [{ "role": "Registrar" }] },
-    { "operation": "CourseOffering.Begin",    "type": "access", "allow": [{ "role": "Registrar" }] },
-    { "operation": "CourseOffering.Finalize", "type": "access", "allow": [{ "role": "Instructor" }] },
-    { "operation": "Enrollment.Request",      "type": "access", "allow": [{ "role": "Student" }] },
-    { "operation": "Enrollment.Confirm",      "type": "access", "allow": [{ "role": "Registrar" }] },
-    { "operation": "Enrollment.Drop",         "type": "access", "allow": [{ "role": "Student", "ownership": true }, { "role": "Registrar" }] },
-    { "operation": "Coursework.Submit",       "type": "access", "allow": [{ "role": "Student", "ownership": true }] },
-    { "operation": "Coursework.Grade",        "type": "access", "allow": [{ "role": "Instructor" }] },
     {
+      "id": "f0a799b8-9c44-492a-bf84-0b045d06007a",
+      "type": "rule",
+      "version": "1",
+      "operation": "CourseOffering.Open",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Registrar"
+        },
+        {
+          "role": "DepartmentChair"
+        }
+      ],
+      "name": "CourseOfferingOpenAccess"
+    },
+    {
+      "id": "47c5f477-0222-4719-89fd-8627732fccf4",
+      "type": "rule",
+      "version": "1",
+      "operation": "CourseOffering.Close",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Registrar"
+        }
+      ],
+      "name": "CourseOfferingCloseAccess"
+    },
+    {
+      "id": "e50ce0fe-08e9-4044-ac57-a8f20711504f",
+      "type": "rule",
+      "version": "1",
+      "operation": "CourseOffering.Begin",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Registrar"
+        }
+      ],
+      "name": "CourseOfferingBeginAccess"
+    },
+    {
+      "id": "610f87a4-6b60-4daf-a8d2-4dfa669daebb",
+      "type": "rule",
+      "version": "1",
+      "operation": "CourseOffering.Finalize",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Instructor"
+        }
+      ],
+      "name": "CourseOfferingFinalizeAccess"
+    },
+    {
+      "id": "f8842cd8-0c3b-47f1-8317-d2b6ff5453e4",
+      "type": "rule",
+      "version": "1",
+      "operation": "Enrollment.Request",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Student"
+        }
+      ],
+      "name": "EnrollmentRequestAccess"
+    },
+    {
+      "id": "72c9950c-1a26-408d-8d83-afa4b7fafa2a",
+      "type": "rule",
+      "version": "1",
+      "operation": "Enrollment.Confirm",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Registrar"
+        }
+      ],
+      "name": "EnrollmentConfirmAccess"
+    },
+    {
+      "id": "cfe38d64-f86f-4ffa-8deb-59f71e206cb5",
+      "type": "rule",
+      "version": "1",
+      "operation": "Enrollment.Drop",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Student",
+          "ownership": true
+        },
+        {
+          "role": "Registrar"
+        }
+      ],
+      "name": "EnrollmentDropAccess"
+    },
+    {
+      "id": "e5006255-1c68-4b56-911b-2e007cdf3ecc",
+      "type": "rule",
+      "version": "1",
+      "operation": "Coursework.Submit",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Student",
+          "ownership": true
+        }
+      ],
+      "name": "CourseworkSubmitAccess"
+    },
+    {
+      "id": "9ce71389-80f3-4e15-8886-2a4dc620e00a",
+      "type": "rule",
+      "version": "1",
+      "operation": "Coursework.Grade",
+      "subtype": "access",
+      "allow": [
+        {
+          "role": "Instructor"
+        }
+      ],
+      "name": "CourseworkGradeAccess"
+    },
+    {
+      "id": "539de792-ce77-4854-b875-377dc51556a1",
+      "type": "rule",
+      "version": "1",
       "name": "OfferingIsOpen",
       "operation": "Enrollment.Request",
-      "type": "condition",
-      "conditions": [{ "attribute": "course_offering.status", "operator": "eq", "value": "open" }]
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "course_offering.status",
+          "operator": "eq",
+          "value": "open"
+        }
+      ]
     },
     {
+      "id": "2fe258c7-3f57-4d42-a868-29e719364904",
+      "type": "rule",
+      "version": "1",
       "name": "SeatsAvailable",
       "operation": "Enrollment.Confirm",
-      "type": "condition",
-      "conditions": [{ "attribute": "course_offering.enrolled_count", "operator": "lt", "value": 999 }]
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "course_offering.enrolled_count",
+          "operator": "lt",
+          "value": 999
+        }
+      ]
     },
     {
+      "id": "776f56d7-ed14-4d49-9d6f-1bde9dce9022",
+      "type": "rule",
+      "version": "1",
       "name": "OfferingInSession",
       "operation": "Coursework.Submit",
-      "type": "condition",
-      "conditions": [{ "attribute": "course_offering.status", "operator": "eq", "value": "in_session" }]
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "course_offering.status",
+          "operator": "eq",
+          "value": "in_session"
+        }
+      ]
     },
     {
+      "id": "dc13418b-d326-420e-98bd-4d265258b279",
+      "type": "rule",
+      "version": "1",
       "name": "AllCourseworkGraded",
       "operation": "CourseOffering.Finalize",
-      "type": "condition",
-      "conditions": [{ "attribute": "course_offering.ungraded_coursework_count", "operator": "eq", "value": 0 }]
+      "subtype": "condition",
+      "conditions": [
+        {
+          "attribute": "course_offering.ungraded_coursework_count",
+          "operator": "eq",
+          "value": 0
+        }
+      ]
     }
   ],
   "relationships": [
-    { "name": "CourseOffering.course", "from": "CourseOffering", "to": "Course",         "cardinality": "many-to-one", "attribute": "course_id" },
-    { "name": "Enrollment.offering",   "from": "Enrollment",     "to": "CourseOffering", "cardinality": "many-to-one", "attribute": "offering_id" },
-    { "name": "Coursework.offering",   "from": "Coursework",     "to": "CourseOffering", "cardinality": "many-to-one", "attribute": "offering_id" }
+    {
+      "id": "6127ca4b-b9c7-4f00-9671-7dffdd65d843",
+      "type": "relationship",
+      "version": "1",
+      "name": "CourseOffering.course",
+      "from": "CourseOffering",
+      "to": "Course",
+      "cardinality": "many-to-one",
+      "attribute": "course_id"
+    },
+    {
+      "id": "5a3ca6a7-ae2f-422d-842c-1b6ba4f9f2ea",
+      "type": "relationship",
+      "version": "1",
+      "name": "Enrollment.offering",
+      "from": "Enrollment",
+      "to": "CourseOffering",
+      "cardinality": "many-to-one",
+      "attribute": "offering_id"
+    },
+    {
+      "id": "9193d4a1-8587-4bee-88f1-5cacc84e01c6",
+      "type": "relationship",
+      "version": "1",
+      "name": "Coursework.offering",
+      "from": "Coursework",
+      "to": "CourseOffering",
+      "cardinality": "many-to-one",
+      "attribute": "offering_id"
+    }
   ],
   "tasks": [
-    { "name": "request-enrollment", "actor": "Student",    "operation": "Enrollment.Request" },
-    { "name": "confirm-enrollment", "actor": "Registrar",  "operation": "Enrollment.Confirm" },
-    { "name": "submit-coursework",  "actor": "Student",    "operation": "Coursework.Submit" },
-    { "name": "grade-coursework",   "actor": "Instructor", "operation": "Coursework.Grade" },
-    { "name": "finalize-offering",  "actor": "Instructor", "operation": "CourseOffering.Finalize" }
+    {
+      "id": "5025fb2b-5a55-454f-a43a-e49433104aad",
+      "type": "task",
+      "version": "1",
+      "name": "request-enrollment",
+      "actor": "Student",
+      "operation": "Enrollment.Request"
+    },
+    {
+      "id": "57d64947-51fb-4861-96b1-74d9dab8a83e",
+      "type": "task",
+      "version": "1",
+      "name": "confirm-enrollment",
+      "actor": "Registrar",
+      "operation": "Enrollment.Confirm"
+    },
+    {
+      "id": "182e1988-4ff2-4f94-ae28-972d5db93cf1",
+      "type": "task",
+      "version": "1",
+      "name": "submit-coursework",
+      "actor": "Student",
+      "operation": "Coursework.Submit"
+    },
+    {
+      "id": "fcc99e33-4e8b-471d-8e52-e6b9cf81cf82",
+      "type": "task",
+      "version": "1",
+      "name": "grade-coursework",
+      "actor": "Instructor",
+      "operation": "Coursework.Grade"
+    },
+    {
+      "id": "8420cd3b-acc8-4edf-849c-ffaee32c5d91",
+      "type": "task",
+      "version": "1",
+      "name": "finalize-offering",
+      "actor": "Instructor",
+      "operation": "CourseOffering.Finalize"
+    }
   ],
   "processes": [
     {
+      "id": "5e2d4360-a926-434e-bb91-0fdcb18ccc7a",
+      "type": "process",
+      "version": "1",
       "name": "EnrollmentApproval",
       "description": "Student requests enrollment, Registrar confirms if seats remain.",
       "operator": "Registrar",
       "startStep": "request",
       "steps": [
-        { "id": "request", "task": "request-enrollment", "conditions": ["OfferingIsOpen"], "else": "abort" },
-        { "id": "confirm", "task": "confirm-enrollment", "depends_on": ["request"], "conditions": ["SeatsAvailable"], "else": "abort" }
+        {
+          "id": "request",
+          "task": "request-enrollment",
+          "conditions": [
+            "OfferingIsOpen"
+          ],
+          "else": "abort"
+        },
+        {
+          "id": "confirm",
+          "task": "confirm-enrollment",
+          "depends_on": [
+            "request"
+          ],
+          "conditions": [
+            "SeatsAvailable"
+          ],
+          "else": "abort"
+        }
       ]
     },
     {
+      "id": "8f689f45-1b4a-4c28-bfa0-d7f80faa507e",
+      "type": "process",
+      "version": "1",
       "name": "SemesterFinalization",
       "description": "End-of-semester: instructor finalizes the offering once all coursework is graded.",
       "operator": "Instructor",
       "startStep": "finalize",
       "steps": [
-        { "id": "finalize", "task": "finalize-offering", "conditions": ["AllCourseworkGraded"], "else": "abort" }
+        {
+          "id": "finalize",
+          "task": "finalize-offering",
+          "conditions": [
+            "AllCourseworkGraded"
+          ],
+          "else": "abort"
+        }
       ]
     }
   ]

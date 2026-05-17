@@ -4,9 +4,11 @@
   "title": "Operation",
   "description": "An Operation is a Subject.Action pair — the atomic unit of business activity. The Subject (target) can be any targetable primitive: Resource, Person, Role, Group, or Process. Examples: Loan.Approve (Resource), Patient.GetAdmitted (Person), Underwriter.Activate (Role, org-admin lifecycle), Case.Settle (Group), PublishFlow.Start (Process, lifecycle action on the SOP itself). The Actor that performs an Operation is expressed through Rules (access) and Tasks (assignment), not on the Operation itself.\n\nThe `target` field is a noun name that the validator resolves across resources[], persons[], roles[], groups[], and processes[] collections. The `action` field must match an entry in the target's actions[] catalog when one is declared.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "required": ["target", "action"],
-  "additionalProperties": false,
+  "unevaluatedProperties": false,
   "properties": {
+    "type": { "const": "operation" },
     "target": {
       "type": "string",
       "description": "The targetable primitive this operation acts on. Resolves across Resource, Person, Role, Group, and Process collections.",

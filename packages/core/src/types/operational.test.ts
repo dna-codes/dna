@@ -33,6 +33,25 @@ function readExamples<T = unknown>(rel: string): T[] {
   return Array.isArray(schema.examples) ? (schema.examples as T[]) : []
 }
 
+const TEST_UUID = '550e8400-e29b-41d4-a716-446655440000'
+
+/**
+ * Schema `examples[]` are kept concise — they don't repeat the base
+ * contract (`id`, `type`, `name`, `version`) on every example. Stamp those
+ * fields before validating so we exercise per-primitive shape, not the
+ * base contract (which has its own tests).
+ */
+function withBase(type: string, example: Record<string, unknown>): Record<string, unknown> {
+  const pascalType = type.charAt(0).toUpperCase() + type.slice(1)
+  return {
+    id: example.id ?? TEST_UUID,
+    type: example.type ?? type,
+    version: example.version ?? '1',
+    name: example.name ?? `${pascalType}TestName`,
+    ...example,
+  }
+}
+
 const validator = new DnaValidator()
 
 describe('Operational TS types ↔ JSON Schema contract', () => {
@@ -62,7 +81,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Resource>('operational/resource.json')
     for (const ex of examples) {
       const _typed: Resource = ex
-      const result = validator.validate(_typed, 'operational/resource')
+      const result = validator.validate(withBase('resource', _typed as any), 'operational/resource')
       expect(result.valid).toBe(true)
     }
   })
@@ -71,7 +90,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Person>('operational/person.json')
     for (const ex of examples) {
       const _typed: Person = ex
-      const result = validator.validate(_typed, 'operational/person')
+      const result = validator.validate(withBase('person', _typed as any), 'operational/person')
       expect(result.valid).toBe(true)
     }
   })
@@ -80,7 +99,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Group>('operational/group.json')
     for (const ex of examples) {
       const _typed: Group = ex
-      const result = validator.validate(_typed, 'operational/group')
+      const result = validator.validate(withBase('group', _typed as any), 'operational/group')
       expect(result.valid).toBe(true)
     }
   })
@@ -89,7 +108,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Role>('operational/role.json')
     for (const ex of examples) {
       const _typed: Role = ex
-      const result = validator.validate(_typed, 'operational/role')
+      const result = validator.validate(withBase('role', _typed as any), 'operational/role')
       expect(result.valid).toBe(true)
     }
   })
@@ -98,7 +117,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Membership>('operational/membership.json')
     for (const ex of examples) {
       const _typed: Membership = ex
-      const result = validator.validate(_typed, 'operational/membership')
+      const result = validator.validate(withBase('membership', _typed as any), 'operational/membership')
       expect(result.valid).toBe(true)
     }
   })
@@ -107,7 +126,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Operation>('operational/operation.json')
     for (const ex of examples) {
       const _typed: Operation = ex
-      const result = validator.validate(_typed, 'operational/operation')
+      const result = validator.validate(withBase('operation', _typed as any), 'operational/operation')
       expect(result.valid).toBe(true)
     }
   })
@@ -116,7 +135,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Trigger>('operational/trigger.json')
     for (const ex of examples) {
       const _typed: Trigger = ex
-      const result = validator.validate(_typed, 'operational/trigger')
+      const result = validator.validate(withBase('trigger', _typed as any), 'operational/trigger')
       expect(result.valid).toBe(true)
     }
   })
@@ -125,7 +144,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Rule>('operational/rule.json')
     for (const ex of examples) {
       const _typed: Rule = ex
-      const result = validator.validate(_typed, 'operational/rule')
+      const result = validator.validate(withBase('rule', _typed as any), 'operational/rule')
       expect(result.valid).toBe(true)
     }
   })
@@ -134,7 +153,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Task>('operational/task.json')
     for (const ex of examples) {
       const _typed: Task = ex
-      const result = validator.validate(_typed, 'operational/task')
+      const result = validator.validate(withBase('task', _typed as any), 'operational/task')
       expect(result.valid).toBe(true)
     }
   })
@@ -143,7 +162,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Process>('operational/process.json')
     for (const ex of examples) {
       const _typed: Process = ex
-      const result = validator.validate(_typed, 'operational/process')
+      const result = validator.validate(withBase('process', _typed as any), 'operational/process')
       expect(result.valid).toBe(true)
     }
   })
@@ -152,7 +171,7 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     const examples = readExamples<Relationship>('operational/relationship.json')
     for (const ex of examples) {
       const _typed: Relationship = ex
-      const result = validator.validate(_typed, 'operational/relationship')
+      const result = validator.validate(withBase('relationship', _typed as any), 'operational/relationship')
       expect(result.valid).toBe(true)
     }
   })

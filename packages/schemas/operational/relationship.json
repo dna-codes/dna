@@ -4,9 +4,11 @@
   "title": "Relationship",
   "description": "A Relationship is a named, directed connection between two Resources. It formalizes the semantic link that a reference Attribute implies — adding cardinality and a human-readable name. Relationships are declared at the Operational layer so that Product and Technical cells can derive foreign keys, join tables, nested routes, and navigation links.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "required": ["name", "from", "to", "cardinality", "attribute"],
-  "additionalProperties": false,
+  "unevaluatedProperties": false,
   "properties": {
+    "type": { "const": "relationship" },
     "name": {
       "type": "string",
       "description": "A unique name for the relationship, typically From.to_resource (e.g. Loan.borrower).",

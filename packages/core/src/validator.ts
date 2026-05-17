@@ -1,4 +1,5 @@
 import Ajv, { ValidateFunction, ErrorObject } from 'ajv/dist/2020'
+import addFormats from 'ajv-formats'
 import { allSchemas } from './index'
 
 export interface ValidationResult {
@@ -84,7 +85,7 @@ interface OperationalDNA {
   memberships?: MembershipShape[]
   operations?: OperationShape[]
   triggers?: { operation?: string; process?: string; source: string; after?: string }[]
-  rules?: { name?: string; operation: string; type?: string; allow?: { role?: string }[] }[]
+  rules?: { name?: string; operation: string; subtype?: string; allow?: { role?: string }[] }[]
   relationships?: { name: string; from: string; to: string; attribute: string; cardinality: string }[]
   tasks?: { name: string; actor: string; operation: string }[]
   processes?: ProcessShape[]
@@ -234,6 +235,7 @@ export class DnaValidator {
 
   constructor() {
     this.ajv = new Ajv({ strict: false, allErrors: true })
+    addFormats(this.ajv)
     this.registerSchemas()
   }
 
@@ -458,7 +460,7 @@ export class DnaValidator {
             message: `Rule "${ruleId}" governs Operation "${rule.operation}" which is not declared; ${availability('operations', operationNames)}`,
           })
         }
-        if (rule.type === 'access') {
+        if (rule.subtype === 'access') {
           if (actorablePool.size > 0) {
             for (const entry of rule.allow ?? []) {
               if (entry.role && !actorablePool.has(entry.role)) {
