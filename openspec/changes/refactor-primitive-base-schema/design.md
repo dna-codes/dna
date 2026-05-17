@@ -96,7 +96,27 @@ migration: MATCH (n:Resource) WHERE n.version = '1'
 all nodes are version "2" — queries work uniformly
 ```
 
-**Versioning rule:** any increment to a primitive's `version` value MUST be accompanied by at least a semantic minor version bump to `@dna-codes/dna-schemas`. If the field shape change is breaking (removing a field, changing a field type, renaming a field), it MUST be a major version bump. This creates a direct, auditable link between primitive-level `version` values and package semver — consumers can determine from the package version alone whether any stored primitives need migration.
+**Versioning rule:** any increment to a primitive's `version` value MUST be accompanied by at least a semantic minor version bump to `@dna-codes/dna-schemas`. If the field shape change is breaking (removing a field, changing a field type, renaming a field, adding a required field that builders do not auto-populate), it MUST be a major version bump.
+
+The link between primitive `version` values and package semver is only machine-actionable if a version manifest is published alongside the schemas. `@dna-codes/dna-schemas` SHALL ship an `operational/versions.json` file declaring the current `version` value for every Operational primitive type:
+
+```json
+{
+  "resource":     "1",
+  "person":       "1",
+  "role":         "1",
+  "group":        "1",
+  "membership":   "1",
+  "operation":    "1",
+  "trigger":      "1",
+  "rule":         "1",
+  "task":         "1",
+  "process":      "1",
+  "relationship": "1"
+}
+```
+
+A consumer with stored nodes compares each node's `version` against its entry in this manifest to determine exactly which types need migration — without parsing CHANGELOG prose. The manifest is updated atomically with any primitive schema change that bumps a `version` value. The version constant in `@dna-codes/dna-core`'s `src/version.ts` is derived from this manifest (or kept in sync with it), so builders always stamp the current version.
 
 `version` is the handle migration scripts use to find nodes that need transformation. Mixed-version state is a transitional window, not a permanent coexistence model.
 

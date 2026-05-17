@@ -6,18 +6,19 @@
 ## 2. `@dna-codes/dna-schemas` — base schema + primitive updates
 
 - [ ] 2.1 Create `operational/base-primitive.json` — declares `id` (uuid), `type` (string), `name` (string), `version` (string) as required; `description` as optional
-- [ ] 2.2 Update `operational/resource.json` — add `allOf: [$ref base-primitive]`, add `"type": { "const": "resource" }` to properties, replace `additionalProperties: false` with `unevaluatedProperties: false`
-- [ ] 2.3 Update `operational/person.json` — same pattern, `"type": { "const": "person" }`
-- [ ] 2.4 Update `operational/role.json` — same pattern, `"type": { "const": "role" }`
-- [ ] 2.5 Update `operational/group.json` — same pattern, `"type": { "const": "group" }`
-- [ ] 2.6 Update `operational/membership.json` — same pattern, `"type": { "const": "membership" }`
-- [ ] 2.7 Update `operational/operation.json` — same pattern, `"type": { "const": "operation" }`
-- [ ] 2.8 Update `operational/trigger.json` — same pattern, `"type": { "const": "trigger" }`
-- [ ] 2.9 Update `operational/rule.json` — same pattern, `"type": { "const": "rule" }`
-- [ ] 2.10 Update `operational/task.json` — same pattern, `"type": { "const": "task" }`
-- [ ] 2.11 Update `operational/process.json` — same pattern, `"type": { "const": "process" }`
-- [ ] 2.12 Update `operational/relationship.json` — same pattern, `"type": { "const": "relationship" }`
-- [ ] 2.13 Bump `@dna-codes/dna-schemas` minor version
+- [ ] 2.2 Create `operational/versions.json` — machine-readable manifest mapping every Operational primitive type to its current `version` value (all `"1"` initially); update atomically whenever any primitive's version increments
+- [ ] 2.3 Update `operational/resource.json` — add `allOf: [$ref base-primitive]`, add `"type": { "const": "resource" }` to properties, replace `additionalProperties: false` with `unevaluatedProperties: false`
+- [ ] 2.4 Update `operational/person.json` — same pattern, `"type": { "const": "person" }`
+- [ ] 2.5 Update `operational/role.json` — same pattern, `"type": { "const": "role" }`
+- [ ] 2.6 Update `operational/group.json` — same pattern, `"type": { "const": "group" }`
+- [ ] 2.7 Update `operational/membership.json` — same pattern, `"type": { "const": "membership" }`
+- [ ] 2.8 Update `operational/operation.json` — same pattern, `"type": { "const": "operation" }`
+- [ ] 2.9 Update `operational/trigger.json` — same pattern, `"type": { "const": "trigger" }`
+- [ ] 2.10 Update `operational/rule.json` — same pattern, `"type": { "const": "rule" }`
+- [ ] 2.11 Update `operational/task.json` — same pattern, `"type": { "const": "task" }`
+- [ ] 2.12 Update `operational/process.json` — same pattern, `"type": { "const": "process" }`
+- [ ] 2.13 Update `operational/relationship.json` — same pattern, `"type": { "const": "relationship" }`
+- [ ] 2.14 Bump `@dna-codes/dna-schemas` minor version
 
 ## 3. `@dna-codes/dna-core` — TypeScript types
 
