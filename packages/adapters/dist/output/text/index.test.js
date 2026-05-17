@@ -27,11 +27,11 @@ const dna = {
         ],
         triggers: [{ operation: 'Loan.Apply', source: 'user' }],
         rules: [
-            { operation: 'Loan.Apply', type: 'access', allow: [{ role: 'Borrower' }] },
-            { operation: 'Loan.Approve', type: 'access', allow: [{ role: 'Underwriter' }] },
+            { operation: 'Loan.Apply', subtype: 'access', allow: [{ role: 'Borrower' }] },
+            { operation: 'Loan.Approve', subtype: 'access', allow: [{ role: 'Underwriter' }] },
             {
                 operation: 'Loan.Approve',
-                type: 'condition',
+                subtype: 'condition',
                 conditions: [{ attribute: 'loan.status', operator: 'eq', value: 'pending' }],
             },
         ],

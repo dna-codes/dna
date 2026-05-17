@@ -47,8 +47,8 @@ export function renderOperations(dna: DnaInput, h: number): string | null {
 }
 
 function renderRule(r: Rule): string {
-  if (r.type === 'access') return `<em>Access:</em> ${renderAllow(r.allow ?? [])}`
-  if (r.type === 'condition') {
+  if (r.subtype === 'access') return `<em>Access:</em> ${renderAllow(r.allow ?? [])}`
+  if (r.subtype === 'condition') {
     const parts = (r.conditions ?? []).map((c) => {
       const v = c.value === undefined ? '' : ` ${code(JSON.stringify(c.value))}`
       return `${code(c.attribute)} ${escape(c.operator)}${v}`

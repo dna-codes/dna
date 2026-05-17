@@ -72,7 +72,7 @@ function renderGherkin(op: Operation, dna: OperationalDna): string {
   lines.push('')
   lines.push(`  Scenario: ${actor} ${action}s a ${resource}`)
 
-  const conditionRules = rules.filter((r) => r.type === 'condition')
+  const conditionRules = rules.filter((r) => r.subtype === 'condition')
   if (triggers.length || conditionRules.length || roles.length) {
     const givens: string[] = []
     if (roles.length) givens.push(`an actor with role \`${roles.join('`, `')}\``)
@@ -120,7 +120,7 @@ function renderProductDna(op: Operation, dna: OperationalDna): string {
   parts.push(kv.join('\n'))
 
   const preconditions = rules
-    .filter((r) => r.type === 'condition')
+    .filter((r) => r.subtype === 'condition')
     .map((r) => `- ${conditionPhrase(r)}`)
   if (preconditions.length) parts.push(`**Preconditions:**\n${preconditions.join('\n')}`)
 
@@ -143,7 +143,7 @@ function collect(op: Operation, dna: OperationalDna): {
   const triggers = groupBy(dna.triggers ?? [], (t) => t.operation ?? '').get(op.name) ?? []
   const roles: string[] = []
   for (const r of rules) {
-    if (r.type !== 'access') continue
+    if (r.subtype !== 'access') continue
     for (const a of r.allow ?? []) if (a.role && !roles.includes(a.role)) roles.push(a.role)
   }
   return { rules, triggers, roles }
@@ -162,8 +162,8 @@ function renderTriggerList(triggers: Trigger[]): string | null {
 function renderCriteriaList(rules: Rule[], changes: OperationChange[]): string | null {
   const lines: string[] = []
   for (const r of rules) {
-    if (r.type === 'condition') lines.push(`- Only when ${conditionPhrase(r)}`)
-    else if (r.type === 'access') {
+    if (r.subtype === 'condition') lines.push(`- Only when ${conditionPhrase(r)}`)
+    else if (r.subtype === 'access') {
       const allowed = renderAllow(r.allow ?? [])
       if (allowed) lines.push(`- Restricted to ${allowed}`)
     } else if (r.description) lines.push(`- ${r.description}`)

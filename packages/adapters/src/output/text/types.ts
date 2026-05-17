@@ -69,7 +69,7 @@ export interface OperationChange {
 export interface Rule {
   name?: string
   operation: string
-  type?: 'access' | 'condition'
+  subtype?: 'access' | 'condition'
   description?: string
   allow?: RuleAllow[]
   conditions?: RuleCondition[]

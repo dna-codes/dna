@@ -5,6 +5,7 @@ import {
   type Attribute,
   type AttributeType,
   type OperationalDNA,
+  type PrimitiveInput,
   type Relationship,
   type RelationshipCardinality,
 } from '@dna-codes/dna-core'
@@ -111,7 +112,7 @@ function buildRelationship(
   to: string,
   attribute: string,
   cardinality: RelationshipCardinality,
-): Relationship {
+): PrimitiveInput<Relationship> {
   return {
     name: `${from}.${attribute}`,
     from,

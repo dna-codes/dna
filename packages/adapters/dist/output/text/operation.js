@@ -57,7 +57,7 @@ function renderGherkin(op, dna) {
         lines.push(`  ${op.description}`);
     lines.push('');
     lines.push(`  Scenario: ${actor} ${action}s a ${resource}`);
-    const conditionRules = rules.filter((r) => r.type === 'condition');
+    const conditionRules = rules.filter((r) => r.subtype === 'condition');
     if (triggers.length || conditionRules.length || roles.length) {
         const givens = [];
         if (roles.length)
@@ -105,7 +105,7 @@ function renderProductDna(op, dna) {
         kv.push(`**Trigger:** ${triggers.map((t) => t.source).join(', ')}`);
     parts.push(kv.join('\n'));
     const preconditions = rules
-        .filter((r) => r.type === 'condition')
+        .filter((r) => r.subtype === 'condition')
         .map((r) => `- ${conditionPhrase(r)}`);
     if (preconditions.length)
         parts.push(`**Preconditions:**\n${preconditions.join('\n')}`);
@@ -122,7 +122,7 @@ function collect(op, dna) {
     const triggers = (0, util_1.groupBy)(dna.triggers ?? [], (t) => t.operation ?? '').get(op.name) ?? [];
     const roles = [];
     for (const r of rules) {
-        if (r.type !== 'access')
+        if (r.subtype !== 'access')
             continue;
         for (const a of r.allow ?? [])
             if (a.role && !roles.includes(a.role))
@@ -143,9 +143,9 @@ function renderTriggerList(triggers) {
 function renderCriteriaList(rules, changes) {
     const lines = [];
     for (const r of rules) {
-        if (r.type === 'condition')
+        if (r.subtype === 'condition')
             lines.push(`- Only when ${conditionPhrase(r)}`);
-        else if (r.type === 'access') {
+        else if (r.subtype === 'access') {
             const allowed = renderAllow(r.allow ?? []);
             if (allowed)
                 lines.push(`- Restricted to ${allowed}`);

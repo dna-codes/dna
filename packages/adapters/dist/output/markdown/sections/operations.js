@@ -39,9 +39,9 @@ function renderOperations(dna, h) {
     return lines.join('\n');
 }
 function renderRule(r) {
-    if (r.type === 'access')
+    if (r.subtype === 'access')
         return `*Access:* ${renderAllow(r.allow ?? [])}`;
-    if (r.type === 'condition') {
+    if (r.subtype === 'condition') {
         const parts = (r.conditions ?? []).map((c) => {
             const v = c.value === undefined ? '' : ` ${JSON.stringify(c.value)}`;
             return `\`${c.attribute}\` ${c.operator}${v}`;
