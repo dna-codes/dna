@@ -515,7 +515,7 @@
       "type": "rule",
       "version": "1",
       "operation": "CourseOffering.Open",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Registrar"
@@ -531,7 +531,7 @@
       "type": "rule",
       "version": "1",
       "operation": "CourseOffering.Close",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Registrar"
@@ -544,7 +544,7 @@
       "type": "rule",
       "version": "1",
       "operation": "CourseOffering.Begin",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Registrar"
@@ -557,7 +557,7 @@
       "type": "rule",
       "version": "1",
       "operation": "CourseOffering.Finalize",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Instructor"
@@ -570,7 +570,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Enrollment.Request",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Student"
@@ -583,7 +583,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Enrollment.Confirm",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Registrar"
@@ -596,7 +596,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Enrollment.Drop",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Student",
@@ -613,7 +613,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Coursework.Submit",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Student",
@@ -627,7 +627,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Coursework.Grade",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Instructor"
@@ -641,7 +641,7 @@
       "version": "1",
       "name": "OfferingIsOpen",
       "operation": "Enrollment.Request",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "course_offering.status",
@@ -656,7 +656,7 @@
       "version": "1",
       "name": "SeatsAvailable",
       "operation": "Enrollment.Confirm",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "course_offering.enrolled_count",
@@ -671,7 +671,7 @@
       "version": "1",
       "name": "OfferingInSession",
       "operation": "Coursework.Submit",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "course_offering.status",
@@ -686,7 +686,7 @@
       "version": "1",
       "name": "AllCourseworkGraded",
       "operation": "CourseOffering.Finalize",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "course_offering.ungraded_coursework_count",

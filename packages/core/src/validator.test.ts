@@ -1458,7 +1458,7 @@ describe('DnaValidator — cross-layer validation', () => {
     const badOp = {
       ...operational,
       rules: [
-        { operation: 'Loan.Approve', subtype: 'access', allow: [{ role: 'PhantomRole' }] },
+        { operation: 'Loan.Approve', rule_type: 'access', allow: [{ role: 'PhantomRole' }] },
       ],
     }
     const result = validator.validateCrossLayer({ operational: badOp })

@@ -25,9 +25,9 @@
       "type": "string",
       "description": "A human-readable explanation of what this rule enforces."
     },
-    "subtype": {
+    "rule_type": {
       "type": "string",
-      "description": "The kind of rule. 'access' controls who can perform the operation; 'condition' defines business conditions that must be satisfied. Named `subtype` (not `type`) because every primitive carries `type` as the base-contract discriminator; this field is the per-primitive sub-classifier.",
+      "description": "The kind of rule. 'access' controls who can perform the operation; 'condition' defines business conditions that must be satisfied. Named `rule_type` (not `type`) because every primitive carries `type` as the base-contract discriminator; this field is the per-primitive sub-classifier.",
       "enum": ["access", "condition"]
     },
     "allow": {
@@ -76,13 +76,13 @@
   "examples": [
     {
       "operation": "Loan.Approve",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [{ "role": "Underwriter" }]
     },
     {
       "name": "LoanIsApproved",
       "operation": "Loan.Approve",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         { "attribute": "status", "operator": "eq", "value": "pending" },
         { "attribute": "amount", "operator": "gt", "value": 0 }
@@ -90,7 +90,7 @@
     },
     {
       "operation": "Post.Delete",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [{ "ownership": true }, { "role": "Admin" }]
     }
   ]

@@ -215,11 +215,11 @@ export interface Rule extends BasePrimitive {
   type: 'rule'
   /** The Operation this rule governs, expressed as Target.Action. */
   operation: string
-  /** Subtype: `access` or `condition`. Re-exposed under `subtype` to avoid clashing with the base `type` discriminator. */
-  subtype?: RuleType
-  /** Used when `subtype === 'access'`. */
+  /** Subtype: `access` or `condition`. Re-exposed under `rule_type` to avoid clashing with the base `type` discriminator. */
+  rule_type?: RuleType
+  /** Used when `rule_type === 'access'`. */
   allow?: RuleAllowEntry[]
-  /** Used when `subtype === 'condition'`. */
+  /** Used when `rule_type === 'condition'`. */
   conditions?: RuleCondition[]
   domain?: string
 }

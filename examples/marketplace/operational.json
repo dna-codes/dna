@@ -367,7 +367,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Listing.Publish",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Host",
@@ -381,7 +381,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Listing.Pause",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Host",
@@ -398,7 +398,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Listing.Delist",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Host",
@@ -415,7 +415,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Booking.Request",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Guest"
@@ -428,7 +428,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Booking.Approve",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Host",
@@ -442,7 +442,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Booking.Decline",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Host",
@@ -456,7 +456,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Booking.Cancel",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Guest",
@@ -478,7 +478,7 @@
       "version": "1",
       "name": "ListingIsActive",
       "operation": "Booking.Request",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "listing.status",
@@ -493,7 +493,7 @@
       "version": "1",
       "name": "BookingIsRequested",
       "operation": "Booking.Approve",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "booking.status",

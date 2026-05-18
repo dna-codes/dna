@@ -11,7 +11,7 @@ function persons(dna) {
     return (dna.domain.persons ?? []);
 }
 function getActorsForOperation(dna, opName) {
-    const accessRules = rules(dna).filter(r => r.operation === opName && r.subtype === 'access');
+    const accessRules = rules(dna).filter(r => r.operation === opName && r.rule_type === 'access');
     const allRoles = roles(dna);
     const allPersons = persons(dna);
     const result = [];

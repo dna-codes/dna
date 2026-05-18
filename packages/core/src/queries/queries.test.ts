@@ -182,7 +182,7 @@ describe('getRules — bookshop', () => {
     expect(getRules(bookshop).length).toBeGreaterThan(0)
   })
   it('found by name — returns value', () => {
-    expect(getRule(bookshop, 'BookIsDraft')).toMatchObject({ subtype: 'condition', operation: 'Book.Publish' })
+    expect(getRule(bookshop, 'BookIsDraft')).toMatchObject({ rule_type: 'condition', operation: 'Book.Publish' })
   })
   it('not found — returns null', () => {
     expect(getRule(bookshop, 'Missing')).toBeNull()
@@ -287,7 +287,7 @@ describe('getActorsForOperation — lending', () => {
   it('dangling reference is silently omitted', () => {
     const dnaWithDangling: OperationalDNA = {
       domain: { name: 'test', roles: [], persons: [] },
-      rules: [{ operation: 'Thing.Do', subtype: 'access', allow: [{ role: 'GhostRole' }] }],
+      rules: [{ operation: 'Thing.Do', rule_type: 'access', allow: [{ role: 'GhostRole' }] }],
     }
     expect(getActorsForOperation(dnaWithDangling, 'Thing.Do')).toEqual([])
   })

@@ -130,7 +130,7 @@ describe('activity builders compose correctly', () => {
 
   it('addRule lands the Rule at the top level', () => {
     let r = addOperation(seeded(), { name: 'Loan.Approve', target: 'Loan', action: 'Approve' })
-    r = addRule(r.dna, { name: 'LoanApproveAccess', operation: 'Loan.Approve', subtype: 'access', allow: [{ role: 'Underwriter' }] })
+    r = addRule(r.dna, { name: 'LoanApproveAccess', operation: 'Loan.Approve', rule_type: 'access', allow: [{ role: 'Underwriter' }] })
     expect(r.dna.rules).toHaveLength(1)
   })
 
@@ -343,7 +343,7 @@ describe('end-to-end schema validation of builder-composed DNA', () => {
     r = addOperation(r, { name: 'Loan.Apply', target: 'Loan', action: 'Apply' }).dna
     r = addOperation(r, { name: 'Loan.Approve', target: 'Loan', action: 'Approve' }).dna
     r = addTrigger(r, { name: 'LoanApplyUser', operation: 'Loan.Apply', source: 'user' }).dna
-    r = addRule(r, { name: 'LoanApproveAccess', operation: 'Loan.Approve', subtype: 'access', allow: [{ role: 'Underwriter' }] }).dna
+    r = addRule(r, { name: 'LoanApproveAccess', operation: 'Loan.Approve', rule_type: 'access', allow: [{ role: 'Underwriter' }] }).dna
     r = addTask(r, { name: 'approve-loan', actor: 'Underwriter', operation: 'Loan.Approve' }).dna
     r = addProcess(r, {
       name: 'LoanApproval',

@@ -275,7 +275,7 @@ describe('examples — manufacturing', () => {
     expect(cutTrigger).toBeDefined()
 
     const rules = dna.rules as Array<any>
-    const cutRule = rules.find((r) => r.operation === 'WorkOrder.Cut' && r.subtype === 'access')
+    const cutRule = rules.find((r) => r.operation === 'WorkOrder.Cut' && r.rule_type === 'access')
     expect(cutRule?.allow).toEqual([{ role: 'CncMachine' }])
   })
 })

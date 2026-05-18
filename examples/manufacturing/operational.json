@@ -376,7 +376,7 @@
       "type": "rule",
       "version": "1",
       "operation": "WorkOrder.Release",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "ShiftSupervisor"
@@ -389,7 +389,7 @@
       "type": "rule",
       "version": "1",
       "operation": "WorkOrder.Cut",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "CncMachine"
@@ -402,7 +402,7 @@
       "type": "rule",
       "version": "1",
       "operation": "WorkOrder.Stamp",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "StampingPress"
@@ -415,7 +415,7 @@
       "type": "rule",
       "version": "1",
       "operation": "WorkOrder.Paint",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "PaintRobot"
@@ -428,7 +428,7 @@
       "type": "rule",
       "version": "1",
       "operation": "WorkOrder.Inspect",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "QualityInspector"
@@ -441,7 +441,7 @@
       "type": "rule",
       "version": "1",
       "operation": "WorkOrder.Reject",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "QualityInspector"
@@ -454,7 +454,7 @@
       "type": "rule",
       "version": "1",
       "operation": "WorkOrder.Complete",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "ShiftSupervisor"
@@ -467,7 +467,7 @@
       "type": "rule",
       "version": "1",
       "operation": "DefectReport.File",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "QualityInspector"
@@ -481,7 +481,7 @@
       "version": "1",
       "name": "WorkOrderIsQueued",
       "operation": "WorkOrder.Cut",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "work_order.status",
@@ -496,7 +496,7 @@
       "version": "1",
       "name": "WorkOrderIsCut",
       "operation": "WorkOrder.Stamp",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "work_order.status",
@@ -514,7 +514,7 @@
       "version": "1",
       "name": "InspectionPassed",
       "operation": "WorkOrder.Complete",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "work_order.status",

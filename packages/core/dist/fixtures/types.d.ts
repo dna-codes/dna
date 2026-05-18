@@ -112,7 +112,7 @@ export interface OperationChange {
 export interface Rule extends BaseFields {
     name?: string;
     operation: string;
-    subtype?: 'access' | 'condition';
+    rule_type?: 'access' | 'condition';
     description?: string;
     allow?: RuleAllow[];
     conditions?: RuleCondition[];

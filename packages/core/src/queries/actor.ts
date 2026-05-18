@@ -14,7 +14,7 @@ function persons(dna: OperationalDNA): Person[] {
 }
 
 export function getActorsForOperation(dna: OperationalDNA, opName: string): Array<Role | Person> {
-  const accessRules = rules(dna).filter(r => r.operation === opName && r.subtype === 'access')
+  const accessRules = rules(dna).filter(r => r.operation === opName && r.rule_type === 'access')
   const allRoles = roles(dna)
   const allPersons = persons(dna)
   const result: Array<Role | Person> = []

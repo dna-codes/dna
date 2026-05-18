@@ -41,9 +41,9 @@ function renderOperations(dna, h) {
     return `<section>${parts.join('')}</section>`;
 }
 function renderRule(r) {
-    if (r.subtype === 'access')
+    if (r.rule_type === 'access')
         return `<em>Access:</em> ${renderAllow(r.allow ?? [])}`;
-    if (r.subtype === 'condition') {
+    if (r.rule_type === 'condition') {
         const parts = (r.conditions ?? []).map((c) => {
             const v = c.value === undefined ? '' : ` ${(0, util_1.code)(JSON.stringify(c.value))}`;
             return `${(0, util_1.code)(c.attribute)} ${(0, util_1.escape)(c.operator)}${v}`;

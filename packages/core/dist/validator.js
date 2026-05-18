@@ -308,7 +308,7 @@ class DnaValidator {
                         message: `Rule "${ruleId}" governs Operation "${rule.operation}" which is not declared; ${availability('operations', operationNames)}`,
                     });
                 }
-                if (rule.subtype === 'access') {
+                if (rule.rule_type === 'access') {
                     if (actorablePool.size > 0) {
                         for (const entry of rule.allow ?? []) {
                             if (entry.role && !actorablePool.has(entry.role)) {

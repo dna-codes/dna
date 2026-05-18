@@ -505,7 +505,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Patient.Admit",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "AttendingPhysician"
@@ -518,7 +518,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Patient.Discharge",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "AttendingPhysician"
@@ -531,7 +531,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Encounter.Open",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "AttendingPhysician"
@@ -550,7 +550,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Order.Place",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "AttendingPhysician"
@@ -563,7 +563,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Prescription.Write",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "AttendingPhysician"
@@ -576,7 +576,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Prescription.Review",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Pharmacist"
@@ -589,7 +589,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Prescription.Approve",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Pharmacist"
@@ -602,7 +602,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Prescription.Reject",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Pharmacist"
@@ -615,7 +615,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Prescription.Administer",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "PrimaryNurse"
@@ -629,7 +629,7 @@
       "version": "1",
       "name": "PatientIsAdmitted",
       "operation": "Order.Place",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "patient.status",
@@ -644,7 +644,7 @@
       "version": "1",
       "name": "PrescriptionIsPendingReview",
       "operation": "Prescription.Review",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "prescription.status",
@@ -659,7 +659,7 @@
       "version": "1",
       "name": "PrescriptionIsApproved",
       "operation": "Prescription.Administer",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "prescription.status",
@@ -674,7 +674,7 @@
       "version": "1",
       "name": "DoseWithinSafeRange",
       "operation": "Prescription.Approve",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "prescription.dose_mg",
@@ -694,7 +694,7 @@
       "version": "1",
       "name": "AllOrdersResolved",
       "operation": "Patient.Discharge",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "patient.outstanding_orders_count",

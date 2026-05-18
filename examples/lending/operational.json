@@ -300,7 +300,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Loan.Apply",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Borrower"
@@ -313,7 +313,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Loan.Approve",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Underwriter"
@@ -326,7 +326,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Loan.Disburse",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "LendingManager"
@@ -339,7 +339,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Loan.Default",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "NightlyDelinquencySweep"
@@ -353,7 +353,7 @@
       "version": "1",
       "name": "ApplicationIsPending",
       "operation": "Loan.Approve",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "loan.status",
@@ -368,7 +368,7 @@
       "version": "1",
       "name": "LoanIsApproved",
       "operation": "Loan.Disburse",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "loan.status",

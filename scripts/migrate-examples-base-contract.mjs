@@ -25,7 +25,7 @@ function deriveName(type, p) {
   }
   if (type === 'rule') {
     const op = pascalize(p.operation || 'Unknown')
-    const sub = pascalize(p.subtype || 'rule')
+    const sub = pascalize(p.rule_type || 'rule')
     return op + sub
   }
   return undefined

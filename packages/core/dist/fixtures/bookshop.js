@@ -149,7 +149,7 @@ exports.bookshopInput = {
                 version: '1',
                 name: 'BookPublishAccess',
                 operation: 'Book.Publish',
-                subtype: 'access',
+                rule_type: 'access',
                 allow: [{ role: 'Editor' }],
             },
             {
@@ -158,7 +158,7 @@ exports.bookshopInput = {
                 version: '1',
                 name: 'BookIsDraft',
                 operation: 'Book.Publish',
-                subtype: 'condition',
+                rule_type: 'condition',
                 conditions: [{ attribute: 'book.status', operator: 'eq', value: 'draft' }],
             },
         ],

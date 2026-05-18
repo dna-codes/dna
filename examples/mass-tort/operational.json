@@ -377,7 +377,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Filing.Submit",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "LeadCounsel"
@@ -396,7 +396,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Filing.Serve",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "Paralegal"
@@ -409,7 +409,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Settlement.Propose",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "LeadCounsel"
@@ -422,7 +422,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Settlement.Accept",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "LeadCounsel"
@@ -435,7 +435,7 @@
       "type": "rule",
       "version": "1",
       "operation": "Settlement.Disburse",
-      "subtype": "access",
+      "rule_type": "access",
       "allow": [
         {
           "role": "LeadCounsel"
@@ -449,7 +449,7 @@
       "version": "1",
       "name": "CaseInDiscovery",
       "operation": "Filing.Submit",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "case.status",
@@ -467,7 +467,7 @@
       "version": "1",
       "name": "SettlementAccepted",
       "operation": "Settlement.Disburse",
-      "subtype": "condition",
+      "rule_type": "condition",
       "conditions": [
         {
           "attribute": "settlement.status",

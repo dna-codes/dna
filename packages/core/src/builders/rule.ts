@@ -4,7 +4,7 @@ import { composeInto, type BuilderOptions, type BuilderResult } from './shared'
 
 /**
  * Add a Rule to the DNA's top-level `rules`. Identity is by `name` when
- * present, otherwise by `(operation, subtype)`.
+ * present, otherwise by `(operation, rule_type)`.
  */
 export function addRule(
   dna: OperationalDNA,
