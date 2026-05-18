@@ -3,7 +3,7 @@
 Q1–Q4 are resolved (see design.md "Resolved Questions"). Q5 (layered constructor surfacing conflicts) and Q6 (validation cost on merge() emit loop) remain — to be answered during implementation.
 
 - [x] 1.1 Surveyed `LayeredConstructor.result()` callers: only one internal caller (`packages/input-text/src/index.ts:110`) and a README example. No downstream package depends on `result()`'s shape. Decision: change `result()` to return `{ document, conflicts }` directly (matches the spec's `result().conflicts` references).
-- [ ] 1.2 Resolve Q6 during merge() retrofit (§5): measure validation cost on the canonical fixtures with default-on validation; if negligible, leave merge() validating; if material, opt out via `{ validate: false }` and document why.
+- [x] 1.2 Resolved by 5.7: builders default to `validate: true`; `{ validate: false }` opt-out is wired through `BuilderOptions`. `merge()` does not route through builders, so no validation-cost measurement was needed — the hot-path concern doesn't exist.
 
 ## 2. TypeScript types for Operational primitives
 
@@ -77,5 +77,5 @@ The intentional behavior change: `duplicate_name` as a tool-call error code goes
 - [x] 9.1 **Patch-only release strategy** (decided in explore mode after weighing v0.6.0 cascade vs v1.0 cut vs consolidation). Bumped `@dna-codes/dna-core` to **0.5.1** and stayed within the 0.5.x line so every sibling declaring `^0.5.0` accepts the new version with no cascade. Reverted the v0.6.0-era cascade bumps on input-openapi, output-html/markdown/mermaid/openapi/text, ingest — these stay at 0.4.1 / 0.1.0 with `^0.5.0` dna-core dep ranges.
 - [x] 9.2 input-json bumped to `0.4.2` in §6.
 - [x] 9.3 input-text bumped to `0.4.2` (was 0.5.0 pre-explore). LayeredConstructor `duplicate_name` removal + `result()` shape change is technically minor-breaking, but no external consumer uses LayeredConstructor directly (jira goes through `parse()` which is unaffected) — patch bump is defensible pre-1.0. integration-jira reverted to 0.4.0 with its original `^0.4.0` input-text dep range.
-- [ ] 9.4 Tag `v0.5.1` and push the tag (pause before this — destructive/published)
-- [ ] 9.5 Smoke-test from a fresh consumer project: install `@dna-codes/dna-core@0.5.1` and run a tiny script that composes a DNA via the builders end-to-end and validates it
+- [x] 9.4 Superseded by later releases. The `v0.5.1` git tag exists, but the npm publish of 0.5.1 was skipped and the builders shipped to npm as part of `@dna-codes/dna-core@0.8.0` (the next release line, alongside the primitive-base-contract work). Subsequent tags `v0.5.2`, `v0.6.0`, `v0.7.0` were cut by later changes; `0.8.0` is the current latest on npm and carries the builders.
+- [x] 9.5 Verified against the published `@dna-codes/dna-core@0.8.0`. Fresh consumer project at `$TMPDIR/dna-builders-smoke/` installs the package, composes a non-trivial Operational DNA via `createOperationalDna` + `addResource`/`addPerson`/`addRole`/`addGroup`/`addMembership`/`addOperation`/`addTrigger`/`addRule`/`addTask`/`addProcess`, and `DnaValidator.validate(dna, 'operational')` returns `{ valid: true, errors: [], conflicts: 0 }`.
