@@ -44,6 +44,30 @@ If your target system lacks one (e.g. no webhooks), delete the file and mention 
 9. Rewrite tests against the new shapes.
 10. Update `AGENTS.md` and `README.md`.
 
+## Pure I/O vs DNA-aware integrations
+
+Most integrations are **pure I/O**: their library API takes URI / byte
+strings, never DNA shapes. Composition with input/output adapters lives
+in the integration's CLI (or in the caller). `integration/jira`,
+`integration/google-drive`, and this template all follow this rule.
+
+**Persistence / runtime-data integrations are a deliberate exception.**
+`integration/neo4j` and `integration/memory` both take an
+`OperationalDNA` at `createClient` time because DNA-awareness *is* the
+whole purpose of a runtime-data store — there is no external system
+supplying foreign content to translate. Their `migrate()` projects the
+DNA's type system into the store; their per-Instance methods are
+type-generic over Resource/Person/Role/Group names declared in that DNA.
+
+When forking this template, ask which case you're in:
+
+- **External system** (Jira, GitHub, Notion, Drive, Slack) → pure I/O.
+  Keep DNA out of the library surface.
+- **Storage backend** (Neo4j, Postgres, SQLite, S3) → DNA-aware exception
+  is on the table. Document it in your `AGENTS.md` with the rationale.
+
+If you're not sure, default to pure I/O — it's the safer commitment.
+
 ## Hard contract
 
 - **Zero runtime dependencies** by default. Add a real dep (e.g. an SDK) only if rewriting it would be absurd. Document every added dep in `README.md`.

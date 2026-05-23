@@ -147,6 +147,16 @@ export type { ParseResult, Unit, Style, StyleMap } from './types/adapters'
 export { DEFAULT_STYLES } from './types/adapters'
 
 export type {
+  DnaDataStore,
+  InstanceRef,
+  InstanceRecord,
+  InstanceCreateInput,
+  LinkCreateOptions,
+  LinkRecord,
+  LinkListFilter,
+} from './types/data-store'
+
+export type {
   Action,
   ActionType,
   Attribute,

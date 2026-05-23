@@ -1,3 +1,5 @@
+> **SUPERSEDED (2026-05-23) by `add-integration-neo4j-data`.** Original scope (Postgres + Neo4j as document/graph stores for the OperationalDNA *descriptor*, Layer A) was rescoped after design discussion to a Neo4j-only Layer B runtime-data store using the registry triad (TypeDefinition / Instance / Link). Postgres is deferred — likely as a CQRS-style projected read model fed from Neo4j, but the design is not committed. `DnaStore` descriptor persistence is also dropped from this line of work; transport wrappers load DNA from a file at startup until a future descriptor-storage proposal lands. This folder is preserved in place for design-history; do not implement.
+
 ## Why
 
 The builders and queries give a complete in-memory read/write API over `OperationalDNA`. Without a persistence layer, every transport wrapper (`dna-mcp`, `dna-api`, `dna-cli`) has to invent its own — rolling its own serialization, file I/O, or DB client. That's the same fragmentation problem builders solved on the write side.

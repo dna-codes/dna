@@ -1,0 +1,1 @@
+{"version":3,"file":"client.d.ts","sourceRoot":"","sources":["../../../src/integration/neo4j/client.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;GAWG;AAMH,OAAO,KAAK,EACV,YAAY,EAOZ,cAAc,EACf,MAAM,qBAAqB,CAAA;AAiB5B,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAA;AAmDjD,wBAAgB,YAAY,CAAC,IAAI,EAAE,kBAAkB,EAAE,GAAG,EAAE,cAAc,GAAG,YAAY,CAgPxF"}

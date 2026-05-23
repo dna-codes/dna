@@ -1,6 +1,6 @@
 {
   "name": "@dna-codes/dna-core",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "repository": "github:dna-codes/dna",
   "description": "DNA — a JSON description language for business systems. Ships typed schema bindings, a JSON-schema manifest, and the cross-layer validator. Schemas themselves live in @dna-codes/dna-schemas.",
   "keywords": [

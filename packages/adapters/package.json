@@ -1,6 +1,6 @@
 {
   "name": "@dna-codes/dna-adapters",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "repository": "github:dna-codes/dna",
   "description": "Unified adapter package for @dna-codes — input parsers, output renderers, and integration clients live as subpaths under @dna-codes/dna-adapters/{input,output,integration}/<name>. Each adapter is self-contained and mechanically extractable into its own package.",
   "keywords": [
@@ -64,6 +64,14 @@
     "./integration/example": {
       "types": "./dist/integration/example/index.d.ts",
       "default": "./dist/integration/example/index.js"
+    },
+    "./integration/memory": {
+      "types": "./dist/integration/memory/index.d.ts",
+      "default": "./dist/integration/memory/index.js"
+    },
+    "./integration/neo4j": {
+      "types": "./dist/integration/neo4j/index.d.ts",
+      "default": "./dist/integration/neo4j/index.js"
     }
   },
   "bin": {
@@ -84,11 +92,12 @@
     "test": "node --experimental-vm-modules ../../node_modules/.bin/jest"
   },
   "dependencies": {
+    "@apidevtools/swagger-parser": "^10.1.0",
     "@dna-codes/dna-core": "^0.8.0",
     "@dna-codes/dna-ingest": "^0.7.0",
     "@dna-codes/dna-schemas": "^0.6.0",
-    "@apidevtools/swagger-parser": "^10.1.0",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "neo4j-driver": "^6.0.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

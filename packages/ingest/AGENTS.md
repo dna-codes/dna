@@ -100,6 +100,29 @@ const actors = getActorsForOperation(dna, 'Loan.Approve') // Array<Role | Person
 
 See [`@dna-codes/dna-core`'s `docs/queries.md`](../core/docs/queries.md) for the full query API.
 
+## Runtime-data integrations are an exception (DNA-aware)
+
+The rule above ("don't return DNA from an integration") applies to
+**external-system integrations** — Jira, Notion, Drive — whose job is to
+ferry foreign content. Translation between foreign shapes and DNA
+belongs in a dedicated `input-*` adapter, not in the integration.
+
+**Runtime-data persistence integrations are different.** Their entire
+purpose is to persist the data described by a DNA into a storage
+backend. `@dna-codes/dna-adapters/integration/neo4j` and
+`@dna-codes/dna-adapters/integration/memory` are the canonical examples —
+both take an `OperationalDNA` at `createClient` time, and both expose a
+type-generic data API (`instance.create(typeName, data)`) keyed on the
+DNA's noun primitives. There is no foreign content to translate; the DNA
+*is* the schema.
+
+These integrations implement the `DnaDataStore` contract from
+`@dna-codes/dna-core` and are NOT participants in the ingest pipeline —
+they sit downstream, after a DNA has already been resolved. Treat them
+as a documented exception, not a precedent for relaxing the
+external-system rule. If you're building a new integration that does
+participate in the ingest pipeline, default to pure I/O.
+
 ## Common pitfalls
 
 - **Don't return DNA from an integration.** Some authors are tempted to skip the input-`*` step. Don't — it forces every integration to embed an LLM, duplicates extraction logic, and breaks the MIME dispatch story.

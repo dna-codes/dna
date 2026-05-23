@@ -55,13 +55,23 @@ describe('LayeredConstructor — no-LLM direct usage', () => {
     expect(
       ctor.handle({
         name: 'add_rule',
-        args: { operation: 'Loan.Apply', type: 'access', allow: [{ role: 'Borrower' }] },
+        args: {
+          name: 'LoanApplyAccess',
+          operation: 'Loan.Apply',
+          rule_type: 'access',
+          allow: [{ role: 'Borrower' }],
+        },
       }),
     ).toMatchObject({ ok: true })
     expect(
       ctor.handle({
         name: 'add_rule',
-        args: { operation: 'Loan.Approve', type: 'access', allow: [{ role: 'Underwriter' }] },
+        args: {
+          name: 'LoanApproveAccess',
+          operation: 'Loan.Approve',
+          rule_type: 'access',
+          allow: [{ role: 'Underwriter' }],
+        },
       }),
     ).toMatchObject({ ok: true })
 

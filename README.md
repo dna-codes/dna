@@ -306,6 +306,8 @@ import { createClient } from '@dna-codes/dna-adapters/integration/jira'
 | `integration/github` 💡 | integration | Read/write DNA via GitHub Issues and Projects |
 | `integration/notion` 💡 | integration | Read/write DNA via Notion pages and databases |
 | [`integration/google-drive`](./packages/adapters/src/integration/google-drive) | integration | 🚧 Stub. Implements `Integration` contract; serves an in-memory mock map; throws `NotImplementedError` for real Drive fetches until a follow-up change wires auth + the Drive API. |
+| [`integration/neo4j`](./packages/adapters/src/integration/neo4j) | integration | Runtime-data store. Persists the *data described by* a DNA into Neo4j using the registry triad (TypeDefinition / Instance / Link). DNA-aware exception to the pure-I/O rule — see [AGENTS.md](./packages/adapters/src/integration/neo4j/AGENTS.md). |
+| [`integration/memory`](./packages/adapters/src/integration/memory) | integration | Zero-dep in-memory implementation of the same `DnaDataStore` contract as `integration/neo4j`. Recommended test double for any consumer of `DnaDataStore`. |
 | [`input/example`](./packages/adapters/src/input/example) | template | Template for a new input adapter — shows deterministic and probabilistic modes side-by-side |
 | [`output/example`](./packages/adapters/src/output/example) | template | Template for a new output renderer with a sections pattern |
 | [`integration/example`](./packages/adapters/src/integration/example) | template | Template for a new integration — outbound API, inbound webhook (HMAC), and a CLI |

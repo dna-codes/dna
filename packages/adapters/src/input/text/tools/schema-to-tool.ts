@@ -45,6 +45,7 @@ export interface EnumPools {
 const SHARED_DEFS: Record<string, JsonSchema> = {
   'https://dna.codes/schemas/operational/attribute': schemas.operational.attribute,
   'https://dna.codes/schemas/operational/action': schemas.operational.action,
+  'https://dna.codes/schemas/operational/base': schemas.operational.base,
 }
 
 export function inlineSchema(schema: JsonSchema): JsonSchema {
@@ -58,12 +59,73 @@ function walk(node: unknown): unknown {
   if (typeof obj.$ref === 'string' && SHARED_DEFS[obj.$ref]) {
     return walk(SHARED_DEFS[obj.$ref])
   }
+
+  // Pre-flatten allOf compositions: when a per-primitive schema extends
+  // the base contract via `allOf: [{$ref: '.../base'}]`, the inlined tool
+  // schema should merge the base's properties into the parent so the
+  // resulting JSON-Schema has no `$ref` and no `allOf`. (The LLM tool
+  // surface needs flat properties; LayeredConstructor handles auto-stamped
+  // fields with placeholders.)
+  if (Array.isArray(obj.allOf)) {
+    const flattened = flattenAllOf(obj)
+    return walkFlattened(flattened)
+  }
+
+  return walkFlattened(obj)
+}
+
+function walkFlattened(obj: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(obj)) {
     if (k === '$id' || k === '$schema' || k === 'examples') continue
     out[k] = walk(v)
   }
   return out
+}
+
+/**
+ * Merge every `allOf` member's `properties`, `required`, and `type` into
+ * the parent object, then drop `allOf`. Each member is `$ref`-resolved via
+ * `SHARED_DEFS` first. The result has the same observable shape minus the
+ * composition keyword.
+ */
+function flattenAllOf(parent: Record<string, unknown>): Record<string, unknown> {
+  const members = (parent.allOf as unknown[]).map((m) => {
+    if (m && typeof m === 'object' && typeof (m as Record<string, unknown>).$ref === 'string') {
+      const ref = (m as Record<string, unknown>).$ref as string
+      const target = SHARED_DEFS[ref]
+      if (target) return target as Record<string, unknown>
+    }
+    return m as Record<string, unknown>
+  })
+
+  const mergedProperties: Record<string, unknown> = {
+    ...((parent.properties as Record<string, unknown> | undefined) ?? {}),
+  }
+  const requiredSet = new Set<string>(
+    Array.isArray(parent.required) ? (parent.required as string[]) : [],
+  )
+
+  for (const member of members) {
+    if (!member || typeof member !== 'object') continue
+    const memberProps = member.properties
+    if (memberProps && typeof memberProps === 'object') {
+      for (const [key, value] of Object.entries(memberProps as Record<string, unknown>)) {
+        if (!(key in mergedProperties)) mergedProperties[key] = value
+      }
+    }
+    if (Array.isArray(member.required)) {
+      for (const r of member.required as string[]) requiredSet.add(r)
+    }
+  }
+
+  const { allOf: _drop, ...rest } = parent
+  void _drop
+  return {
+    ...rest,
+    properties: mergedProperties,
+    required: [...requiredSet],
+  }
 }
 
 const PRIMITIVE_SCHEMA: Record<PrimitiveKind, JsonSchema> = {
