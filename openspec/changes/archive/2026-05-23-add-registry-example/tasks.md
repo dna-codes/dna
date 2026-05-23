@@ -58,5 +58,5 @@ Build the example incrementally and run `npm test --workspace=@dna-codes/dna-cor
 - [x] 8.1 Run `openspec validate add-registry-example --strict` and confirm the change still validates.
 - [x] 8.2 Run `npm test --workspace=@dna-codes/dna-core` end-to-end and confirm the full suite passes.
 - [x] 8.3 Diff the changed files; confirm no spurious edits crept into adapter / ingest / schemas packages.
-- [ ] 8.4 Commit on `main` with a single descriptive message referencing GitHub issue #1.
-- [ ] 8.5 Run `/opsx:archive add-registry-example` (separate session) to archive the change and sync `openspec/specs/cross-domain-examples/spec.md`.
+- [x] 8.4 Committed and pushed as `2cad085` referencing issue #1.
+- [x] 8.5 Archiving in this session; sync creates `openspec/specs/cross-domain-examples/spec.md` from the delta.
