@@ -321,3 +321,89 @@ describe('examples — education', () => {
     expect(finalizeTrigger).toBeDefined()
   })
 })
+
+describe('examples — registry', () => {
+  const dna = loadExample('registry')
+
+  it('declares the TypeDefinition / Instance / Link triad with TypeDefinition carrying a category enum', () => {
+    const resources = dna.domain.resources as Array<any>
+    const typeDef = resources.find((r) => r.name === 'TypeDefinition')
+    const instance = resources.find((r) => r.name === 'Instance')
+    const link = resources.find((r) => r.name === 'Link')
+
+    expect(typeDef).toBeDefined()
+    expect(instance).toBeDefined()
+    expect(link).toBeDefined()
+
+    const categoryAttr = typeDef.attributes.find((a: any) => a.name === 'category')
+    expect(categoryAttr).toBeDefined()
+    expect(categoryAttr.type).toBe('enum')
+    expect(categoryAttr.values).toEqual(
+      expect.arrayContaining(['person', 'role', 'group', 'resource', 'domain']),
+    )
+  })
+
+  it('declares ValidationEngine as a system Role linked to a Resource template', () => {
+    const roles = dna.domain.roles as Array<any>
+    const engine = roles.find((r) => r.name === 'ValidationEngine')
+    expect(engine?.system).toBe(true)
+    expect(engine?.resource).toBe('ValidationService')
+
+    const resources = dna.domain.resources as Array<any>
+    expect(resources.find((r) => r.name === 'ValidationService')).toBeDefined()
+  })
+
+  it('triggers the InstanceBootstrap Process from TypeDefinition.Publish', () => {
+    const triggers = dna.triggers as Array<any>
+    const bootstrap = triggers.find(
+      (t) => t.source === 'operation' && t.after === 'TypeDefinition.Publish',
+    )
+    expect(bootstrap).toBeDefined()
+    expect(bootstrap.process).toBe('InstanceBootstrap')
+
+    const processes = dna.processes as Array<any>
+    expect(processes.find((p) => p.name === 'InstanceBootstrap')).toBeDefined()
+  })
+
+  it('gates a Process step via conditions[] referencing named condition Rules', () => {
+    const processes = dna.processes as Array<any>
+    const bootstrap = processes.find((p) => p.name === 'InstanceBootstrap')
+    const validateStep = bootstrap.steps.find((s: any) => s.id === 'validate')
+    expect(validateStep?.conditions).toEqual(
+      expect.arrayContaining(['TypeIsPublished', 'TypeIsNotRole']),
+    )
+
+    const rules = dna.rules as Array<any>
+    for (const ruleName of validateStep.conditions) {
+      const rule = rules.find((r) => r.name === ruleName)
+      expect(rule).toBeDefined()
+      expect(rule.rule_type).toBe('condition')
+    }
+  })
+
+  it('wires both DataManager and ValidationEngine to Instance.Update through separate access Rules', () => {
+    const rules = dna.rules as Array<any>
+    const accessOnUpdate = rules.filter(
+      (r) => r.operation === 'Instance.Update' && r.rule_type === 'access',
+    )
+    const allowedRoles = accessOnUpdate.flatMap((r: any) => r.allow.map((a: any) => a.role))
+    expect(allowedRoles).toEqual(expect.arrayContaining(['DataManager', 'ValidationEngine']))
+  })
+
+  it('declares Instance → TypeDefinition and Link → Instance Relationships with cardinality and inverse', () => {
+    const rels = dna.relationships as Array<any>
+    const instanceOfType = rels.find((r) => r.name === 'InstanceOfType')
+    const linkFrom = rels.find((r) => r.name === 'LinkFrom')
+    const linkTo = rels.find((r) => r.name === 'LinkTo')
+
+    expect(instanceOfType).toMatchObject({
+      from: 'Instance',
+      to: 'TypeDefinition',
+      cardinality: 'many-to-one',
+      attribute: 'type_def',
+      inverse: 'instances',
+    })
+    expect(linkFrom?.inverse).toBe('outbound_links')
+    expect(linkTo?.inverse).toBe('inbound_links')
+  })
+})

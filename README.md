@@ -96,6 +96,7 @@ Canonical end-to-end DNA documents demonstrating the model across different busi
 | [`examples/healthcare`](./examples/healthcare) | Patient as Person template (structure + lifecycle); per-Person Role.scope (AttendingPhysician.scope = Patient); mixed scope targets (Person + Group); multi-predicate condition Rule |
 | [`examples/manufacturing`](./examples/manufacturing) | Multiple system Roles (CNC, press, paint robot, scheduler) with `system: true` and `resource:` link; parallel fan-out + fan-in via Step.depends_on; schedule-source Trigger on a system Operation |
 | [`examples/education`](./examples/education) | Course (Resource catalog) vs CourseOffering (Group); two Person templates eligible for distinct Roles (Faculty→Instructor, UniversityMember→Student); three scope tiers; calendar-aligned schedule Triggers |
+| [`examples/registry`](./examples/registry) | Type-driven platform meta-pattern; TypeDefinition / Instance / Link triad; `category` enum dispatching condition Rules (`TypeIsNotRole`, `TypeIsPublished`); system Role on a Resource template (`ValidationEngine`); Process-level Trigger off a config-primitive lifecycle Operation (`InstanceBootstrap` after `TypeDefinition.Publish`) |
 
 ## Framework comparisons
 
