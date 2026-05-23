@@ -5,7 +5,8 @@
     "packages/schemas",
     "packages/core",
     "packages/ingest",
-    "packages/adapters"
+    "packages/adapters",
+    "packages/api"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",

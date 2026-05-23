@@ -1,0 +1,30 @@
+# Standard exclusions — keep the Docker build context small.
+node_modules
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/.cache
+
+# Test + scaffolding artifacts not needed in the final image.
+**/*.test.ts
+**/*.test.js
+**/__tests__/**
+**/__mocks__/**
+**/.jest-cache/**
+
+# Local dev noise.
+.git
+.gitignore
+.github
+.vscode
+.idea
+.DS_Store
+.npm
+*.log
+npm-debug.log*
+
+# Repo-level docs / proposals — not runtime content.
+openspec/
+.claude/
+.skills/
+.sandcastle/

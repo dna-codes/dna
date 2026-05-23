@@ -270,14 +270,15 @@ Legend: ✅ shipped · 🚧 planned (listed below) · 💡 candidate (natural fi
 
 ### Packages
 
-The repo currently publishes four npm packages:
+The repo currently publishes five npm packages:
 
 | Package | Purpose |
 |---|---|
 | [`@dna-codes/dna-schemas`](./packages/schemas) | Canonical JSON Schema (Draft 2020-12) definitions for all three layers — language-agnostic, zero deps |
-| [`@dna-codes/dna-core`](./packages/core) | TypeScript bindings + per-layer and cross-layer validator; wraps `@dna-codes/dna-schemas`. Also home to shared adapter contracts (`ParseResult`, `Style`, `Unit`, `StyleMap`, `DEFAULT_STYLES`) |
+| [`@dna-codes/dna-core`](./packages/core) | TypeScript bindings + per-layer and cross-layer validator; wraps `@dna-codes/dna-schemas`. Also home to shared adapter contracts (`ParseResult`, `Style`, `Unit`, `StyleMap`, `DEFAULT_STYLES`) and the `DnaDataStore` runtime-data contract |
 | [`@dna-codes/dna-ingest`](./packages/ingest) | Multi-source DNA orchestrator. Fans `[source URI] → integration → input → partial DNA` per source, merges via `dna-core.merge()`, reports conflicts + provenance + non-fatal errors. Imports zero adapters — caller injects them. Defines the `Integration` and `InputAdapter` ports. |
 | [`@dna-codes/dna-adapters`](./packages/adapters) | Unified adapter package — every input parser, output renderer, and integration client lives as a subpath. One version line, one publish per release. |
+| [`@dna-codes/dna-api`](./packages/api) | First transport wrapper: a deployable GraphQL API server. Loads an `OperationalDNA` at startup, generates a GraphQL schema from it, and routes resolvers through `integration/neo4j`. Includes a CLI and Docker setup for local-dev. |
 
 #### Adapters (subpaths of `@dna-codes/dna-adapters`)
 

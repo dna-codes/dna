@@ -1,0 +1,72 @@
+{
+  "name": "@dna-codes/dna-api",
+  "version": "0.1.0",
+  "repository": "github:dna-codes/dna",
+  "description": "DNA-derived GraphQL API server. Loads an OperationalDNA at startup, generates a GraphQL schema from its noun primitives + relationships + operations, and serves runtime data through @dna-codes/dna-adapters/integration/neo4j.",
+  "keywords": [
+    "dna",
+    "graphql",
+    "neo4j",
+    "api",
+    "apollo"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "dna-api": "./bin/dna-api.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "Dockerfile",
+    "docker-compose.yml",
+    "docker-compose.examples.yml",
+    "README.md",
+    "AGENTS.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --experimental-vm-modules ../../node_modules/.bin/jest"
+  },
+  "dependencies": {
+    "@apollo/server": "^5.0.0",
+    "@as-integrations/express4": "^1.1.2",
+    "@dna-codes/dna-adapters": "^0.8.0",
+    "@dna-codes/dna-core": "^0.8.1",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "graphql": "^16.9.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@types/supertest": "^6.0.2",
+    "jest": "^29.5.0",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.4.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ]
+  }
+}

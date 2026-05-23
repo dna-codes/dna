@@ -1,0 +1,112 @@
+# Multi-example-org compose — three parallel stacks demonstrating the
+# per-org deployable pattern. Each org gets its own API process loaded
+# with its own example DNA, and its own Neo4j instance.
+#
+# Usage (from the repo root):
+#
+#   docker compose -f packages/api/docker-compose.examples.yml up
+#
+# Then query each stack's GraphQL endpoint:
+#
+#   - lending:    http://localhost:4001/graphql
+#   - registry:   http://localhost:4002/graphql
+#   - mass-tort:  http://localhost:4003/graphql
+#
+# Each stack is independent — start one with:
+#
+#   docker compose -f packages/api/docker-compose.examples.yml up api-lending neo4j-lending
+#
+# Local-dev only — heavy (three Neo4j containers); not production-shaped.
+
+services:
+  # ── lending ────────────────────────────────────────────────────────────
+  neo4j-lending:
+    image: neo4j:5.24-community
+    ports:
+      - "7475:7474"
+      - "7688:7687"
+    environment:
+      NEO4J_AUTH: "neo4j/lending-dev"
+      NEO4J_PLUGINS: '[]'
+    volumes:
+      - neo4j_lending_data:/data
+
+  api-lending:
+    build:
+      context: ../..
+      dockerfile: packages/api/Dockerfile
+    depends_on:
+      - neo4j-lending
+    ports:
+      - "4001:4000"
+    environment:
+      DNA_FILE: /repo/examples/lending/operational.json
+      NEO4J_URI: bolt://neo4j-lending:7687
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: lending-dev
+      PORT: "4000"
+    volumes:
+      - ../../examples/lending/operational.json:/repo/examples/lending/operational.json:ro
+
+  # ── registry ───────────────────────────────────────────────────────────
+  neo4j-registry:
+    image: neo4j:5.24-community
+    ports:
+      - "7476:7474"
+      - "7689:7687"
+    environment:
+      NEO4J_AUTH: "neo4j/registry-dev"
+      NEO4J_PLUGINS: '[]'
+    volumes:
+      - neo4j_registry_data:/data
+
+  api-registry:
+    build:
+      context: ../..
+      dockerfile: packages/api/Dockerfile
+    depends_on:
+      - neo4j-registry
+    ports:
+      - "4002:4000"
+    environment:
+      DNA_FILE: /repo/examples/registry/operational.json
+      NEO4J_URI: bolt://neo4j-registry:7687
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: registry-dev
+      PORT: "4000"
+    volumes:
+      - ../../examples/registry/operational.json:/repo/examples/registry/operational.json:ro
+
+  # ── mass-tort ──────────────────────────────────────────────────────────
+  neo4j-mass-tort:
+    image: neo4j:5.24-community
+    ports:
+      - "7477:7474"
+      - "7690:7687"
+    environment:
+      NEO4J_AUTH: "neo4j/mass-tort-dev"
+      NEO4J_PLUGINS: '[]'
+    volumes:
+      - neo4j_mass_tort_data:/data
+
+  api-mass-tort:
+    build:
+      context: ../..
+      dockerfile: packages/api/Dockerfile
+    depends_on:
+      - neo4j-mass-tort
+    ports:
+      - "4003:4000"
+    environment:
+      DNA_FILE: /repo/examples/mass-tort/operational.json
+      NEO4J_URI: bolt://neo4j-mass-tort:7687
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: mass-tort-dev
+      PORT: "4000"
+    volumes:
+      - ../../examples/mass-tort/operational.json:/repo/examples/mass-tort/operational.json:ro
+
+volumes:
+  neo4j_lending_data:
+  neo4j_registry_data:
+  neo4j_mass_tort_data:
