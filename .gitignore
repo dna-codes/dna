@@ -3,3 +3,6 @@ node_modules
 .env
 .env.*
 !.env.example
+
+# Local-dev DNA copies that the api docker-compose mounts.
+packages/api/dna.json
