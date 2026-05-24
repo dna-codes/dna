@@ -21,13 +21,23 @@ services:
       NEO4J_PLUGINS: '[]'
     volumes:
       - neo4j_data:/data
+    healthcheck:
+      # Wait for Bolt to actually accept connections — the container starts
+      # several seconds before the database is listening on 7687.
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p devpassword 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
 
   api:
     build:
       context: ../..
       dockerfile: packages/api/Dockerfile
     depends_on:
-      - neo4j
+      neo4j:
+        condition: service_healthy
+    restart: on-failure
     ports:
       - "4000:4000"
     environment:

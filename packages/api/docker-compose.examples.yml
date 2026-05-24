@@ -30,13 +30,21 @@ services:
       NEO4J_PLUGINS: '[]'
     volumes:
       - neo4j_lending_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p lending-dev 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
 
   api-lending:
     build:
       context: ../..
       dockerfile: packages/api/Dockerfile
     depends_on:
-      - neo4j-lending
+      neo4j-lending:
+        condition: service_healthy
+    restart: on-failure
     ports:
       - "4001:4000"
     environment:
@@ -59,13 +67,21 @@ services:
       NEO4J_PLUGINS: '[]'
     volumes:
       - neo4j_registry_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p registry-dev 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
 
   api-registry:
     build:
       context: ../..
       dockerfile: packages/api/Dockerfile
     depends_on:
-      - neo4j-registry
+      neo4j-registry:
+        condition: service_healthy
+    restart: on-failure
     ports:
       - "4002:4000"
     environment:
@@ -88,13 +104,21 @@ services:
       NEO4J_PLUGINS: '[]'
     volumes:
       - neo4j_mass_tort_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p mass-tort-dev 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
 
   api-mass-tort:
     build:
       context: ../..
       dockerfile: packages/api/Dockerfile
     depends_on:
-      - neo4j-mass-tort
+      neo4j-mass-tort:
+        condition: service_healthy
+    restart: on-failure
     ports:
       - "4003:4000"
     environment:

@@ -1,20 +1,14 @@
 /**
- * DNA `Relationship` primitive → GraphQL expansion fields.
+ * `RelationshipType` records → GraphQL expansion fields codegen.
  *
- * Reference attributes (`attribute.type === 'reference'`) already produce
- * scalar `ID` fields in `./types.ts` — those stay. This module ADDS the
- * expansion field on the `from` type for every entry in
- * `dna.relationships[]`:
+ * For each `RelationshipType` record (typically from
+ * `dataStore.relationshipType.list()`), the codegen adds an expansion
+ * field on the `from` ResourceType's GraphQL type. Cardinality drives
+ * single-vs-list (many-to-one/one-to-one → single; the others → list).
  *
- *   - Cardinality `many-to-one` / `one-to-one` → single nullable field
- *     (`borrower: Borrower`).
- *   - Cardinality `one-to-many` / `many-to-many` → nullable list of
- *     non-null elements (`borrowers: [Borrower!]`).
- *
- * The field name is the relationship's `attribute` field with any
- * trailing `_id`/`Id`/`ID` stripped, then camelCased. The resolver wires
- * via `./resolvers/relationships.ts` (passes a closure over the data
- * store) when the schema is composed in `./index.ts`.
+ * The field name is derived from the relationship's `attribute` field
+ * (trailing `_id` stripped, camelCased). The resolver factory is wired
+ * by the schema composer in `./index.ts`.
  */
 
 import {
@@ -25,29 +19,17 @@ import {
   type GraphQLOutputType,
 } from 'graphql'
 
-import type { OperationalDNA } from '@dna-codes/dna-core'
+import type { RelationshipType } from '@dna-codes/dna-core'
 
-import type { DnaRelationship } from './dna-shapes'
 import { stripIdSuffix } from './naming'
 import type { ResourceTypeBundle } from './types'
 
-/**
- * Metadata captured for each Relationship the codegen registered. The
- * resolver factory in `./resolvers/relationships.ts` reads this to know
- * which store call to issue and how to shape the result.
- */
 export interface RelationshipFieldInfo {
-  /** The `from` type name (Resource that holds the expansion field). */
   fromType: string
-  /** The `to` type name (target of the expansion). */
   toType: string
-  /** The GraphQL field name on `fromType` (e.g. `borrower` for `Loan.borrower_id`). */
   fieldName: string
-  /** The store's link `role` to filter on (the relationship's `name`). */
   relationshipName: string
-  /** Cardinality, drives single-vs-list. */
-  cardinality: DnaRelationship['cardinality']
-  /** True for list-valued fields (one-to-many, many-to-many). */
+  cardinality: RelationshipType['cardinality']
   isList: boolean
 }
 
@@ -59,50 +41,36 @@ export interface RelationshipFieldBuilder {
 }
 
 /**
- * Compute the relationship-field metadata. Returns one entry per
- * `dna.relationships[]` whose `from` AND `to` types both exist in the
- * bundle. Orphan relationships (dangling references) are silently
- * skipped — same policy as the merge / validator layers.
- *
- * The actual field installation requires resolvers (which the schema
- * composer wires); this function only returns the descriptors.
+ * Compute relationship-field metadata from live `RelationshipType` records.
+ * Returns one entry per `RelationshipType` whose `from` AND `to` types both
+ * exist in the bundle.
  */
 export function planRelationshipFields(
-  dna: OperationalDNA,
+  relationshipTypes: RelationshipType[],
   bundle: ResourceTypeBundle,
 ): RelationshipFieldBuilder[] {
   const out: RelationshipFieldBuilder[] = []
-  const rels = Array.isArray(dna.relationships) ? (dna.relationships as DnaRelationship[]) : []
-  for (const rel of rels) {
-    if (
-      typeof rel?.name !== 'string' ||
-      typeof rel?.from !== 'string' ||
-      typeof rel?.to !== 'string' ||
-      typeof rel?.cardinality !== 'string' ||
-      typeof rel?.attribute !== 'string'
-    ) {
-      continue
-    }
-    const fromType = bundle.registry.get(rel.from)
-    const toType = bundle.registry.get(rel.to)
+  for (const rrt of relationshipTypes) {
+    const fromType = bundle.registry.get(rrt.from)
+    const toType = bundle.registry.get(rrt.to)
     if (!fromType || !toType) continue
 
-    const isList = rel.cardinality === 'one-to-many' || rel.cardinality === 'many-to-many'
-    const fieldName = stripIdSuffix(rel.attribute)
+    const isList = rrt.cardinality === 'one-to-many' || rrt.cardinality === 'many-to-many'
+    const fieldName = stripIdSuffix(rrt.attribute)
     const fieldType: GraphQLOutputType = isList
       ? new GraphQLList(new GraphQLNonNull(toType))
       : toType
 
     out.push({
-      fromType: rel.from,
+      fromType: rrt.from,
       fieldName,
       fieldType,
       info: {
-        fromType: rel.from,
-        toType: rel.to,
+        fromType: rrt.from,
+        toType: rrt.to,
         fieldName,
-        relationshipName: rel.name,
-        cardinality: rel.cardinality,
+        relationshipName: rrt.name,
+        cardinality: rrt.cardinality,
         isList,
       },
     })
@@ -110,16 +78,6 @@ export function planRelationshipFields(
   return out
 }
 
-/**
- * Build the field configs to install on the corresponding object types.
- * The schema composer feeds these back into `extendObjectFields` (a
- * thunk-friendly merger) so the resolvers can be wired alongside.
- *
- * `resolverFor` is the dependency the composer injects; it returns the
- * GraphQL resolver for a given `RelationshipFieldInfo`. Keeping this
- * dependency-injected means this module owns no I/O and stays unit-
- * testable without the data store.
- */
 export function buildRelationshipFieldConfigs(
   builders: RelationshipFieldBuilder[],
   resolverFor: (info: RelationshipFieldInfo) => GraphQLFieldConfig<unknown, unknown>['resolve'],
@@ -136,34 +94,19 @@ export function buildRelationshipFieldConfigs(
   return grouped
 }
 
-/**
- * The thunked-fields API on `GraphQLObjectType` means you can't naively
- * mutate `.fields` after construction. We re-wrap each affected type's
- * field thunk to include the new relationship fields, returning a fresh
- * map of types the schema composer should substitute.
- *
- * This is intentionally a non-destructive operation — callers receive a
- * new Map and decide whether to swap the originals.
- */
 export function extendObjectFields(
   bundle: ResourceTypeBundle,
   additions: Map<string, Record<string, GraphQLFieldConfig<unknown, unknown>>>,
 ): void {
-  // GraphQL types accept a `fields` thunk that is invoked exactly once
-  // by `getFields()`. Once invoked, the field set is cached. By the time
-  // `extendObjectFields` runs the thunks haven't been resolved yet (the
-  // schema composer is still assembling), so we can re-wrap the
-  // underlying configuration via the public `.toConfig()` API.
   for (const [typeName, addedFields] of additions) {
     const objectType = bundle.registry.get(typeName)
     if (!objectType) continue
     const config = objectType.toConfig()
     const existingFields = config.fields
     const newFields = { ...existingFields, ...addedFields }
-    // Replace the entry in the registry with a fresh type carrying the
-    // combined field set. This relies on the schema composer holding a
-    // reference to `bundle.registry`, not the original object types.
-    const updated = new (objectType.constructor as { new (cfg: unknown): GraphQLObjectType })({
+    const updated = new (objectType.constructor as {
+      new (cfg: unknown): GraphQLObjectType
+    })({
       ...config,
       fields: newFields,
     })

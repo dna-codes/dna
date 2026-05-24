@@ -1,21 +1,27 @@
 import { GraphQLNonNull, GraphQLList, GraphQLID, GraphQLBoolean, type GraphQLObjectType } from 'graphql'
 
-import type { OperationalDNA } from '@dna-codes/dna-core'
+import type { ResourceType } from '@dna-codes/dna-core'
 
 import { buildCrudFields } from './crud'
 import { buildResourceTypes } from './types'
 
-function lendingDna(): OperationalDNA {
+function makeResourceType(name: string, category: ResourceType['category'] = 'resource'): ResourceType {
   return {
-    domain: {
-      name: 'lending',
-      resources: [
-        { name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] },
-        { name: 'Borrower', attributes: [{ name: 'email', type: 'string' }] },
-      ],
-      persons: [{ name: 'Customer' }],
-    },
+    id: `rt-${name}`,
+    name,
+    category,
+    attribute_schema: [{ name: 'foo', type: 'string' }],
+    current_version: 1,
+    is_seed: false,
   }
+}
+
+function lendingTypes(): ResourceType[] {
+  return [
+    makeResourceType('Loan'),
+    makeResourceType('Borrower'),
+    makeResourceType('Customer', 'person'),
+  ]
 }
 
 const stubResolvers = {
@@ -27,16 +33,12 @@ const stubResolvers = {
 }
 
 describe('schema/crud — buildCrudFields', () => {
-  it('registers the five CRUD operations per noun primitive', () => {
-    const bundle = buildResourceTypes(lendingDna())
+  it('registers the five CRUD operations per ResourceType', () => {
+    const bundle = buildResourceTypes(lendingTypes())
     const { queries, mutations } = buildCrudFields(bundle, stubResolvers)
-
     for (const type of ['Loan', 'Borrower', 'Customer']) {
       const single = type.charAt(0).toLowerCase() + type.slice(1)
-      const plural =
-        type === 'Person'
-          ? 'persons'
-          : `${type.charAt(0).toLowerCase() + type.slice(1)}s`
+      const plural = `${type.charAt(0).toLowerCase() + type.slice(1)}s`
       expect(queries[single]).toBeDefined()
       expect(queries[plural]).toBeDefined()
       expect(mutations[`create${type}`]).toBeDefined()
@@ -46,17 +48,14 @@ describe('schema/crud — buildCrudFields', () => {
   })
 
   it('uses persons override for Person plural (not peoples)', () => {
-    const dna: OperationalDNA = {
-      domain: { name: 'ex', persons: [{ name: 'Person' }] },
-    }
-    const bundle = buildResourceTypes(dna)
+    const bundle = buildResourceTypes([makeResourceType('Person', 'person')])
     const { queries } = buildCrudFields(bundle, stubResolvers)
     expect(queries.persons).toBeDefined()
     expect((queries as Record<string, unknown>).peoples).toBeUndefined()
   })
 
   it('list query returns a non-null list of non-null elements', () => {
-    const bundle = buildResourceTypes(lendingDna())
+    const bundle = buildResourceTypes(lendingTypes())
     const { queries } = buildCrudFields(bundle, stubResolvers)
     const loans = queries.loans
     expect(loans.type).toBeInstanceOf(GraphQLNonNull)
@@ -65,7 +64,7 @@ describe('schema/crud — buildCrudFields', () => {
   })
 
   it('delete mutation returns Boolean!', () => {
-    const bundle = buildResourceTypes(lendingDna())
+    const bundle = buildResourceTypes(lendingTypes())
     const { mutations } = buildCrudFields(bundle, stubResolvers)
     const del = mutations.deleteLoan
     expect(del.type).toBeInstanceOf(GraphQLNonNull)
@@ -74,7 +73,7 @@ describe('schema/crud — buildCrudFields', () => {
   })
 
   it('update mutation takes id: ID! and input: <Type>Input!', () => {
-    const bundle = buildResourceTypes(lendingDna())
+    const bundle = buildResourceTypes(lendingTypes())
     const { mutations } = buildCrudFields(bundle, stubResolvers)
     const update = mutations.updateLoan
     expect(update.args).toBeDefined()
@@ -87,7 +86,7 @@ describe('schema/crud — buildCrudFields', () => {
   })
 
   it('emits crudMutationNames for collision detection downstream', () => {
-    const bundle = buildResourceTypes(lendingDna())
+    const bundle = buildResourceTypes(lendingTypes())
     const { crudMutationNames } = buildCrudFields(bundle, stubResolvers)
     expect(crudMutationNames.has('createLoan')).toBe(true)
     expect(crudMutationNames.has('updateLoan')).toBe(true)

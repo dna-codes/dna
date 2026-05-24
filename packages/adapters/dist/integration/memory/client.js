@@ -1,33 +1,57 @@
 "use strict";
 /**
- * In-memory `DnaDataStore` implementation. Zero dependencies; the
- * recommended test double for any package that depends on `DnaDataStore`.
+ * In-memory `DnaDataStore` implementation, registry-native edition. Zero
+ * dependencies; the recommended test double for any package that depends
+ * on `DnaDataStore`.
  *
- * Storage shape mirrors the Neo4j adapter's semantics so tests written
- * against this adapter exercise the same behaviors the Neo4j adapter
- * promises (modulo network and persistence):
+ * Storage shape mirrors the Neo4j adapter so tests written against this
+ * adapter exercise the same behaviors the Neo4j adapter promises (modulo
+ * network and persistence):
  *
- *   - Instances are keyed by `(typeName, id)` — same `id` across different
- *     types does not collide.
- *   - Links carry their own unique IDs and store `from`, `to`, optional
- *     `role`, optional `attributes`.
- *   - `migrate()` seeds TypeDefinition and RelationshipDef metadata from
- *     the constructor DNA.
+ *   - `ResourceType` and `RelationshipType` records live in their own
+ *     in-memory maps with versioned history.
+ *   - `Instance` records are keyed by `(typeName, id)` and stamped with
+ *     `_schemaVersion` from the relevant ResourceType.current_version at
+ *     write time.
+ *   - `Link` records carry their own unique IDs plus optional `role` and
+ *     `attributes`, and a `_schemaVersion` from the RelationshipType.
+ *   - `seedFromDna` writes seed records once; `hasBeenSeeded()` reflects
+ *     the marker.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createClient = createClient;
 const crypto_1 = require("crypto");
+const dna_core_1 = require("@dna-codes/dna-core");
 const NOUN_KEYS = [
     { key: 'resources', category: 'resource' },
     { key: 'persons', category: 'person' },
     { key: 'roles', category: 'role' },
     { key: 'groups', category: 'group' },
 ];
-function createClient(dna) {
+const FOUNDATIONAL = [
+    { name: 'Person', category: 'person' },
+    { name: 'Role', category: 'role' },
+    { name: 'Group', category: 'group' },
+    { name: 'Resource', category: 'resource' },
+];
+function toAttributeSchema(raw) {
+    if (!Array.isArray(raw))
+        return [];
+    return raw.filter((e) => !!e && typeof e === 'object' && typeof e.name === 'string');
+}
+function createClient(_dna) {
+    // The constructor DNA is ignored — seedFromDna takes the DNA explicitly.
+    // Accepting it as an optional positional arg preserves API compatibility
+    // with the prior call shape used by older test fixtures.
+    const resourceTypes = new Map();
+    const resourceTypeVersionsById = new Map();
+    const resourceTypeIdByName = new Map();
+    const relationshipTypes = new Map();
+    const relationshipTypeVersionsById = new Map();
+    const relationshipTypeIdByName = new Map();
     const instances = new Map();
     const links = [];
-    const typeDefs = new Map();
-    const relationshipDefs = new Map();
+    let seedMarker = false;
     function bucket(typeName) {
         let b = instances.get(typeName);
         if (!b) {
@@ -39,23 +63,121 @@ function createClient(dna) {
     function refEquals(a, b) {
         return a.typeName === b.typeName && a.id === b.id;
     }
+    function pushVersion(id, version, schema, kind) {
+        if (kind === 'resource') {
+            const versions = resourceTypeVersionsById.get(id) ?? [];
+            versions.push({
+                id: (0, crypto_1.randomUUID)(),
+                resource_type_id: id,
+                version,
+                attribute_schema: schema,
+                created_at: new Date().toISOString(),
+            });
+            resourceTypeVersionsById.set(id, versions);
+        }
+        else {
+            const versions = relationshipTypeVersionsById.get(id) ?? [];
+            versions.push({
+                id: (0, crypto_1.randomUUID)(),
+                relationship_type_id: id,
+                version,
+                attribute_schema: schema,
+                created_at: new Date().toISOString(),
+            });
+            relationshipTypeVersionsById.set(id, versions);
+        }
+    }
+    function createResourceTypeImpl(input, isSeed) {
+        if (resourceTypeIdByName.has(input.name)) {
+            throw new Error(`integration/memory: ResourceType "${input.name}" already exists`);
+        }
+        const id = input.id && input.id.length > 0 ? input.id : (0, crypto_1.randomUUID)();
+        const record = {
+            id,
+            name: input.name,
+            category: input.category,
+            attribute_schema: input.attribute_schema,
+            current_version: 1,
+            is_seed: isSeed,
+            ...(input.description !== undefined ? { description: input.description } : {}),
+        };
+        resourceTypes.set(id, record);
+        resourceTypeIdByName.set(input.name, id);
+        pushVersion(id, 1, input.attribute_schema, 'resource');
+        return { id };
+    }
+    function createRelationshipTypeImpl(input, isSeed) {
+        if (relationshipTypeIdByName.has(input.name)) {
+            throw new Error(`integration/memory: RelationshipType "${input.name}" already exists`);
+        }
+        const id = input.id && input.id.length > 0 ? input.id : (0, crypto_1.randomUUID)();
+        const record = {
+            id,
+            name: input.name,
+            from: input.from,
+            to: input.to,
+            cardinality: input.cardinality,
+            attribute: input.attribute,
+            current_version: 1,
+            is_seed: isSeed,
+            ...(input.inverse !== undefined ? { inverse: input.inverse } : {}),
+            ...(input.attribute_schema !== undefined ? { attribute_schema: input.attribute_schema } : {}),
+            ...(input.description !== undefined ? { description: input.description } : {}),
+        };
+        relationshipTypes.set(id, record);
+        relationshipTypeIdByName.set(input.name, id);
+        pushVersion(id, 1, input.attribute_schema ?? [], 'relationship');
+        return { id };
+    }
+    function resourceTypeByName(name) {
+        const id = resourceTypeIdByName.get(name);
+        return id ? resourceTypes.get(id) : undefined;
+    }
+    function relationshipTypeByName(name) {
+        const id = relationshipTypeIdByName.get(name);
+        return id ? relationshipTypes.get(id) : undefined;
+    }
     return {
         async migrate() {
-            typeDefs.clear();
-            relationshipDefs.clear();
+            // Memory adapter has no constraints/indexes to create.
+        },
+        async seedFromDna(dna) {
+            const report = {
+                resourceTypesCreated: 0,
+                resourceTypesSkipped: 0,
+                relationshipTypesCreated: 0,
+                relationshipTypesSkipped: 0,
+            };
+            // 1. Four foundational ResourceTypes.
+            for (const f of FOUNDATIONAL) {
+                if (resourceTypeIdByName.has(f.name)) {
+                    report.resourceTypesSkipped += 1;
+                    continue;
+                }
+                createResourceTypeImpl({ name: f.name, category: f.category, attribute_schema: [] }, 
+                /* isSeed */ true);
+                report.resourceTypesCreated += 1;
+            }
+            // 2. Tenant-domain ResourceTypes from dna.domain.*
             const domain = dna.domain ?? {};
             for (const { key, category } of NOUN_KEYS) {
                 const list = Array.isArray(domain[key]) ? domain[key] : [];
                 for (const entry of list) {
                     if (typeof entry?.name !== 'string')
                         continue;
-                    typeDefs.set(entry.name, {
+                    if (resourceTypeIdByName.has(entry.name)) {
+                        report.resourceTypesSkipped += 1;
+                        continue;
+                    }
+                    createResourceTypeImpl({
                         name: entry.name,
                         category,
-                        attributes: Array.isArray(entry.attributes) ? entry.attributes : [],
-                    });
+                        attribute_schema: toAttributeSchema(entry.attributes),
+                    }, true);
+                    report.resourceTypesCreated += 1;
                 }
             }
+            // 3. RelationshipTypes from dna.relationships[]
             const rels = Array.isArray(dna.relationships) ? dna.relationships : [];
             for (const rel of rels) {
                 if (typeof rel?.name !== 'string' ||
@@ -65,16 +187,129 @@ function createClient(dna) {
                     typeof rel?.attribute !== 'string') {
                     continue;
                 }
-                const record = {
+                if (relationshipTypeIdByName.has(rel.name)) {
+                    report.relationshipTypesSkipped += 1;
+                    continue;
+                }
+                createRelationshipTypeImpl({
                     name: rel.name,
                     from: rel.from,
                     to: rel.to,
                     cardinality: rel.cardinality,
                     attribute: rel.attribute,
                     ...(typeof rel.inverse === 'string' ? { inverse: rel.inverse } : {}),
-                };
-                relationshipDefs.set(record.name, record);
+                }, true);
+                report.relationshipTypesCreated += 1;
             }
+            seedMarker = true;
+            return report;
+        },
+        async hasBeenSeeded() {
+            return seedMarker;
+        },
+        resourceType: {
+            async create(input) {
+                return createResourceTypeImpl(input, /* isSeed */ false);
+            },
+            async get(id) {
+                return resourceTypes.get(id) ?? null;
+            },
+            async list(filter) {
+                const all = [...resourceTypes.values()];
+                if (filter?.category)
+                    return all.filter((rt) => rt.category === filter.category);
+                return all;
+            },
+            async update(id, patch) {
+                const existing = resourceTypes.get(id);
+                if (!existing)
+                    throw new Error(`integration/memory: ResourceType ${id} not found`);
+                const nextSchema = patch.attribute_schema ?? existing.attribute_schema;
+                const next = {
+                    ...existing,
+                    ...(patch.attribute_schema !== undefined ? { attribute_schema: patch.attribute_schema } : {}),
+                    ...(patch.description !== undefined ? { description: patch.description } : {}),
+                    current_version: existing.current_version + 1,
+                };
+                resourceTypes.set(id, next);
+                pushVersion(id, next.current_version, nextSchema, 'resource');
+            },
+            async delete(id, opts) {
+                const existing = resourceTypes.get(id);
+                if (!existing)
+                    return;
+                const inUse = instances.get(existing.name)?.size ?? 0;
+                if (inUse > 0 && !opts?.cascade) {
+                    throw new dna_core_1.TypeInUseError(existing.name, inUse);
+                }
+                if (inUse > 0 && opts?.cascade) {
+                    // Remove all instances of that type and any adjacent Links.
+                    instances.delete(existing.name);
+                    for (let i = links.length - 1; i >= 0; i--) {
+                        const l = links[i];
+                        if (l.from.typeName === existing.name || l.to.typeName === existing.name) {
+                            links.splice(i, 1);
+                        }
+                    }
+                }
+                resourceTypes.delete(id);
+                resourceTypeIdByName.delete(existing.name);
+                resourceTypeVersionsById.delete(id);
+            },
+            async versions(id) {
+                const versions = resourceTypeVersionsById.get(id) ?? [];
+                return [...versions].sort((a, b) => b.version - a.version);
+            },
+        },
+        relationshipType: {
+            async create(input) {
+                return createRelationshipTypeImpl(input, /* isSeed */ false);
+            },
+            async get(id) {
+                return relationshipTypes.get(id) ?? null;
+            },
+            async list() {
+                return [...relationshipTypes.values()];
+            },
+            async update(id, patch) {
+                const existing = relationshipTypes.get(id);
+                if (!existing)
+                    throw new Error(`integration/memory: RelationshipType ${id} not found`);
+                const nextSchema = patch.attribute_schema ?? existing.attribute_schema ?? [];
+                const next = {
+                    ...existing,
+                    ...(patch.cardinality !== undefined ? { cardinality: patch.cardinality } : {}),
+                    ...(patch.attribute !== undefined ? { attribute: patch.attribute } : {}),
+                    ...(patch.inverse !== undefined ? { inverse: patch.inverse } : {}),
+                    ...(patch.attribute_schema !== undefined ? { attribute_schema: patch.attribute_schema } : {}),
+                    ...(patch.description !== undefined ? { description: patch.description } : {}),
+                    current_version: existing.current_version + 1,
+                };
+                relationshipTypes.set(id, next);
+                pushVersion(id, next.current_version, nextSchema, 'relationship');
+            },
+            async delete(id, opts) {
+                const existing = relationshipTypes.get(id);
+                if (!existing)
+                    return;
+                const inUse = links.filter((l) => l.role === existing.name).length;
+                if (inUse > 0 && !opts?.cascade) {
+                    throw new dna_core_1.TypeInUseError(existing.name, inUse);
+                }
+                if (inUse > 0 && opts?.cascade) {
+                    for (let i = links.length - 1; i >= 0; i--) {
+                        if (links[i].role === existing.name)
+                            links.splice(i, 1);
+                    }
+                }
+                relationshipTypes.delete(id);
+                relationshipTypeIdByName.delete(existing.name);
+                relationshipTypeVersionsById.delete(id);
+            },
+            async versions(id) {
+                const versions = relationshipTypeVersionsById.get(id) ?? [];
+                return [...versions].sort((a, b) => b.version - a.version);
+            },
         },
         instance: {
             async create(typeName, data) {
@@ -83,17 +318,20 @@ function createClient(dna) {
                 if (b.has(id)) {
                     throw new Error(`integration/memory: ${typeName} instance with id "${id}" already exists`);
                 }
-                // Strip `id` from the payload — it's a control field, not a stored attribute.
                 const { id: _stripped, ...rest } = data;
                 void _stripped;
-                b.set(id, { ...rest });
+                const rt = resourceTypeByName(typeName);
+                const schemaVersion = rt?.current_version;
+                const record = {
+                    id,
+                    ...rest,
+                    ...(schemaVersion !== undefined ? { _schemaVersion: schemaVersion } : {}),
+                };
+                b.set(id, record);
                 return { id };
             },
             async get(typeName, id) {
-                const record = bucket(typeName).get(id);
-                if (!record)
-                    return null;
-                return { id, ...record };
+                return bucket(typeName).get(id) ?? null;
             },
             async update(typeName, id, patch) {
                 const b = bucket(typeName);
@@ -101,17 +339,23 @@ function createClient(dna) {
                 if (!existing) {
                     throw new Error(`integration/memory: ${typeName} instance with id "${id}" not found`);
                 }
-                // Strip `id` from patch — IDs are immutable.
-                const { id: _stripped, ...rest } = patch;
+                const { id: _stripped, _schemaVersion: _v, ...rest } = patch;
                 void _stripped;
-                b.set(id, { ...existing, ...rest });
+                void _v;
+                const rt = resourceTypeByName(typeName);
+                const schemaVersion = rt?.current_version;
+                const next = {
+                    ...existing,
+                    ...rest,
+                    ...(schemaVersion !== undefined ? { _schemaVersion: schemaVersion } : {}),
+                };
+                b.set(id, next);
             },
             async delete(typeName, id) {
                 bucket(typeName).delete(id);
             },
             async list(typeName) {
-                const b = bucket(typeName);
-                return [...b.entries()].map(([id, data]) => ({ id, ...data }));
+                return [...bucket(typeName).values()];
             },
         },
         link: {
@@ -120,12 +364,15 @@ function createClient(dna) {
                 if (links.some((l) => l.id === id)) {
                     throw new Error(`integration/memory: link with id "${id}" already exists`);
                 }
+                const rrt = opts.role !== undefined ? relationshipTypeByName(opts.role) : undefined;
+                const schemaVersion = rrt?.current_version;
                 const record = {
                     id,
                     from: { ...from },
                     to: { ...to },
                     ...(opts.role !== undefined ? { role: opts.role } : {}),
                     ...(opts.attributes !== undefined ? { attributes: { ...opts.attributes } } : {}),
+                    ...(schemaVersion !== undefined ? { _schemaVersion: schemaVersion } : {}),
                 };
                 links.push(record);
                 return { id };
@@ -146,6 +393,7 @@ function createClient(dna) {
                     to: { ...l.to },
                     ...(l.role !== undefined ? { role: l.role } : {}),
                     ...(l.attributes !== undefined ? { attributes: { ...l.attributes } } : {}),
+                    ...(l._schemaVersion !== undefined ? { _schemaVersion: l._schemaVersion } : {}),
                 }));
             },
         },

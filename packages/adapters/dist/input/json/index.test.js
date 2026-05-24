@@ -62,12 +62,15 @@ describe('@dna-codes/dna-input-json', () => {
         it('emits a one-to-one relationship', () => {
             const { operational } = (0, index_1.parse)(bookSample, { name: 'Book' });
             const rel = operational.relationships?.find((r) => r.name === 'Book.author');
-            expect(rel).toEqual({
+            expect(rel).toMatchObject({
                 name: 'Book.author',
                 from: 'Book',
                 to: 'Author',
                 attribute: 'author',
                 cardinality: 'one-to-one',
+                type: 'relationship',
+                version: expect.any(String),
+                id: expect.any(String),
             });
         });
     });

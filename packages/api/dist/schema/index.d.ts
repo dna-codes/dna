@@ -1,25 +1,36 @@
 /**
- * Schema composition entry point.
+ * Registry-native schema composition entry point.
  *
- * Builds a GraphQL schema from an `OperationalDNA` and an injected
- * `DnaDataStore`. The order of operations matters:
+ * Builds a GraphQL schema from the **current** `DnaDataStore` state. The
+ * schema includes:
  *
- *   1. Validate DNA via `DnaValidator` (fails fast on malformed input).
- *   2. Build per-noun-primitive types + inputs + enums.
- *   3. Plan relationship fields, build their resolvers, and extend the
- *      object types in the registry with the expansion fields.
- *   4. Build CRUD queries + mutations with resolvers.
- *   5. Build Operation mutations; collisions resolve to the Operation.
- *   6. Assemble into a `GraphQLSchema` with `Query` + `Mutation`
- *      root types.
+ *   1. Fixed top-level CRUD for `ResourceType` and `RelationshipType`
+ *      (the admin surface — see `./registry-fields.ts`).
+ *   2. Dynamic per-type GraphQL types generated from the data store's
+ *      `resourceType.list()`.
+ *   3. Per-type CRUD queries/mutations.
+ *   4. Relationship expansion fields from `relationshipType.list()`.
+ *
+ * Resolvers close over the injected `DnaDataStore` (and a
+ * `SchemaManager` for the admin mutations to trigger rebuilds).
+ *
+ * No DNA validation runs here — the API layer assumes the data store is
+ * already populated (either by `seedFromDna` at first boot or by admin
+ * mutations after). Per-Resource data is validated by the instance
+ * resolvers via `ValidatorCache`.
  */
 import { GraphQLSchema } from 'graphql';
-import { type DnaDataStore, type OperationalDNA } from '@dna-codes/dna-core';
+import type { DnaDataStore } from '@dna-codes/dna-core';
+import type { ValidatorCache } from '../validation/validator-cache';
+import { SchemaManager } from './schema-manager';
 export interface BuildSchemaArgs {
-    dna: OperationalDNA;
     dataStore: DnaDataStore;
-    /** Skip the up-front DNA validation. Tests use this when fixtures intentionally omit base-contract fields. Default false. */
-    skipValidation?: boolean;
+    validatorCache: ValidatorCache;
+    schemaManager: SchemaManager;
 }
-export declare function buildSchema({ dna, dataStore, skipValidation }: BuildSchemaArgs): GraphQLSchema;
+/**
+ * Build a fresh `GraphQLSchema` from the data store's current state.
+ * Called by the SchemaManager's builder closure on every rebuild.
+ */
+export declare function buildRegistrySchema(args: BuildSchemaArgs): Promise<GraphQLSchema>;
 //# sourceMappingURL=index.d.ts.map

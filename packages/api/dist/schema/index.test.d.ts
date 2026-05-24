@@ -1,7 +1,7 @@
 /**
- * Schema-composition smoke tests. Validates that the codegen runs end to
- * end against real example DNAs (`examples/lending`) and produces the
- * expected types/queries/mutations after composition.
+ * Schema-composition smoke tests for the registry-native build path.
+ * Builds a schema from a populated in-memory data store and asserts the
+ * expected GraphQL types / queries / mutations are present.
  */
 export {};
 //# sourceMappingURL=index.test.d.ts.map

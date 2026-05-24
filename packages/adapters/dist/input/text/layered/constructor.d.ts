@@ -84,6 +84,16 @@ export declare class LayeredConstructor {
     handle(call: ToolCallRequest): ToolCallResult;
     private recordCall;
     private handleAdd;
+    /**
+     * If a primitive with the given `kind` and `name` already exists in the
+     * running DNA, return a copy of `args` with its `id` field set to the
+     * existing id. Otherwise return `args` unchanged. Prevents merge() from
+     * reporting a spurious id-scalar conflict when the same name is composed
+     * twice (a supported pattern; only user-facing scalars should conflict).
+     */
+    private reuseExistingId;
+    private findPrimitiveByName;
+    private collectionFor;
     private validatePrimitive;
     private checkReferences;
     private handleFinalize;

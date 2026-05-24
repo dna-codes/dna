@@ -154,7 +154,22 @@ export type {
   LinkCreateOptions,
   LinkRecord,
   LinkListFilter,
+  NounCategory,
+  AttributeSchema,
+  AttributeSchemaEntry,
+  ResourceType,
+  ResourceTypeVersion,
+  ResourceTypeInput,
+  ResourceTypeUpdate,
+  RelationshipType,
+  RelationshipTypeVersion,
+  RelationshipTypeInput,
+  RelationshipTypeUpdate,
+  TypeDeleteOptions,
+  SeedReport,
 } from './types/data-store'
+
+export { TypeInUseError } from './types/data-store'
 
 export type {
   Action,

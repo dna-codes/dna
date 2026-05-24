@@ -1,6 +1,6 @@
 {
   "name": "@dna-codes/dna-adapters",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "repository": "github:dna-codes/dna",
   "description": "Unified adapter package for @dna-codes — input parsers, output renderers, and integration clients live as subpaths under @dna-codes/dna-adapters/{input,output,integration}/<name>. Each adapter is self-contained and mechanically extractable into its own package.",
   "keywords": [
@@ -93,7 +93,7 @@
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
-    "@dna-codes/dna-core": "^0.8.0",
+    "@dna-codes/dna-core": "^0.8.0 || ^0.9.0",
     "@dna-codes/dna-ingest": "^0.7.0",
     "@dna-codes/dna-schemas": "^0.6.0",
     "js-yaml": "^4.1.0",

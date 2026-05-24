@@ -3,6 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.LayeredConstructor = void 0;
 const dna_core_1 = require("@dna-codes/dna-core");
 const schema_to_tool_1 = require("../tools/schema-to-tool");
+/**
+ * Placeholder values for the base-contract fields the LLM tool surface
+ * doesn't supply. Builders auto-stamp the real `id`, `type`, `version` on
+ * compose; these are only used to satisfy the JSON-Schema validator during
+ * the up-front `validatePrimitive` check.
+ */
+const PLACEHOLDER_UUID = '00000000-0000-4000-8000-000000000000';
+const PLACEHOLDER_VERSION = '1';
 const ADD_BUILDER = {
     resource: dna_core_1.addResource,
     person: dna_core_1.addPerson,
@@ -150,10 +158,16 @@ class LayeredConstructor {
         const refError = this.checkReferences(kind, args);
         if (refError)
             return refError;
+        // Same-name composition: if a primitive with this name+kind already
+        // exists in the running DNA, reuse its id so the auto-stamped UUIDs
+        // don't surface as a spurious scalar conflict at merge time. (Same-name
+        // primitives compose by design; only their user-facing scalars are
+        // genuine conflicts.)
+        const composeArgs = this.reuseExistingId(kind, args);
         // Compose into the running DNA via the matching builder. We just
         // validated; pass `validate: false` to skip a redundant pass.
         const builder = ADD_BUILDER[kind];
-        const composed = builder(this.dna, args, { validate: false });
+        const composed = builder(this.dna, composeArgs, { validate: false });
         this.dna = composed.dna;
         if (composed.conflicts.length > 0) {
             this.accumulatedConflicts.push(...composed.conflicts);
@@ -167,9 +181,66 @@ class LayeredConstructor {
             ...(composed.conflicts.length > 0 ? { conflicts: composed.conflicts } : {}),
         };
     }
+    /**
+     * If a primitive with the given `kind` and `name` already exists in the
+     * running DNA, return a copy of `args` with its `id` field set to the
+     * existing id. Otherwise return `args` unchanged. Prevents merge() from
+     * reporting a spurious id-scalar conflict when the same name is composed
+     * twice (a supported pattern; only user-facing scalars should conflict).
+     */
+    reuseExistingId(kind, args) {
+        if (typeof args.id === 'string' && args.id.length > 0)
+            return args;
+        const name = typeof args.name === 'string' ? args.name : null;
+        if (!name)
+            return args;
+        const existing = this.findPrimitiveByName(kind, name);
+        if (!existing)
+            return args;
+        return { ...args, id: existing.id };
+    }
+    findPrimitiveByName(kind, name) {
+        const collection = this.collectionFor(kind);
+        for (const entry of collection) {
+            if (entry &&
+                typeof entry === 'object' &&
+                entry.name === name &&
+                typeof entry.id === 'string') {
+                return { id: entry.id };
+            }
+        }
+        return null;
+    }
+    collectionFor(kind) {
+        const dom = this.dna.domain;
+        switch (kind) {
+            case 'resource': return dom.resources ?? [];
+            case 'person': return dom.persons ?? [];
+            case 'role': return dom.roles ?? [];
+            case 'group': return dom.groups ?? [];
+            case 'membership': return this.dna.memberships ?? [];
+            case 'operation': return this.dna.operations ?? [];
+            case 'task': return this.dna.tasks ?? [];
+            case 'process': return this.dna.processes ?? [];
+            case 'trigger': return this.dna.triggers ?? [];
+            case 'rule': return this.dna.rules ?? [];
+            default: return [];
+        }
+    }
     validatePrimitive(kind, args) {
         const schemaId = `operational/${kind}`;
-        return this.validator.validate(args, schemaId);
+        // The base contract requires `id`, `type`, `version` on every primitive,
+        // but builders auto-stamp those downstream — callers (and the LLM tool
+        // surface) supply just the primitive-specific args. Augment with safe
+        // placeholders for the auto-stamped fields before validating so we get a
+        // clean `schema_violation` only for per-primitive shape errors.
+        const augmented = {
+            id: PLACEHOLDER_UUID,
+            type: kind,
+            version: PLACEHOLDER_VERSION,
+            ...args,
+        };
+        return this.validator.validate(augmented, schemaId);
     }
     checkReferences(kind, args) {
         const pools = this.pools();

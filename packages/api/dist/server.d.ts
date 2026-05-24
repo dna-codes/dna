@@ -1,28 +1,28 @@
 /**
- * Apollo Server v5 + Express HTTP integration.
+ * Apollo Server v5 + Express HTTP integration for the registry-native API.
  *
  * `createServer({ dna, dataStore })`:
- *   1. Builds the GraphQL schema from the DNA (validates DNA first).
- *   2. Calls `dataStore.migrate()` so the store backend is ready before
- *      requests arrive.
- *   3. Returns the composed Apollo server, an Express app with
- *      `/graphql` and `/healthz` mounted, and a `listen(port)` helper.
- *
- * The function NEVER instantiates a `DnaDataStore` directly — the caller
- * (CLI or a test harness) constructs the store and passes it in.
+ *   1. Calls `dataStore.migrate()` (constraints/indexes only).
+ *   2. Checks `dataStore.hasBeenSeeded()`. If false, calls
+ *      `dataStore.seedFromDna(dna)` to populate the foundational
+ *      `ResourceType` / `RelationshipType` records.
+ *   3. Instantiates a `SchemaManager` whose builder reads from the store
+ *      and calls `rebuild()` to populate the initial schema.
+ *   4. Subscribes to schema-change events to recreate the Apollo Server
+ *      instance on swap (D5 — restart pattern).
+ *   5. Returns the composed server + Express app + `listen(port)` helper.
  */
 import { ApolloServer } from '@apollo/server';
 import { type Express } from 'express';
-import type { GraphQLSchema } from 'graphql';
 import type { DnaDataStore, OperationalDNA } from '@dna-codes/dna-core';
+import { SchemaManager } from './schema/schema-manager';
 export interface CreateServerArgs {
+    /** DNA used ONLY for first-boot seeding via `dataStore.seedFromDna`. Ignored on subsequent boots. */
     dna: OperationalDNA;
     dataStore: DnaDataStore;
-    /** Skip DNA validation (tests with intentionally minimal fixtures). Default false. */
-    skipDnaValidation?: boolean;
 }
 export interface CreatedServer {
-    schema: GraphQLSchema;
+    schemaManager: SchemaManager;
     apolloServer: ApolloServer;
     expressApp: Express;
     listen(port: number): Promise<{

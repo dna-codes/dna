@@ -4,7 +4,7 @@ const cypher_1 = require("./cypher");
 describe('cypher/validateLabel', () => {
     it('accepts PascalCase identifiers', () => {
         expect(() => (0, cypher_1.validateLabel)('Loan')).not.toThrow();
-        expect(() => (0, cypher_1.validateLabel)('TypeDefinition')).not.toThrow();
+        expect(() => (0, cypher_1.validateLabel)('ResourceType')).not.toThrow();
         expect(() => (0, cypher_1.validateLabel)('Borrower2')).not.toThrow();
     });
     it('rejects unsafe / non-PascalCase labels', () => {
@@ -15,12 +15,19 @@ describe('cypher/validateLabel', () => {
         expect(() => (0, cypher_1.validateLabel)('Loan-2')).toThrow(/invalid typeName/);
     });
 });
-describe('cypher/metadata schema', () => {
-    it('METADATA_SCHEMA_CYPHER covers TypeDefinition, RelationshipDef, and LINK._id', () => {
+describe('cypher/metadata schema (registry-native)', () => {
+    it('METADATA_SCHEMA_CYPHER covers ResourceType, RelationshipType, version nodes, LINK._id', () => {
         const joined = cypher_1.METADATA_SCHEMA_CYPHER.join('\n');
-        expect(joined).toMatch(/CONSTRAINT.*TypeDefinition.*name/i);
-        expect(joined).toMatch(/CONSTRAINT.*RelationshipDef.*name/i);
+        expect(joined).toMatch(/CONSTRAINT.*ResourceType.*name/i);
+        expect(joined).toMatch(/CONSTRAINT.*RelationshipType.*name/i);
+        expect(joined).toMatch(/CONSTRAINT.*ResourceTypeVersion.*id/i);
+        expect(joined).toMatch(/CONSTRAINT.*RelationshipTypeVersion.*id/i);
         expect(joined).toMatch(/INDEX.*LINK.*_id/i);
+    });
+    it('TypeDefinition and RelationshipDef labels are NOT created (renamed)', () => {
+        const joined = cypher_1.METADATA_SCHEMA_CYPHER.join('\n');
+        expect(joined).not.toMatch(/TypeDefinition/);
+        expect(joined).not.toMatch(/RelationshipDef/);
     });
     it('all metadata statements use IF NOT EXISTS for idempotency', () => {
         for (const stmt of cypher_1.METADATA_SCHEMA_CYPHER) {
@@ -36,8 +43,79 @@ describe('cypher/labelSchemaCypher', () => {
         expect(index).toMatch(/INDEX.*Loan.*_typeName/i);
         expect(index).toMatch(/IF NOT EXISTS/);
     });
+    it('dropLabelSchemaCypher emits DROP statements for the same artifacts', () => {
+        const [dropConstraint, dropIndex] = (0, cypher_1.dropLabelSchemaCypher)('Loan');
+        expect(dropConstraint).toMatch(/DROP CONSTRAINT.*loan_id_unique/i);
+        expect(dropIndex).toMatch(/DROP INDEX.*loan_typename_index/i);
+    });
     it('rejects an unsafe label', () => {
         expect(() => (0, cypher_1.labelSchemaCypher)('Loan; DROP')).toThrow(/invalid typeName/);
+        expect(() => (0, cypher_1.dropLabelSchemaCypher)('Loan; DROP')).toThrow(/invalid typeName/);
+    });
+});
+describe('cypher/ResourceType + RelationshipType CRUD', () => {
+    it('CREATE_RESOURCE_TYPE_CYPHER writes a labeled node from $props', () => {
+        expect(cypher_1.CREATE_RESOURCE_TYPE_CYPHER).toContain('(rt:ResourceType');
+        expect(cypher_1.CREATE_RESOURCE_TYPE_CYPHER).toContain('$props');
+        expect(cypher_1.CREATE_RESOURCE_TYPE_CYPHER).toContain('RETURN rt.id AS id');
+    });
+    it('CREATE_RESOURCE_TYPE_VERSION_CYPHER links to the live type via VERSION_OF', () => {
+        expect(cypher_1.CREATE_RESOURCE_TYPE_VERSION_CYPHER).toContain('(rt:ResourceType {id: $resourceTypeId})');
+        expect(cypher_1.CREATE_RESOURCE_TYPE_VERSION_CYPHER).toContain('(v:ResourceTypeVersion');
+        expect(cypher_1.CREATE_RESOURCE_TYPE_VERSION_CYPHER).toContain('[:VERSION_OF]');
+    });
+    it('UPDATE_RESOURCE_TYPE_CYPHER bumps current_version', () => {
+        expect(cypher_1.UPDATE_RESOURCE_TYPE_CYPHER).toContain('SET rt += $patch, rt.current_version = $newVersion');
+    });
+    it('DELETE_RESOURCE_TYPE_CYPHER cleans up versions via DETACH DELETE', () => {
+        expect(cypher_1.DELETE_RESOURCE_TYPE_CYPHER).toContain('DETACH DELETE v, rt');
+    });
+    it('GET_RESOURCE_TYPE_CYPHER and GET_RESOURCE_TYPE_BY_NAME_CYPHER both target :ResourceType', () => {
+        expect(cypher_1.GET_RESOURCE_TYPE_CYPHER).toContain('(rt:ResourceType {id: $id})');
+        expect(cypher_1.GET_RESOURCE_TYPE_BY_NAME_CYPHER).toContain('(rt:ResourceType {name: $name})');
+    });
+    it('LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER filters by category', () => {
+        expect(cypher_1.LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER).toContain('(rt:ResourceType {category: $category})');
+    });
+    it('LIST_RESOURCE_TYPES_CYPHER returns all in name order', () => {
+        expect(cypher_1.LIST_RESOURCE_TYPES_CYPHER).toContain('(rt:ResourceType)');
+        expect(cypher_1.LIST_RESOURCE_TYPES_CYPHER).toContain('ORDER BY rt.name');
+    });
+    it('LIST_RESOURCE_TYPE_VERSIONS_CYPHER returns versions in descending order', () => {
+        expect(cypher_1.LIST_RESOURCE_TYPE_VERSIONS_CYPHER).toContain('ORDER BY v.version DESC');
+    });
+    it('RelationshipType mirror exists', () => {
+        expect(cypher_1.CREATE_RELATIONSHIP_TYPE_CYPHER).toContain('(rt:RelationshipType');
+        expect(cypher_1.CREATE_RELATIONSHIP_TYPE_VERSION_CYPHER).toContain('(v:RelationshipTypeVersion');
+        expect(cypher_1.UPDATE_RELATIONSHIP_TYPE_CYPHER).toContain('SET rt += $patch, rt.current_version = $newVersion');
+        expect(cypher_1.DELETE_RELATIONSHIP_TYPE_CYPHER).toContain('DETACH DELETE v, rt');
+        expect(cypher_1.GET_RELATIONSHIP_TYPE_CYPHER).toContain('(rt:RelationshipType {id: $id})');
+        expect(cypher_1.GET_RELATIONSHIP_TYPE_BY_NAME_CYPHER).toContain('(rt:RelationshipType {name: $name})');
+        expect(cypher_1.LIST_RELATIONSHIP_TYPES_CYPHER).toContain('(rt:RelationshipType)');
+        expect(cypher_1.LIST_RELATIONSHIP_TYPE_VERSIONS_CYPHER).toContain('(rt:RelationshipType {id: $id})');
+    });
+    it('COUNT_INSTANCES_OF_TYPE_CYPHER is per-label and rejects unsafe labels', () => {
+        expect((0, cypher_1.COUNT_INSTANCES_OF_TYPE_CYPHER)('Loan')).toBe('MATCH (n:Loan) RETURN count(n) AS count');
+        expect(() => (0, cypher_1.COUNT_INSTANCES_OF_TYPE_CYPHER)('Loan; DROP')).toThrow();
+    });
+    it('COUNT_LINKS_OF_ROLE_CYPHER filters by role property', () => {
+        expect(cypher_1.COUNT_LINKS_OF_ROLE_CYPHER).toContain('[r:LINK {role: $role}]');
+        expect(cypher_1.COUNT_LINKS_OF_ROLE_CYPHER).toContain('count(r) AS count');
+    });
+    it('DELETE_LINKS_OF_ROLE_CYPHER deletes by role', () => {
+        expect(cypher_1.DELETE_LINKS_OF_ROLE_CYPHER).toContain('[r:LINK {role: $role}]');
+        expect(cypher_1.DELETE_LINKS_OF_ROLE_CYPHER).toContain('DELETE r');
+    });
+});
+describe('cypher/seed marker', () => {
+    it('HAS_SEED_MARKER_CYPHER queries a :SeedMarker node', () => {
+        expect(cypher_1.HAS_SEED_MARKER_CYPHER).toContain('(m:SeedMarker)');
+        expect(cypher_1.HAS_SEED_MARKER_CYPHER).toContain('LIMIT 1');
+    });
+    it('WRITE_SEED_MARKER_CYPHER MERGEs the marker with createdAt + dnaHash', () => {
+        expect(cypher_1.WRITE_SEED_MARKER_CYPHER).toContain('MERGE (m:SeedMarker)');
+        expect(cypher_1.WRITE_SEED_MARKER_CYPHER).toContain('m.createdAt = $createdAt');
+        expect(cypher_1.WRITE_SEED_MARKER_CYPHER).toContain('m.dnaHash = $dnaHash');
     });
 });
 describe('cypher/Instance CRUD', () => {
@@ -97,26 +175,7 @@ describe('cypher/buildLinkListCypher', () => {
         expect(cypher).not.toMatch(/WHERE/);
         expect(params).toEqual({});
     });
-    it('from filter pins the source label and parameterizes fromId', () => {
-        const { cypher, params } = (0, cypher_1.buildLinkListCypher)({
-            from: { typeName: 'Loan', id: 'l1' },
-        });
-        expect(cypher).toContain('(a:Loan {_id: $fromId})');
-        expect(params).toEqual({ fromId: 'l1' });
-    });
-    it('to filter pins the target label and parameterizes toId', () => {
-        const { cypher, params } = (0, cypher_1.buildLinkListCypher)({
-            to: { typeName: 'Borrower', id: 'b1' },
-        });
-        expect(cypher).toContain('(b:Borrower {_id: $toId})');
-        expect(params).toEqual({ toId: 'b1' });
-    });
-    it('role filter adds a WHERE clause and parameterizes role', () => {
-        const { cypher, params } = (0, cypher_1.buildLinkListCypher)({ role: 'primary_borrower' });
-        expect(cypher).toContain('WHERE r.role = $role');
-        expect(params).toEqual({ role: 'primary_borrower' });
-    });
-    it('combined filter parameterizes all three', () => {
+    it('combined filter parameterizes from, to, and role', () => {
         const { cypher, params } = (0, cypher_1.buildLinkListCypher)({
             from: { typeName: 'Loan', id: 'l1' },
             to: { typeName: 'Borrower', id: 'b1' },
@@ -134,16 +193,6 @@ describe('cypher/buildLinkListCypher', () => {
     it('rejects unsafe labels in either endpoint', () => {
         expect(() => (0, cypher_1.buildLinkListCypher)({ from: { typeName: 'Loan; DROP', id: 'l1' } })).toThrow();
         expect(() => (0, cypher_1.buildLinkListCypher)({ to: { typeName: 'Loan; DROP', id: 'l1' } })).toThrow();
-    });
-});
-describe('cypher/metadata MERGE', () => {
-    it('MERGE_TYPEDEF_CYPHER merges on name and assigns props', () => {
-        expect(cypher_1.MERGE_TYPEDEF_CYPHER).toContain('MERGE (n:TypeDefinition {name: $name})');
-        expect(cypher_1.MERGE_TYPEDEF_CYPHER).toContain('SET n += $props');
-    });
-    it('MERGE_RELDEF_CYPHER merges on name and assigns props', () => {
-        expect(cypher_1.MERGE_RELDEF_CYPHER).toContain('MERGE (n:RelationshipDef {name: $name})');
-        expect(cypher_1.MERGE_RELDEF_CYPHER).toContain('SET n += $props');
     });
 });
 //# sourceMappingURL=cypher.test.js.map

@@ -3,17 +3,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const graphql_1 = require("graphql");
 const crud_1 = require("./crud");
 const types_1 = require("./types");
-function lendingDna() {
+function makeResourceType(name, category = 'resource') {
     return {
-        domain: {
-            name: 'lending',
-            resources: [
-                { name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] },
-                { name: 'Borrower', attributes: [{ name: 'email', type: 'string' }] },
-            ],
-            persons: [{ name: 'Customer' }],
-        },
+        id: `rt-${name}`,
+        name,
+        category,
+        attribute_schema: [{ name: 'foo', type: 'string' }],
+        current_version: 1,
+        is_seed: false,
     };
+}
+function lendingTypes() {
+    return [
+        makeResourceType('Loan'),
+        makeResourceType('Borrower'),
+        makeResourceType('Customer', 'person'),
+    ];
 }
 const stubResolvers = {
     get: () => () => null,
@@ -23,14 +28,12 @@ const stubResolvers = {
     delete: () => () => true,
 };
 describe('schema/crud — buildCrudFields', () => {
-    it('registers the five CRUD operations per noun primitive', () => {
-        const bundle = (0, types_1.buildResourceTypes)(lendingDna());
+    it('registers the five CRUD operations per ResourceType', () => {
+        const bundle = (0, types_1.buildResourceTypes)(lendingTypes());
         const { queries, mutations } = (0, crud_1.buildCrudFields)(bundle, stubResolvers);
         for (const type of ['Loan', 'Borrower', 'Customer']) {
             const single = type.charAt(0).toLowerCase() + type.slice(1);
-            const plural = type === 'Person'
-                ? 'persons'
-                : `${type.charAt(0).toLowerCase() + type.slice(1)}s`;
+            const plural = `${type.charAt(0).toLowerCase() + type.slice(1)}s`;
             expect(queries[single]).toBeDefined();
             expect(queries[plural]).toBeDefined();
             expect(mutations[`create${type}`]).toBeDefined();
@@ -39,16 +42,13 @@ describe('schema/crud — buildCrudFields', () => {
         }
     });
     it('uses persons override for Person plural (not peoples)', () => {
-        const dna = {
-            domain: { name: 'ex', persons: [{ name: 'Person' }] },
-        };
-        const bundle = (0, types_1.buildResourceTypes)(dna);
+        const bundle = (0, types_1.buildResourceTypes)([makeResourceType('Person', 'person')]);
         const { queries } = (0, crud_1.buildCrudFields)(bundle, stubResolvers);
         expect(queries.persons).toBeDefined();
         expect(queries.peoples).toBeUndefined();
     });
     it('list query returns a non-null list of non-null elements', () => {
-        const bundle = (0, types_1.buildResourceTypes)(lendingDna());
+        const bundle = (0, types_1.buildResourceTypes)(lendingTypes());
         const { queries } = (0, crud_1.buildCrudFields)(bundle, stubResolvers);
         const loans = queries.loans;
         expect(loans.type).toBeInstanceOf(graphql_1.GraphQLNonNull);
@@ -56,7 +56,7 @@ describe('schema/crud — buildCrudFields', () => {
         expect(inner).toBeInstanceOf(graphql_1.GraphQLList);
     });
     it('delete mutation returns Boolean!', () => {
-        const bundle = (0, types_1.buildResourceTypes)(lendingDna());
+        const bundle = (0, types_1.buildResourceTypes)(lendingTypes());
         const { mutations } = (0, crud_1.buildCrudFields)(bundle, stubResolvers);
         const del = mutations.deleteLoan;
         expect(del.type).toBeInstanceOf(graphql_1.GraphQLNonNull);
@@ -64,7 +64,7 @@ describe('schema/crud — buildCrudFields', () => {
         expect(inner).toBe(graphql_1.GraphQLBoolean);
     });
     it('update mutation takes id: ID! and input: <Type>Input!', () => {
-        const bundle = (0, types_1.buildResourceTypes)(lendingDna());
+        const bundle = (0, types_1.buildResourceTypes)(lendingTypes());
         const { mutations } = (0, crud_1.buildCrudFields)(bundle, stubResolvers);
         const update = mutations.updateLoan;
         expect(update.args).toBeDefined();
@@ -76,7 +76,7 @@ describe('schema/crud — buildCrudFields', () => {
         expect(inputArg.type).toBeInstanceOf(graphql_1.GraphQLNonNull);
     });
     it('emits crudMutationNames for collision detection downstream', () => {
-        const bundle = (0, types_1.buildResourceTypes)(lendingDna());
+        const bundle = (0, types_1.buildResourceTypes)(lendingTypes());
         const { crudMutationNames } = (0, crud_1.buildCrudFields)(bundle, stubResolvers);
         expect(crudMutationNames.has('createLoan')).toBe(true);
         expect(crudMutationNames.has('updateLoan')).toBe(true);

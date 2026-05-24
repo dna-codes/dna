@@ -47,6 +47,9 @@ describe('server', () => {
         })
             .set('Content-Type', 'application/json');
         expect(create.status).toBe(200);
+        if (create.body.errors) {
+            throw new Error(`createLoan errors: ${JSON.stringify(create.body.errors)}`);
+        }
         const created = create.body.data.createLoan;
         expect(created.amount).toBe(1000);
         const read = await (0, supertest_1.default)(server.expressApp)

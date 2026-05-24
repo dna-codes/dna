@@ -278,7 +278,7 @@ The repo currently publishes five npm packages:
 | [`@dna-codes/dna-core`](./packages/core) | TypeScript bindings + per-layer and cross-layer validator; wraps `@dna-codes/dna-schemas`. Also home to shared adapter contracts (`ParseResult`, `Style`, `Unit`, `StyleMap`, `DEFAULT_STYLES`) and the `DnaDataStore` runtime-data contract |
 | [`@dna-codes/dna-ingest`](./packages/ingest) | Multi-source DNA orchestrator. Fans `[source URI] → integration → input → partial DNA` per source, merges via `dna-core.merge()`, reports conflicts + provenance + non-fatal errors. Imports zero adapters — caller injects them. Defines the `Integration` and `InputAdapter` ports. |
 | [`@dna-codes/dna-adapters`](./packages/adapters) | Unified adapter package — every input parser, output renderer, and integration client lives as a subpath. One version line, one publish per release. |
-| [`@dna-codes/dna-api`](./packages/api) | First transport wrapper: a deployable GraphQL API server. Loads an `OperationalDNA` at startup, generates a GraphQL schema from it, and routes resolvers through `integration/neo4j`. Includes a CLI and Docker setup for local-dev. |
+| [`@dna-codes/dna-api`](./packages/api) | Registry-native GraphQL API server. Seeds `ResourceType` / `RelationshipType` records from a DNA on first boot; admins author the type system at runtime through the API. Schema regenerates and hot-swaps on type mutations. Backed by `integration/neo4j` with versioned history. |
 
 #### Adapters (subpaths of `@dna-codes/dna-adapters`)
 

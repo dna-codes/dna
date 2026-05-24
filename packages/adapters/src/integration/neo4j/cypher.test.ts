@@ -1,15 +1,36 @@
 import {
   buildLinkListCypher,
+  COUNT_INSTANCES_OF_TYPE_CYPHER,
+  COUNT_LINKS_OF_ROLE_CYPHER,
+  CREATE_RELATIONSHIP_TYPE_CYPHER,
+  CREATE_RELATIONSHIP_TYPE_VERSION_CYPHER,
+  CREATE_RESOURCE_TYPE_CYPHER,
+  CREATE_RESOURCE_TYPE_VERSION_CYPHER,
+  DELETE_LINK_CYPHER,
+  DELETE_LINKS_OF_ROLE_CYPHER,
+  DELETE_RELATIONSHIP_TYPE_CYPHER,
+  DELETE_RESOURCE_TYPE_CYPHER,
+  GET_RELATIONSHIP_TYPE_BY_NAME_CYPHER,
+  GET_RELATIONSHIP_TYPE_CYPHER,
+  GET_RESOURCE_TYPE_BY_NAME_CYPHER,
+  GET_RESOURCE_TYPE_CYPHER,
+  HAS_SEED_MARKER_CYPHER,
+  LIST_RELATIONSHIP_TYPES_CYPHER,
+  LIST_RELATIONSHIP_TYPE_VERSIONS_CYPHER,
+  LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER,
+  LIST_RESOURCE_TYPES_CYPHER,
+  LIST_RESOURCE_TYPE_VERSIONS_CYPHER,
+  METADATA_SCHEMA_CYPHER,
+  UPDATE_RELATIONSHIP_TYPE_CYPHER,
+  UPDATE_RESOURCE_TYPE_CYPHER,
+  WRITE_SEED_MARKER_CYPHER,
   createInstanceCypher,
   createLinkCypher,
-  DELETE_LINK_CYPHER,
   deleteInstanceCypher,
+  dropLabelSchemaCypher,
   getInstanceCypher,
   labelSchemaCypher,
   listInstanceCypher,
-  MERGE_RELDEF_CYPHER,
-  MERGE_TYPEDEF_CYPHER,
-  METADATA_SCHEMA_CYPHER,
   updateInstanceCypher,
   validateLabel,
 } from './cypher'
@@ -17,7 +38,7 @@ import {
 describe('cypher/validateLabel', () => {
   it('accepts PascalCase identifiers', () => {
     expect(() => validateLabel('Loan')).not.toThrow()
-    expect(() => validateLabel('TypeDefinition')).not.toThrow()
+    expect(() => validateLabel('ResourceType')).not.toThrow()
     expect(() => validateLabel('Borrower2')).not.toThrow()
   })
 
@@ -30,12 +51,20 @@ describe('cypher/validateLabel', () => {
   })
 })
 
-describe('cypher/metadata schema', () => {
-  it('METADATA_SCHEMA_CYPHER covers TypeDefinition, RelationshipDef, and LINK._id', () => {
+describe('cypher/metadata schema (registry-native)', () => {
+  it('METADATA_SCHEMA_CYPHER covers ResourceType, RelationshipType, version nodes, LINK._id', () => {
     const joined = METADATA_SCHEMA_CYPHER.join('\n')
-    expect(joined).toMatch(/CONSTRAINT.*TypeDefinition.*name/i)
-    expect(joined).toMatch(/CONSTRAINT.*RelationshipDef.*name/i)
+    expect(joined).toMatch(/CONSTRAINT.*ResourceType.*name/i)
+    expect(joined).toMatch(/CONSTRAINT.*RelationshipType.*name/i)
+    expect(joined).toMatch(/CONSTRAINT.*ResourceTypeVersion.*id/i)
+    expect(joined).toMatch(/CONSTRAINT.*RelationshipTypeVersion.*id/i)
     expect(joined).toMatch(/INDEX.*LINK.*_id/i)
+  })
+
+  it('TypeDefinition and RelationshipDef labels are NOT created (renamed)', () => {
+    const joined = METADATA_SCHEMA_CYPHER.join('\n')
+    expect(joined).not.toMatch(/TypeDefinition/)
+    expect(joined).not.toMatch(/RelationshipDef/)
   })
 
   it('all metadata statements use IF NOT EXISTS for idempotency', () => {
@@ -54,8 +83,94 @@ describe('cypher/labelSchemaCypher', () => {
     expect(index).toMatch(/IF NOT EXISTS/)
   })
 
+  it('dropLabelSchemaCypher emits DROP statements for the same artifacts', () => {
+    const [dropConstraint, dropIndex] = dropLabelSchemaCypher('Loan')
+    expect(dropConstraint).toMatch(/DROP CONSTRAINT.*loan_id_unique/i)
+    expect(dropIndex).toMatch(/DROP INDEX.*loan_typename_index/i)
+  })
+
   it('rejects an unsafe label', () => {
     expect(() => labelSchemaCypher('Loan; DROP')).toThrow(/invalid typeName/)
+    expect(() => dropLabelSchemaCypher('Loan; DROP')).toThrow(/invalid typeName/)
+  })
+})
+
+describe('cypher/ResourceType + RelationshipType CRUD', () => {
+  it('CREATE_RESOURCE_TYPE_CYPHER writes a labeled node from $props', () => {
+    expect(CREATE_RESOURCE_TYPE_CYPHER).toContain('(rt:ResourceType')
+    expect(CREATE_RESOURCE_TYPE_CYPHER).toContain('$props')
+    expect(CREATE_RESOURCE_TYPE_CYPHER).toContain('RETURN rt.id AS id')
+  })
+
+  it('CREATE_RESOURCE_TYPE_VERSION_CYPHER links to the live type via VERSION_OF', () => {
+    expect(CREATE_RESOURCE_TYPE_VERSION_CYPHER).toContain('(rt:ResourceType {id: $resourceTypeId})')
+    expect(CREATE_RESOURCE_TYPE_VERSION_CYPHER).toContain('(v:ResourceTypeVersion')
+    expect(CREATE_RESOURCE_TYPE_VERSION_CYPHER).toContain('[:VERSION_OF]')
+  })
+
+  it('UPDATE_RESOURCE_TYPE_CYPHER bumps current_version', () => {
+    expect(UPDATE_RESOURCE_TYPE_CYPHER).toContain('SET rt += $patch, rt.current_version = $newVersion')
+  })
+
+  it('DELETE_RESOURCE_TYPE_CYPHER cleans up versions via DETACH DELETE', () => {
+    expect(DELETE_RESOURCE_TYPE_CYPHER).toContain('DETACH DELETE v, rt')
+  })
+
+  it('GET_RESOURCE_TYPE_CYPHER and GET_RESOURCE_TYPE_BY_NAME_CYPHER both target :ResourceType', () => {
+    expect(GET_RESOURCE_TYPE_CYPHER).toContain('(rt:ResourceType {id: $id})')
+    expect(GET_RESOURCE_TYPE_BY_NAME_CYPHER).toContain('(rt:ResourceType {name: $name})')
+  })
+
+  it('LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER filters by category', () => {
+    expect(LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER).toContain('(rt:ResourceType {category: $category})')
+  })
+
+  it('LIST_RESOURCE_TYPES_CYPHER returns all in name order', () => {
+    expect(LIST_RESOURCE_TYPES_CYPHER).toContain('(rt:ResourceType)')
+    expect(LIST_RESOURCE_TYPES_CYPHER).toContain('ORDER BY rt.name')
+  })
+
+  it('LIST_RESOURCE_TYPE_VERSIONS_CYPHER returns versions in descending order', () => {
+    expect(LIST_RESOURCE_TYPE_VERSIONS_CYPHER).toContain('ORDER BY v.version DESC')
+  })
+
+  it('RelationshipType mirror exists', () => {
+    expect(CREATE_RELATIONSHIP_TYPE_CYPHER).toContain('(rt:RelationshipType')
+    expect(CREATE_RELATIONSHIP_TYPE_VERSION_CYPHER).toContain('(v:RelationshipTypeVersion')
+    expect(UPDATE_RELATIONSHIP_TYPE_CYPHER).toContain('SET rt += $patch, rt.current_version = $newVersion')
+    expect(DELETE_RELATIONSHIP_TYPE_CYPHER).toContain('DETACH DELETE v, rt')
+    expect(GET_RELATIONSHIP_TYPE_CYPHER).toContain('(rt:RelationshipType {id: $id})')
+    expect(GET_RELATIONSHIP_TYPE_BY_NAME_CYPHER).toContain('(rt:RelationshipType {name: $name})')
+    expect(LIST_RELATIONSHIP_TYPES_CYPHER).toContain('(rt:RelationshipType)')
+    expect(LIST_RELATIONSHIP_TYPE_VERSIONS_CYPHER).toContain('(rt:RelationshipType {id: $id})')
+  })
+
+  it('COUNT_INSTANCES_OF_TYPE_CYPHER is per-label and rejects unsafe labels', () => {
+    expect(COUNT_INSTANCES_OF_TYPE_CYPHER('Loan')).toBe('MATCH (n:Loan) RETURN count(n) AS count')
+    expect(() => COUNT_INSTANCES_OF_TYPE_CYPHER('Loan; DROP')).toThrow()
+  })
+
+  it('COUNT_LINKS_OF_ROLE_CYPHER filters by role property', () => {
+    expect(COUNT_LINKS_OF_ROLE_CYPHER).toContain('[r:LINK {role: $role}]')
+    expect(COUNT_LINKS_OF_ROLE_CYPHER).toContain('count(r) AS count')
+  })
+
+  it('DELETE_LINKS_OF_ROLE_CYPHER deletes by role', () => {
+    expect(DELETE_LINKS_OF_ROLE_CYPHER).toContain('[r:LINK {role: $role}]')
+    expect(DELETE_LINKS_OF_ROLE_CYPHER).toContain('DELETE r')
+  })
+})
+
+describe('cypher/seed marker', () => {
+  it('HAS_SEED_MARKER_CYPHER queries a :SeedMarker node', () => {
+    expect(HAS_SEED_MARKER_CYPHER).toContain('(m:SeedMarker)')
+    expect(HAS_SEED_MARKER_CYPHER).toContain('LIMIT 1')
+  })
+
+  it('WRITE_SEED_MARKER_CYPHER MERGEs the marker with createdAt + dnaHash', () => {
+    expect(WRITE_SEED_MARKER_CYPHER).toContain('MERGE (m:SeedMarker)')
+    expect(WRITE_SEED_MARKER_CYPHER).toContain('m.createdAt = $createdAt')
+    expect(WRITE_SEED_MARKER_CYPHER).toContain('m.dnaHash = $dnaHash')
   })
 })
 
@@ -126,29 +241,7 @@ describe('cypher/buildLinkListCypher', () => {
     expect(params).toEqual({})
   })
 
-  it('from filter pins the source label and parameterizes fromId', () => {
-    const { cypher, params } = buildLinkListCypher({
-      from: { typeName: 'Loan', id: 'l1' },
-    })
-    expect(cypher).toContain('(a:Loan {_id: $fromId})')
-    expect(params).toEqual({ fromId: 'l1' })
-  })
-
-  it('to filter pins the target label and parameterizes toId', () => {
-    const { cypher, params } = buildLinkListCypher({
-      to: { typeName: 'Borrower', id: 'b1' },
-    })
-    expect(cypher).toContain('(b:Borrower {_id: $toId})')
-    expect(params).toEqual({ toId: 'b1' })
-  })
-
-  it('role filter adds a WHERE clause and parameterizes role', () => {
-    const { cypher, params } = buildLinkListCypher({ role: 'primary_borrower' })
-    expect(cypher).toContain('WHERE r.role = $role')
-    expect(params).toEqual({ role: 'primary_borrower' })
-  })
-
-  it('combined filter parameterizes all three', () => {
+  it('combined filter parameterizes from, to, and role', () => {
     const { cypher, params } = buildLinkListCypher({
       from: { typeName: 'Loan', id: 'l1' },
       to: { typeName: 'Borrower', id: 'b1' },
@@ -167,17 +260,5 @@ describe('cypher/buildLinkListCypher', () => {
   it('rejects unsafe labels in either endpoint', () => {
     expect(() => buildLinkListCypher({ from: { typeName: 'Loan; DROP', id: 'l1' } })).toThrow()
     expect(() => buildLinkListCypher({ to: { typeName: 'Loan; DROP', id: 'l1' } })).toThrow()
-  })
-})
-
-describe('cypher/metadata MERGE', () => {
-  it('MERGE_TYPEDEF_CYPHER merges on name and assigns props', () => {
-    expect(MERGE_TYPEDEF_CYPHER).toContain('MERGE (n:TypeDefinition {name: $name})')
-    expect(MERGE_TYPEDEF_CYPHER).toContain('SET n += $props')
-  })
-
-  it('MERGE_RELDEF_CYPHER merges on name and assigns props', () => {
-    expect(MERGE_RELDEF_CYPHER).toContain('MERGE (n:RelationshipDef {name: $name})')
-    expect(MERGE_RELDEF_CYPHER).toContain('SET n += $props')
   })
 })

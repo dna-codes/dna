@@ -1,18 +1,30 @@
 "use strict";
 /**
- * Cypher snippet builders for the Neo4j `DnaDataStore` adapter.
+ * Cypher snippet builders for the Neo4j `DnaDataStore` adapter,
+ * registry-native edition.
  *
  * Neo4j does NOT parameterize node labels or relationship types in
  * Cypher — they have to be string-interpolated. To stay safe, every
  * caller-provided label MUST flow through `validateLabel()` first.
  *
+ * Storage labels (registry-native):
+ *   :ResourceType            metadata (was :TypeDefinition in v0.1.0)
+ *   :RelationshipType        metadata (was :RelationshipDef)
+ *   :ResourceTypeVersion     append-only version history for :ResourceType
+ *   :RelationshipTypeVersion same for :RelationshipType
+ *   :<TypeName>              per-typename Instance labels (e.g. :Loan)
+ *   [:LINK]                  edge between Instance nodes
+ *   [:VERSION_OF]            edge from version node back to its live type
+ *   :SeedMarker              singleton sentinel after seedFromDna
+ *
  * Functions in this file are pure (no I/O). They are unit-testable in
  * isolation, and the runtime adapter (`client.ts`) imports them by name.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DELETE_LINK_CYPHER = exports.MERGE_RELDEF_CYPHER = exports.MERGE_TYPEDEF_CYPHER = exports.METADATA_SCHEMA_CYPHER = void 0;
+exports.DELETE_LINK_CYPHER = exports.WRITE_SEED_MARKER_CYPHER = exports.HAS_SEED_MARKER_CYPHER = exports.DELETE_LINKS_OF_ROLE_CYPHER = exports.COUNT_LINKS_OF_ROLE_CYPHER = exports.LIST_RELATIONSHIP_TYPE_VERSIONS_CYPHER = exports.DELETE_RELATIONSHIP_TYPE_CYPHER = exports.UPDATE_RELATIONSHIP_TYPE_CYPHER = exports.LIST_RELATIONSHIP_TYPES_CYPHER = exports.GET_RELATIONSHIP_TYPE_BY_NAME_CYPHER = exports.GET_RELATIONSHIP_TYPE_CYPHER = exports.CREATE_RELATIONSHIP_TYPE_VERSION_CYPHER = exports.CREATE_RELATIONSHIP_TYPE_CYPHER = exports.COUNT_INSTANCES_OF_TYPE_CYPHER = exports.LIST_RESOURCE_TYPE_VERSIONS_CYPHER = exports.DELETE_RESOURCE_TYPE_CYPHER = exports.UPDATE_RESOURCE_TYPE_CYPHER = exports.LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER = exports.LIST_RESOURCE_TYPES_CYPHER = exports.GET_RESOURCE_TYPE_BY_NAME_CYPHER = exports.GET_RESOURCE_TYPE_CYPHER = exports.CREATE_RESOURCE_TYPE_VERSION_CYPHER = exports.CREATE_RESOURCE_TYPE_CYPHER = exports.METADATA_SCHEMA_CYPHER = void 0;
 exports.validateLabel = validateLabel;
 exports.labelSchemaCypher = labelSchemaCypher;
+exports.dropLabelSchemaCypher = dropLabelSchemaCypher;
 exports.createInstanceCypher = createInstanceCypher;
 exports.getInstanceCypher = getInstanceCypher;
 exports.updateInstanceCypher = updateInstanceCypher;
@@ -36,26 +48,89 @@ function validateLabel(label) {
         throw new Error(`integration/neo4j: invalid typeName "${label}" — must match /^[A-Z][a-zA-Z0-9]*$/ (the DNA noun-primitive naming convention)`);
     }
 }
-/** Constraint and index Cypher for the metadata labels (TypeDefinition, RelationshipDef). */
+/**
+ * Static constraint + index Cypher created on every `migrate()` call.
+ *
+ * Per-typename Instance constraints (`(:Loan) REQUIRE _id IS UNIQUE`) are
+ * NOT created here — they're created on-demand when `resourceType.create`
+ * runs for a new typename. This matches the registry-native flow where
+ * the type system is dynamic.
+ */
 exports.METADATA_SCHEMA_CYPHER = [
-    'CREATE CONSTRAINT typedef_name_unique IF NOT EXISTS FOR (n:TypeDefinition) REQUIRE n.name IS UNIQUE',
-    'CREATE CONSTRAINT reldef_name_unique IF NOT EXISTS FOR (n:RelationshipDef) REQUIRE n.name IS UNIQUE',
+    'CREATE CONSTRAINT resource_type_name_unique IF NOT EXISTS FOR (n:ResourceType) REQUIRE n.name IS UNIQUE',
+    'CREATE CONSTRAINT relationship_type_name_unique IF NOT EXISTS FOR (n:RelationshipType) REQUIRE n.name IS UNIQUE',
+    'CREATE CONSTRAINT resource_type_id_unique IF NOT EXISTS FOR (n:ResourceType) REQUIRE n.id IS UNIQUE',
+    'CREATE CONSTRAINT relationship_type_id_unique IF NOT EXISTS FOR (n:RelationshipType) REQUIRE n.id IS UNIQUE',
+    'CREATE CONSTRAINT resource_type_version_id_unique IF NOT EXISTS FOR (n:ResourceTypeVersion) REQUIRE n.id IS UNIQUE',
+    'CREATE CONSTRAINT relationship_type_version_id_unique IF NOT EXISTS FOR (n:RelationshipTypeVersion) REQUIRE n.id IS UNIQUE',
     'CREATE INDEX link_id_index IF NOT EXISTS FOR ()-[r:LINK]-() ON (r._id)',
 ];
-/** Per-noun-primitive-label constraint + index Cypher. `label` MUST be validated. */
+/**
+ * Per-typename constraint Cypher, created on-demand when a new
+ * `ResourceType` is registered. Idempotent via `IF NOT EXISTS`.
+ */
 function labelSchemaCypher(label) {
     validateLabel(label);
-    // Constraint name needs a unique, safe identifier per label.
     const safeName = label.toLowerCase();
     return [
         `CREATE CONSTRAINT ${safeName}_id_unique IF NOT EXISTS FOR (n:${label}) REQUIRE n._id IS UNIQUE`,
         `CREATE INDEX ${safeName}_typename_index IF NOT EXISTS FOR (n:${label}) ON (n._typeName)`,
     ];
 }
-/** Cypher to MERGE a TypeDefinition node. Properties passed via `$props`. */
-exports.MERGE_TYPEDEF_CYPHER = 'MERGE (n:TypeDefinition {name: $name}) SET n += $props';
-/** Cypher to MERGE a RelationshipDef node. Properties passed via `$props`. */
-exports.MERGE_RELDEF_CYPHER = 'MERGE (n:RelationshipDef {name: $name}) SET n += $props';
+/** Cypher to drop the per-typename constraint+index. Called by `resourceType.delete`. */
+function dropLabelSchemaCypher(label) {
+    validateLabel(label);
+    const safeName = label.toLowerCase();
+    return [
+        `DROP CONSTRAINT ${safeName}_id_unique IF EXISTS`,
+        `DROP INDEX ${safeName}_typename_index IF EXISTS`,
+    ];
+}
+// ── ResourceType / RelationshipType CRUD Cypher ────────────────────────────
+exports.CREATE_RESOURCE_TYPE_CYPHER = 'CREATE (rt:ResourceType $props) RETURN rt.id AS id';
+exports.CREATE_RESOURCE_TYPE_VERSION_CYPHER = `MATCH (rt:ResourceType {id: $resourceTypeId})
+CREATE (v:ResourceTypeVersion $versionProps)
+CREATE (v)-[:VERSION_OF]->(rt)
+RETURN v.id AS id`;
+exports.GET_RESOURCE_TYPE_CYPHER = 'MATCH (rt:ResourceType {id: $id}) RETURN rt';
+exports.GET_RESOURCE_TYPE_BY_NAME_CYPHER = 'MATCH (rt:ResourceType {name: $name}) RETURN rt';
+exports.LIST_RESOURCE_TYPES_CYPHER = 'MATCH (rt:ResourceType) RETURN rt ORDER BY rt.name';
+exports.LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER = 'MATCH (rt:ResourceType {category: $category}) RETURN rt ORDER BY rt.name';
+exports.UPDATE_RESOURCE_TYPE_CYPHER = `MATCH (rt:ResourceType {id: $id})
+SET rt += $patch, rt.current_version = $newVersion
+RETURN rt`;
+exports.DELETE_RESOURCE_TYPE_CYPHER = `MATCH (rt:ResourceType {id: $id})
+OPTIONAL MATCH (v:ResourceTypeVersion)-[:VERSION_OF]->(rt)
+DETACH DELETE v, rt`;
+exports.LIST_RESOURCE_TYPE_VERSIONS_CYPHER = `MATCH (v:ResourceTypeVersion)-[:VERSION_OF]->(rt:ResourceType {id: $id})
+RETURN v ORDER BY v.version DESC`;
+const COUNT_INSTANCES_OF_TYPE_CYPHER = (label) => {
+    validateLabel(label);
+    return `MATCH (n:${label}) RETURN count(n) AS count`;
+};
+exports.COUNT_INSTANCES_OF_TYPE_CYPHER = COUNT_INSTANCES_OF_TYPE_CYPHER;
+exports.CREATE_RELATIONSHIP_TYPE_CYPHER = 'CREATE (rt:RelationshipType $props) RETURN rt.id AS id';
+exports.CREATE_RELATIONSHIP_TYPE_VERSION_CYPHER = `MATCH (rt:RelationshipType {id: $relationshipTypeId})
+CREATE (v:RelationshipTypeVersion $versionProps)
+CREATE (v)-[:VERSION_OF]->(rt)
+RETURN v.id AS id`;
+exports.GET_RELATIONSHIP_TYPE_CYPHER = 'MATCH (rt:RelationshipType {id: $id}) RETURN rt';
+exports.GET_RELATIONSHIP_TYPE_BY_NAME_CYPHER = 'MATCH (rt:RelationshipType {name: $name}) RETURN rt';
+exports.LIST_RELATIONSHIP_TYPES_CYPHER = 'MATCH (rt:RelationshipType) RETURN rt ORDER BY rt.name';
+exports.UPDATE_RELATIONSHIP_TYPE_CYPHER = `MATCH (rt:RelationshipType {id: $id})
+SET rt += $patch, rt.current_version = $newVersion
+RETURN rt`;
+exports.DELETE_RELATIONSHIP_TYPE_CYPHER = `MATCH (rt:RelationshipType {id: $id})
+OPTIONAL MATCH (v:RelationshipTypeVersion)-[:VERSION_OF]->(rt)
+DETACH DELETE v, rt`;
+exports.LIST_RELATIONSHIP_TYPE_VERSIONS_CYPHER = `MATCH (v:RelationshipTypeVersion)-[:VERSION_OF]->(rt:RelationshipType {id: $id})
+RETURN v ORDER BY v.version DESC`;
+exports.COUNT_LINKS_OF_ROLE_CYPHER = 'MATCH ()-[r:LINK {role: $role}]->() RETURN count(r) AS count';
+exports.DELETE_LINKS_OF_ROLE_CYPHER = 'MATCH ()-[r:LINK {role: $role}]->() DELETE r';
+// ── Seed marker ────────────────────────────────────────────────────────────
+exports.HAS_SEED_MARKER_CYPHER = 'MATCH (m:SeedMarker) RETURN m LIMIT 1';
+exports.WRITE_SEED_MARKER_CYPHER = 'MERGE (m:SeedMarker) SET m.createdAt = $createdAt, m.dnaHash = $dnaHash RETURN m';
+// ── Instance / Link CRUD (existing snippets, retained) ─────────────────────
 /** Cypher for `instance.create` — caller MUST validate the `label`. */
 function createInstanceCypher(label) {
     validateLabel(label);

@@ -1,0 +1,458 @@
+{
+  "domain": {
+    "name": "lending",
+    "path": "acme.finance.lending",
+    "description": "Consumer lending — loan origination, underwriting, servicing.",
+    "resources": [
+      {
+        "id": "139afa3b-1e6d-43f5-935f-513fa56c2b1e",
+        "type": "resource",
+        "version": "1",
+        "name": "Loan",
+        "description": "A financial loan issued to a Borrower with repayment terms.",
+        "attributes": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "amount",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "interest_rate",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "borrower_id",
+            "type": "reference",
+            "resource": "Borrower",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "values": [
+              "pending",
+              "approved",
+              "active",
+              "repaid",
+              "defaulted"
+            ]
+          },
+          {
+            "name": "due_date",
+            "type": "date"
+          }
+        ],
+        "actions": [
+          {
+            "name": "Apply",
+            "description": "Borrower submits a loan application.",
+            "type": "write"
+          },
+          {
+            "name": "Approve",
+            "description": "Underwriter approves a pending application.",
+            "type": "write"
+          },
+          {
+            "name": "Disburse",
+            "description": "Funds released to the borrower.",
+            "type": "destructive"
+          },
+          {
+            "name": "Repay",
+            "description": "Borrower makes a payment.",
+            "type": "write"
+          },
+          {
+            "name": "Default",
+            "description": "Loan flagged as overdue beyond grace period.",
+            "type": "write"
+          }
+        ]
+      }
+    ],
+    "persons": [
+      {
+        "id": "50217835-49a4-4296-9791-3ab2f6a6188b",
+        "type": "person",
+        "version": "1",
+        "name": "Borrower",
+        "description": "An external party who applies for and repays loans. Acts as both Person template (structure with credit score) and actor (performs Loan.Apply directly).",
+        "attributes": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "credit_score",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "id": "2bd1b393-e5f9-49ea-a08b-7c9b596caac9",
+        "type": "person",
+        "version": "1",
+        "name": "Employee",
+        "description": "Internal worker; eligible for Underwriter and LendingManager Roles."
+      }
+    ],
+    "groups": [
+      {
+        "id": "e29c1fd4-7f5a-429e-aba2-84330bb45384",
+        "type": "group",
+        "version": "1",
+        "name": "BankDepartment",
+        "description": "An internal department within the bank. Scopes Underwriter Memberships.",
+        "attributes": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    ],
+    "roles": [
+      {
+        "id": "740c26db-0f97-415a-b023-68a133886bbe",
+        "type": "role",
+        "version": "1",
+        "name": "Underwriter",
+        "description": "Internal Role responsible for approving loan applications.",
+        "scope": "BankDepartment"
+      },
+      {
+        "id": "8925eacd-91f5-42f6-8204-7d68aaad3eb0",
+        "type": "role",
+        "version": "1",
+        "name": "SeniorUnderwriter",
+        "description": "Senior position above Underwriter; inherits BankDepartment scope and adds promotion authority.",
+        "parent": "Underwriter",
+        "actions": [
+          {
+            "name": "Promote",
+            "type": "write",
+            "description": "Promotes a junior Underwriter to senior."
+          }
+        ]
+      },
+      {
+        "id": "09f8a782-5629-4259-aa85-30ca303e0c6b",
+        "type": "role",
+        "version": "1",
+        "name": "LendingManager",
+        "description": "Internal Role responsible for owning the loan-origination Process.",
+        "scope": "BankDepartment"
+      },
+      {
+        "id": "60142615-4175-43cb-90ae-8ffec7f89105",
+        "type": "role",
+        "version": "1",
+        "name": "NightlyDelinquencySweep",
+        "description": "System Role: scheduled job that flags overdue loans as defaulted.",
+        "system": true
+      }
+    ]
+  },
+  "memberships": [
+    {
+      "id": "38f2671d-3490-4450-95b2-39ab02b3f1c2",
+      "type": "membership",
+      "version": "1",
+      "name": "EmployeeUnderwriter",
+      "person": "Employee",
+      "role": "Underwriter",
+      "description": "Employees may hold the Underwriter role within a BankDepartment."
+    },
+    {
+      "id": "4ff66da9-28f9-4570-b41e-09cbea02fa77",
+      "type": "membership",
+      "version": "1",
+      "name": "EmployeeLendingManager",
+      "person": "Employee",
+      "role": "LendingManager",
+      "description": "Employees may hold the Lending Manager role within a BankDepartment."
+    }
+  ],
+  "operations": [
+    {
+      "id": "8cdeae8c-672b-4c68-a1f6-c686948c1a31",
+      "type": "operation",
+      "version": "1",
+      "target": "Loan",
+      "action": "Apply",
+      "name": "Loan.Apply",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "pending"
+        }
+      ]
+    },
+    {
+      "id": "8ecadc0f-674e-4e29-af89-3098367a4ddf",
+      "type": "operation",
+      "version": "1",
+      "target": "Loan",
+      "action": "Approve",
+      "name": "Loan.Approve",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "approved"
+        }
+      ]
+    },
+    {
+      "id": "ef4bc8ea-e7a9-4bb9-b930-28c158a6be7c",
+      "type": "operation",
+      "version": "1",
+      "target": "Loan",
+      "action": "Disburse",
+      "name": "Loan.Disburse",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "active"
+        }
+      ]
+    },
+    {
+      "id": "4cef54c0-ca6f-4d06-a1f1-085fad9f63f9",
+      "type": "operation",
+      "version": "1",
+      "target": "Loan",
+      "action": "Repay",
+      "name": "Loan.Repay"
+    },
+    {
+      "id": "5b46b7d6-57f7-4614-a0a3-1b846ed4dbbd",
+      "type": "operation",
+      "version": "1",
+      "target": "Loan",
+      "action": "Default",
+      "name": "Loan.Default",
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "defaulted"
+        }
+      ]
+    },
+    {
+      "id": "f903d1d6-cae6-476a-8836-5bfea2e20e04",
+      "type": "operation",
+      "version": "1",
+      "target": "LoanOrigination",
+      "action": "Start",
+      "name": "LoanOrigination.Start",
+      "description": "LendingManager kicks off the LoanOrigination SOP for a qualified lead."
+    }
+  ],
+  "triggers": [
+    {
+      "id": "938b6a13-2c90-4e40-99e2-4520345d479a",
+      "type": "trigger",
+      "version": "1",
+      "operation": "Loan.Apply",
+      "source": "user",
+      "description": "Borrower submits an application via web or branch.",
+      "name": "LoanApplyUser"
+    },
+    {
+      "id": "691777e1-523a-42ba-8b75-d46cb6dff121",
+      "type": "trigger",
+      "version": "1",
+      "process": "LoanOrigination",
+      "source": "webhook",
+      "event": "crm.lead.qualified",
+      "description": "Kick off the full origination SOP when CRM signals a qualified lead.",
+      "name": "LoanOriginationWebhook"
+    },
+    {
+      "id": "4e552a9e-16bd-4a82-8568-16565b838e3f",
+      "type": "trigger",
+      "version": "1",
+      "operation": "Loan.Default",
+      "source": "schedule",
+      "schedule": "0 0 * * *",
+      "description": "Nightly sweep flags overdue loans.",
+      "name": "LoanDefaultSchedule"
+    }
+  ],
+  "rules": [
+    {
+      "id": "e9e9d75b-9b47-4360-afb4-f3588e96098d",
+      "type": "rule",
+      "version": "1",
+      "operation": "Loan.Apply",
+      "rule_type": "access",
+      "allow": [
+        {
+          "role": "Borrower"
+        }
+      ],
+      "name": "LoanApplyAccess"
+    },
+    {
+      "id": "affde934-22f7-46ce-bd4d-51321dd0aa45",
+      "type": "rule",
+      "version": "1",
+      "operation": "Loan.Approve",
+      "rule_type": "access",
+      "allow": [
+        {
+          "role": "Underwriter"
+        }
+      ],
+      "name": "LoanApproveAccess"
+    },
+    {
+      "id": "15935bbe-cc7c-4bc0-973a-49b3c77d7492",
+      "type": "rule",
+      "version": "1",
+      "operation": "Loan.Disburse",
+      "rule_type": "access",
+      "allow": [
+        {
+          "role": "LendingManager"
+        }
+      ],
+      "name": "LoanDisburseAccess"
+    },
+    {
+      "id": "1e47d1d2-70c4-4c90-937e-4fe9d6a5a217",
+      "type": "rule",
+      "version": "1",
+      "operation": "Loan.Default",
+      "rule_type": "access",
+      "allow": [
+        {
+          "role": "NightlyDelinquencySweep"
+        }
+      ],
+      "name": "LoanDefaultAccess"
+    },
+    {
+      "id": "e97d8326-1040-420a-8f36-d230125f19a1",
+      "type": "rule",
+      "version": "1",
+      "name": "ApplicationIsPending",
+      "operation": "Loan.Approve",
+      "rule_type": "condition",
+      "conditions": [
+        {
+          "attribute": "loan.status",
+          "operator": "eq",
+          "value": "pending"
+        }
+      ]
+    },
+    {
+      "id": "84d6e405-f17d-4a22-91e8-ecb4947901ee",
+      "type": "rule",
+      "version": "1",
+      "name": "LoanIsApproved",
+      "operation": "Loan.Disburse",
+      "rule_type": "condition",
+      "conditions": [
+        {
+          "attribute": "loan.status",
+          "operator": "eq",
+          "value": "approved"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "aded8d07-2da9-4ea9-b1a9-43fc9ef86db2",
+      "type": "relationship",
+      "version": "1",
+      "name": "Loan.borrower",
+      "from": "Loan",
+      "to": "Borrower",
+      "cardinality": "many-to-one",
+      "attribute": "borrower_id",
+      "inverse": "loans"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "62144a5e-accb-4cdb-a878-c39ccb3e5d8b",
+      "type": "task",
+      "version": "1",
+      "name": "intake-application",
+      "actor": "Borrower",
+      "operation": "Loan.Apply"
+    },
+    {
+      "id": "70c9b6a3-b49d-4ca0-b6a5-b02b28c48978",
+      "type": "task",
+      "version": "1",
+      "name": "underwrite-loan",
+      "actor": "Underwriter",
+      "operation": "Loan.Approve"
+    },
+    {
+      "id": "826eba4e-ef19-4fbe-b0f7-d05faaddc563",
+      "type": "task",
+      "version": "1",
+      "name": "disburse-loan",
+      "actor": "LendingManager",
+      "operation": "Loan.Disburse"
+    }
+  ],
+  "processes": [
+    {
+      "id": "987268ea-b394-4bcd-bceb-98eaae414924",
+      "type": "process",
+      "version": "1",
+      "name": "LoanOrigination",
+      "description": "End-to-end loan origination from application to disbursement.",
+      "operator": "LendingManager",
+      "startStep": "intake",
+      "steps": [
+        {
+          "id": "intake",
+          "task": "intake-application"
+        },
+        {
+          "id": "underwrite",
+          "task": "underwrite-loan",
+          "depends_on": [
+            "intake"
+          ],
+          "conditions": [
+            "ApplicationIsPending"
+          ]
+        },
+        {
+          "id": "disburse",
+          "task": "disburse-loan",
+          "depends_on": [
+            "underwrite"
+          ],
+          "conditions": [
+            "LoanIsApproved"
+          ],
+          "else": "abort"
+        }
+      ]
+    }
+  ]
+}

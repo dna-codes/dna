@@ -1,22 +1,27 @@
 /**
- * In-memory `DnaDataStore` implementation. Zero dependencies; the
- * recommended test double for any package that depends on `DnaDataStore`.
+ * In-memory `DnaDataStore` implementation, registry-native edition. Zero
+ * dependencies; the recommended test double for any package that depends
+ * on `DnaDataStore`.
  *
- * Storage shape mirrors the Neo4j adapter's semantics so tests written
- * against this adapter exercise the same behaviors the Neo4j adapter
- * promises (modulo network and persistence):
+ * Storage shape mirrors the Neo4j adapter so tests written against this
+ * adapter exercise the same behaviors the Neo4j adapter promises (modulo
+ * network and persistence):
  *
- *   - Instances are keyed by `(typeName, id)` — same `id` across different
- *     types does not collide.
- *   - Links carry their own unique IDs and store `from`, `to`, optional
- *     `role`, optional `attributes`.
- *   - `migrate()` seeds TypeDefinition and RelationshipDef metadata from
- *     the constructor DNA.
+ *   - `ResourceType` and `RelationshipType` records live in their own
+ *     in-memory maps with versioned history.
+ *   - `Instance` records are keyed by `(typeName, id)` and stamped with
+ *     `_schemaVersion` from the relevant ResourceType.current_version at
+ *     write time.
+ *   - `Link` records carry their own unique IDs plus optional `role` and
+ *     `attributes`, and a `_schemaVersion` from the RelationshipType.
+ *   - `seedFromDna` writes seed records once; `hasBeenSeeded()` reflects
+ *     the marker.
  */
 
 import { randomUUID } from 'crypto'
 
 import type {
+  AttributeSchema,
   DnaDataStore,
   InstanceCreateInput,
   InstanceRecord,
@@ -24,15 +29,28 @@ import type {
   LinkCreateOptions,
   LinkListFilter,
   LinkRecord,
+  NounCategory,
   OperationalDNA,
+  RelationshipType,
+  RelationshipTypeInput,
+  RelationshipTypeUpdate,
+  RelationshipTypeVersion,
+  ResourceType,
+  ResourceTypeInput,
+  ResourceTypeUpdate,
+  ResourceTypeVersion,
+  SeedReport,
+  TypeDeleteOptions,
 } from '@dna-codes/dna-core'
 
-interface NounPrimitive {
+import { TypeInUseError } from '@dna-codes/dna-core'
+
+interface NounDnaShape {
   name?: unknown
   attributes?: unknown
 }
 
-interface RelationshipPrimitive {
+interface RelDnaShape {
   name?: unknown
   from?: unknown
   to?: unknown
@@ -41,37 +59,45 @@ interface RelationshipPrimitive {
   inverse?: unknown
 }
 
-interface TypeDefinitionRecord {
-  name: string
-  category: 'resource' | 'person' | 'role' | 'group'
-  attributes: unknown[]
-}
-
-interface RelationshipDefRecord {
-  name: string
-  from: string
-  to: string
-  cardinality: string
-  attribute: string
-  inverse?: string
-}
-
-interface LinkInternal extends LinkRecord {}
-
-const NOUN_KEYS: Array<{ key: 'resources' | 'persons' | 'roles' | 'groups'; category: TypeDefinitionRecord['category'] }> = [
+const NOUN_KEYS: Array<{ key: 'resources' | 'persons' | 'roles' | 'groups'; category: NounCategory }> = [
   { key: 'resources', category: 'resource' },
   { key: 'persons', category: 'person' },
   { key: 'roles', category: 'role' },
   { key: 'groups', category: 'group' },
 ]
 
-export function createClient(dna: OperationalDNA): DnaDataStore {
-  const instances = new Map<string, Map<string, Record<string, unknown>>>()
-  const links: LinkInternal[] = []
-  const typeDefs = new Map<string, TypeDefinitionRecord>()
-  const relationshipDefs = new Map<string, RelationshipDefRecord>()
+const FOUNDATIONAL: Array<{ name: string; category: NounCategory }> = [
+  { name: 'Person', category: 'person' },
+  { name: 'Role', category: 'role' },
+  { name: 'Group', category: 'group' },
+  { name: 'Resource', category: 'resource' },
+]
 
-  function bucket(typeName: string): Map<string, Record<string, unknown>> {
+function toAttributeSchema(raw: unknown): AttributeSchema {
+  if (!Array.isArray(raw)) return []
+  return raw.filter(
+    (e): e is { name: string; type: string } =>
+      !!e && typeof e === 'object' && typeof (e as Record<string, unknown>).name === 'string',
+  ) as AttributeSchema
+}
+
+export function createClient(_dna?: OperationalDNA): DnaDataStore {
+  // The constructor DNA is ignored — seedFromDna takes the DNA explicitly.
+  // Accepting it as an optional positional arg preserves API compatibility
+  // with the prior call shape used by older test fixtures.
+  const resourceTypes = new Map<string, ResourceType>()
+  const resourceTypeVersionsById = new Map<string, ResourceTypeVersion[]>()
+  const resourceTypeIdByName = new Map<string, string>()
+
+  const relationshipTypes = new Map<string, RelationshipType>()
+  const relationshipTypeVersionsById = new Map<string, RelationshipTypeVersion[]>()
+  const relationshipTypeIdByName = new Map<string, string>()
+
+  const instances = new Map<string, Map<string, InstanceRecord>>()
+  const links: LinkRecord[] = []
+  let seedMarker = false
+
+  function bucket(typeName: string): Map<string, InstanceRecord> {
     let b = instances.get(typeName)
     if (!b) {
       b = new Map()
@@ -84,25 +110,142 @@ export function createClient(dna: OperationalDNA): DnaDataStore {
     return a.typeName === b.typeName && a.id === b.id
   }
 
+  function pushVersion(
+    id: string,
+    version: number,
+    schema: AttributeSchema,
+    kind: 'resource' | 'relationship',
+  ): void {
+    if (kind === 'resource') {
+      const versions = resourceTypeVersionsById.get(id) ?? []
+      versions.push({
+        id: randomUUID(),
+        resource_type_id: id,
+        version,
+        attribute_schema: schema,
+        created_at: new Date().toISOString(),
+      })
+      resourceTypeVersionsById.set(id, versions)
+    } else {
+      const versions = relationshipTypeVersionsById.get(id) ?? []
+      versions.push({
+        id: randomUUID(),
+        relationship_type_id: id,
+        version,
+        attribute_schema: schema,
+        created_at: new Date().toISOString(),
+      })
+      relationshipTypeVersionsById.set(id, versions)
+    }
+  }
+
+  function createResourceTypeImpl(input: ResourceTypeInput, isSeed: boolean): { id: string } {
+    if (resourceTypeIdByName.has(input.name)) {
+      throw new Error(`integration/memory: ResourceType "${input.name}" already exists`)
+    }
+    const id = input.id && input.id.length > 0 ? input.id : randomUUID()
+    const record: ResourceType = {
+      id,
+      name: input.name,
+      category: input.category,
+      attribute_schema: input.attribute_schema,
+      current_version: 1,
+      is_seed: isSeed,
+      ...(input.description !== undefined ? { description: input.description } : {}),
+    }
+    resourceTypes.set(id, record)
+    resourceTypeIdByName.set(input.name, id)
+    pushVersion(id, 1, input.attribute_schema, 'resource')
+    return { id }
+  }
+
+  function createRelationshipTypeImpl(
+    input: RelationshipTypeInput,
+    isSeed: boolean,
+  ): { id: string } {
+    if (relationshipTypeIdByName.has(input.name)) {
+      throw new Error(`integration/memory: RelationshipType "${input.name}" already exists`)
+    }
+    const id = input.id && input.id.length > 0 ? input.id : randomUUID()
+    const record: RelationshipType = {
+      id,
+      name: input.name,
+      from: input.from,
+      to: input.to,
+      cardinality: input.cardinality,
+      attribute: input.attribute,
+      current_version: 1,
+      is_seed: isSeed,
+      ...(input.inverse !== undefined ? { inverse: input.inverse } : {}),
+      ...(input.attribute_schema !== undefined ? { attribute_schema: input.attribute_schema } : {}),
+      ...(input.description !== undefined ? { description: input.description } : {}),
+    }
+    relationshipTypes.set(id, record)
+    relationshipTypeIdByName.set(input.name, id)
+    pushVersion(id, 1, input.attribute_schema ?? [], 'relationship')
+    return { id }
+  }
+
+  function resourceTypeByName(name: string): ResourceType | undefined {
+    const id = resourceTypeIdByName.get(name)
+    return id ? resourceTypes.get(id) : undefined
+  }
+
+  function relationshipTypeByName(name: string): RelationshipType | undefined {
+    const id = relationshipTypeIdByName.get(name)
+    return id ? relationshipTypes.get(id) : undefined
+  }
+
   return {
     async migrate(): Promise<void> {
-      typeDefs.clear()
-      relationshipDefs.clear()
+      // Memory adapter has no constraints/indexes to create.
+    },
 
+    async seedFromDna(dna: OperationalDNA): Promise<SeedReport> {
+      const report: SeedReport = {
+        resourceTypesCreated: 0,
+        resourceTypesSkipped: 0,
+        relationshipTypesCreated: 0,
+        relationshipTypesSkipped: 0,
+      }
+
+      // 1. Four foundational ResourceTypes.
+      for (const f of FOUNDATIONAL) {
+        if (resourceTypeIdByName.has(f.name)) {
+          report.resourceTypesSkipped += 1
+          continue
+        }
+        createResourceTypeImpl(
+          { name: f.name, category: f.category, attribute_schema: [] },
+          /* isSeed */ true,
+        )
+        report.resourceTypesCreated += 1
+      }
+
+      // 2. Tenant-domain ResourceTypes from dna.domain.*
       const domain = dna.domain ?? {}
       for (const { key, category } of NOUN_KEYS) {
-        const list = Array.isArray(domain[key]) ? (domain[key] as NounPrimitive[]) : []
+        const list = Array.isArray(domain[key]) ? (domain[key] as NounDnaShape[]) : []
         for (const entry of list) {
           if (typeof entry?.name !== 'string') continue
-          typeDefs.set(entry.name, {
-            name: entry.name,
-            category,
-            attributes: Array.isArray(entry.attributes) ? entry.attributes : [],
-          })
+          if (resourceTypeIdByName.has(entry.name)) {
+            report.resourceTypesSkipped += 1
+            continue
+          }
+          createResourceTypeImpl(
+            {
+              name: entry.name,
+              category,
+              attribute_schema: toAttributeSchema(entry.attributes),
+            },
+            true,
+          )
+          report.resourceTypesCreated += 1
         }
       }
 
-      const rels = Array.isArray(dna.relationships) ? (dna.relationships as RelationshipPrimitive[]) : []
+      // 3. RelationshipTypes from dna.relationships[]
+      const rels = Array.isArray(dna.relationships) ? (dna.relationships as RelDnaShape[]) : []
       for (const rel of rels) {
         if (
           typeof rel?.name !== 'string' ||
@@ -113,16 +256,140 @@ export function createClient(dna: OperationalDNA): DnaDataStore {
         ) {
           continue
         }
-        const record: RelationshipDefRecord = {
-          name: rel.name,
-          from: rel.from,
-          to: rel.to,
-          cardinality: rel.cardinality,
-          attribute: rel.attribute,
-          ...(typeof rel.inverse === 'string' ? { inverse: rel.inverse } : {}),
+        if (relationshipTypeIdByName.has(rel.name)) {
+          report.relationshipTypesSkipped += 1
+          continue
         }
-        relationshipDefs.set(record.name, record)
+        createRelationshipTypeImpl(
+          {
+            name: rel.name,
+            from: rel.from,
+            to: rel.to,
+            cardinality: rel.cardinality as RelationshipType['cardinality'],
+            attribute: rel.attribute,
+            ...(typeof rel.inverse === 'string' ? { inverse: rel.inverse } : {}),
+          },
+          true,
+        )
+        report.relationshipTypesCreated += 1
       }
+
+      seedMarker = true
+      return report
+    },
+
+    async hasBeenSeeded(): Promise<boolean> {
+      return seedMarker
+    },
+
+    resourceType: {
+      async create(input: ResourceTypeInput): Promise<{ id: string }> {
+        return createResourceTypeImpl(input, /* isSeed */ false)
+      },
+
+      async get(id: string): Promise<ResourceType | null> {
+        return resourceTypes.get(id) ?? null
+      },
+
+      async list(filter?: { category?: NounCategory }): Promise<ResourceType[]> {
+        const all = [...resourceTypes.values()]
+        if (filter?.category) return all.filter((rt) => rt.category === filter.category)
+        return all
+      },
+
+      async update(id: string, patch: ResourceTypeUpdate): Promise<void> {
+        const existing = resourceTypes.get(id)
+        if (!existing) throw new Error(`integration/memory: ResourceType ${id} not found`)
+        const nextSchema = patch.attribute_schema ?? existing.attribute_schema
+        const next: ResourceType = {
+          ...existing,
+          ...(patch.attribute_schema !== undefined ? { attribute_schema: patch.attribute_schema } : {}),
+          ...(patch.description !== undefined ? { description: patch.description } : {}),
+          current_version: existing.current_version + 1,
+        }
+        resourceTypes.set(id, next)
+        pushVersion(id, next.current_version, nextSchema, 'resource')
+      },
+
+      async delete(id: string, opts?: TypeDeleteOptions): Promise<void> {
+        const existing = resourceTypes.get(id)
+        if (!existing) return
+        const inUse = instances.get(existing.name)?.size ?? 0
+        if (inUse > 0 && !opts?.cascade) {
+          throw new TypeInUseError(existing.name, inUse)
+        }
+        if (inUse > 0 && opts?.cascade) {
+          // Remove all instances of that type and any adjacent Links.
+          instances.delete(existing.name)
+          for (let i = links.length - 1; i >= 0; i--) {
+            const l = links[i]
+            if (l.from.typeName === existing.name || l.to.typeName === existing.name) {
+              links.splice(i, 1)
+            }
+          }
+        }
+        resourceTypes.delete(id)
+        resourceTypeIdByName.delete(existing.name)
+        resourceTypeVersionsById.delete(id)
+      },
+
+      async versions(id: string): Promise<ResourceTypeVersion[]> {
+        const versions = resourceTypeVersionsById.get(id) ?? []
+        return [...versions].sort((a, b) => b.version - a.version)
+      },
+    },
+
+    relationshipType: {
+      async create(input: RelationshipTypeInput): Promise<{ id: string }> {
+        return createRelationshipTypeImpl(input, /* isSeed */ false)
+      },
+
+      async get(id: string): Promise<RelationshipType | null> {
+        return relationshipTypes.get(id) ?? null
+      },
+
+      async list(): Promise<RelationshipType[]> {
+        return [...relationshipTypes.values()]
+      },
+
+      async update(id: string, patch: RelationshipTypeUpdate): Promise<void> {
+        const existing = relationshipTypes.get(id)
+        if (!existing) throw new Error(`integration/memory: RelationshipType ${id} not found`)
+        const nextSchema = patch.attribute_schema ?? existing.attribute_schema ?? []
+        const next: RelationshipType = {
+          ...existing,
+          ...(patch.cardinality !== undefined ? { cardinality: patch.cardinality } : {}),
+          ...(patch.attribute !== undefined ? { attribute: patch.attribute } : {}),
+          ...(patch.inverse !== undefined ? { inverse: patch.inverse } : {}),
+          ...(patch.attribute_schema !== undefined ? { attribute_schema: patch.attribute_schema } : {}),
+          ...(patch.description !== undefined ? { description: patch.description } : {}),
+          current_version: existing.current_version + 1,
+        }
+        relationshipTypes.set(id, next)
+        pushVersion(id, next.current_version, nextSchema, 'relationship')
+      },
+
+      async delete(id: string, opts?: TypeDeleteOptions): Promise<void> {
+        const existing = relationshipTypes.get(id)
+        if (!existing) return
+        const inUse = links.filter((l) => l.role === existing.name).length
+        if (inUse > 0 && !opts?.cascade) {
+          throw new TypeInUseError(existing.name, inUse)
+        }
+        if (inUse > 0 && opts?.cascade) {
+          for (let i = links.length - 1; i >= 0; i--) {
+            if (links[i].role === existing.name) links.splice(i, 1)
+          }
+        }
+        relationshipTypes.delete(id)
+        relationshipTypeIdByName.delete(existing.name)
+        relationshipTypeVersionsById.delete(id)
+      },
+
+      async versions(id: string): Promise<RelationshipTypeVersion[]> {
+        const versions = relationshipTypeVersionsById.get(id) ?? []
+        return [...versions].sort((a, b) => b.version - a.version)
+      },
     },
 
     instance: {
@@ -132,17 +399,21 @@ export function createClient(dna: OperationalDNA): DnaDataStore {
         if (b.has(id)) {
           throw new Error(`integration/memory: ${typeName} instance with id "${id}" already exists`)
         }
-        // Strip `id` from the payload — it's a control field, not a stored attribute.
         const { id: _stripped, ...rest } = data
         void _stripped
-        b.set(id, { ...rest })
+        const rt = resourceTypeByName(typeName)
+        const schemaVersion = rt?.current_version
+        const record: InstanceRecord = {
+          id,
+          ...rest,
+          ...(schemaVersion !== undefined ? { _schemaVersion: schemaVersion } : {}),
+        }
+        b.set(id, record)
         return { id }
       },
 
       async get(typeName: string, id: string): Promise<InstanceRecord | null> {
-        const record = bucket(typeName).get(id)
-        if (!record) return null
-        return { id, ...record }
+        return bucket(typeName).get(id) ?? null
       },
 
       async update(typeName: string, id: string, patch: Record<string, unknown>): Promise<void> {
@@ -151,10 +422,17 @@ export function createClient(dna: OperationalDNA): DnaDataStore {
         if (!existing) {
           throw new Error(`integration/memory: ${typeName} instance with id "${id}" not found`)
         }
-        // Strip `id` from patch — IDs are immutable.
-        const { id: _stripped, ...rest } = patch
+        const { id: _stripped, _schemaVersion: _v, ...rest } = patch
         void _stripped
-        b.set(id, { ...existing, ...rest })
+        void _v
+        const rt = resourceTypeByName(typeName)
+        const schemaVersion = rt?.current_version
+        const next: InstanceRecord = {
+          ...existing,
+          ...rest,
+          ...(schemaVersion !== undefined ? { _schemaVersion: schemaVersion } : {}),
+        }
+        b.set(id, next)
       },
 
       async delete(typeName: string, id: string): Promise<void> {
@@ -162,8 +440,7 @@ export function createClient(dna: OperationalDNA): DnaDataStore {
       },
 
       async list(typeName: string): Promise<InstanceRecord[]> {
-        const b = bucket(typeName)
-        return [...b.entries()].map(([id, data]) => ({ id, ...data }))
+        return [...bucket(typeName).values()]
       },
     },
 
@@ -177,12 +454,16 @@ export function createClient(dna: OperationalDNA): DnaDataStore {
         if (links.some((l) => l.id === id)) {
           throw new Error(`integration/memory: link with id "${id}" already exists`)
         }
-        const record: LinkInternal = {
+        const rrt =
+          opts.role !== undefined ? relationshipTypeByName(opts.role) : undefined
+        const schemaVersion = rrt?.current_version
+        const record: LinkRecord = {
           id,
           from: { ...from },
           to: { ...to },
           ...(opts.role !== undefined ? { role: opts.role } : {}),
           ...(opts.attributes !== undefined ? { attributes: { ...opts.attributes } } : {}),
+          ...(schemaVersion !== undefined ? { _schemaVersion: schemaVersion } : {}),
         }
         links.push(record)
         return { id }
@@ -204,6 +485,7 @@ export function createClient(dna: OperationalDNA): DnaDataStore {
             to: { ...l.to },
             ...(l.role !== undefined ? { role: l.role } : {}),
             ...(l.attributes !== undefined ? { attributes: { ...l.attributes } } : {}),
+            ...(l._schemaVersion !== undefined ? { _schemaVersion: l._schemaVersion } : {}),
           }))
       },
     },

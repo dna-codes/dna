@@ -21,6 +21,7 @@ exports.PRIMITIVE_KINDS = [
 const SHARED_DEFS = {
     'https://dna.codes/schemas/operational/attribute': dna_core_1.schemas.operational.attribute,
     'https://dna.codes/schemas/operational/action': dna_core_1.schemas.operational.action,
+    'https://dna.codes/schemas/operational/base': dna_core_1.schemas.operational.base,
 };
 function inlineSchema(schema) {
     return walk(schema);
@@ -34,6 +35,19 @@ function walk(node) {
     if (typeof obj.$ref === 'string' && SHARED_DEFS[obj.$ref]) {
         return walk(SHARED_DEFS[obj.$ref]);
     }
+    // Pre-flatten allOf compositions: when a per-primitive schema extends
+    // the base contract via `allOf: [{$ref: '.../base'}]`, the inlined tool
+    // schema should merge the base's properties into the parent so the
+    // resulting JSON-Schema has no `$ref` and no `allOf`. (The LLM tool
+    // surface needs flat properties; LayeredConstructor handles auto-stamped
+    // fields with placeholders.)
+    if (Array.isArray(obj.allOf)) {
+        const flattened = flattenAllOf(obj);
+        return walkFlattened(flattened);
+    }
+    return walkFlattened(obj);
+}
+function walkFlattened(obj) {
     const out = {};
     for (const [k, v] of Object.entries(obj)) {
         if (k === '$id' || k === '$schema' || k === 'examples')
@@ -41,6 +55,49 @@ function walk(node) {
         out[k] = walk(v);
     }
     return out;
+}
+/**
+ * Merge every `allOf` member's `properties`, `required`, and `type` into
+ * the parent object, then drop `allOf`. Each member is `$ref`-resolved via
+ * `SHARED_DEFS` first. The result has the same observable shape minus the
+ * composition keyword.
+ */
+function flattenAllOf(parent) {
+    const members = parent.allOf.map((m) => {
+        if (m && typeof m === 'object' && typeof m.$ref === 'string') {
+            const ref = m.$ref;
+            const target = SHARED_DEFS[ref];
+            if (target)
+                return target;
+        }
+        return m;
+    });
+    const mergedProperties = {
+        ...(parent.properties ?? {}),
+    };
+    const requiredSet = new Set(Array.isArray(parent.required) ? parent.required : []);
+    for (const member of members) {
+        if (!member || typeof member !== 'object')
+            continue;
+        const memberProps = member.properties;
+        if (memberProps && typeof memberProps === 'object') {
+            for (const [key, value] of Object.entries(memberProps)) {
+                if (!(key in mergedProperties))
+                    mergedProperties[key] = value;
+            }
+        }
+        if (Array.isArray(member.required)) {
+            for (const r of member.required)
+                requiredSet.add(r);
+        }
+    }
+    const { allOf: _drop, ...rest } = parent;
+    void _drop;
+    return {
+        ...rest,
+        properties: mergedProperties,
+        required: [...requiredSet],
+    };
 }
 const PRIMITIVE_SCHEMA = {
     resource: dna_core_1.schemas.operational.resource,

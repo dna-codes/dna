@@ -1,8 +1,9 @@
 /**
- * Type-level tests for the `DnaDataStore` interface. These assertions live
- * in a `.test.ts` so they participate in the Jest run (failing types break
- * compilation, which fails the test build). They have no runtime
- * expectations beyond a smoke check that the structure is importable.
+ * Type-level tests for the registry-native `DnaDataStore` interface. These
+ * assertions live in a `.test.ts` so they participate in the Jest run
+ * (failing types break compilation, which fails the test build). They have
+ * no runtime expectations beyond a smoke check that the structure is
+ * importable.
  */
 
 import type {
@@ -13,7 +14,40 @@ import type {
   LinkCreateOptions,
   LinkListFilter,
   LinkRecord,
+  ResourceType,
+  ResourceTypeInput,
+  ResourceTypeVersion,
+  RelationshipType,
+  RelationshipTypeInput,
+  RelationshipTypeVersion,
+  SeedReport,
 } from './data-store'
+
+import { TypeInUseError } from './data-store'
+
+function makeResourceType(name: string): ResourceType {
+  return {
+    id: 'rt-1',
+    name,
+    category: 'resource',
+    attribute_schema: [{ name: 'foo', type: 'string' }],
+    current_version: 1,
+    is_seed: false,
+  }
+}
+
+function makeRelationshipType(): RelationshipType {
+  return {
+    id: 'rrt-1',
+    name: 'Loan.borrower',
+    from: 'Loan',
+    to: 'Borrower',
+    cardinality: 'many-to-one',
+    attribute: 'borrower_id',
+    current_version: 1,
+    is_seed: false,
+  }
+}
 
 describe('DnaDataStore type contract', () => {
   it('declares the expected method shape', () => {
@@ -21,73 +55,91 @@ describe('DnaDataStore type contract', () => {
     // every method signature below.
     const stub: DnaDataStore = {
       migrate: async () => undefined,
+      seedFromDna: async (): Promise<SeedReport> => ({
+        resourceTypesCreated: 0,
+        resourceTypesSkipped: 0,
+        relationshipTypesCreated: 0,
+        relationshipTypesSkipped: 0,
+      }),
+      hasBeenSeeded: async () => false,
+      resourceType: {
+        create: async (input: ResourceTypeInput) => ({ id: input.id ?? 'generated' }),
+        get: async (): Promise<ResourceType | null> => null,
+        list: async () => [],
+        update: async () => undefined,
+        delete: async () => undefined,
+        versions: async (): Promise<ResourceTypeVersion[]> => [],
+      },
+      relationshipType: {
+        create: async (input: RelationshipTypeInput) => ({ id: input.id ?? 'generated' }),
+        get: async (): Promise<RelationshipType | null> => null,
+        list: async () => [],
+        update: async () => undefined,
+        delete: async () => undefined,
+        versions: async (): Promise<RelationshipTypeVersion[]> => [],
+      },
       instance: {
-        create: async (typeName: string, data: InstanceCreateInput): Promise<{ id: string }> => {
-          void typeName
-          return { id: data.id ?? 'generated-id' }
-        },
-        get: async (typeName: string, id: string): Promise<InstanceRecord | null> => {
-          void typeName
-          void id
-          return null
-        },
-        update: async (typeName: string, id: string, patch: Record<string, unknown>): Promise<void> => {
-          void typeName
-          void id
-          void patch
-        },
-        delete: async (typeName: string, id: string): Promise<void> => {
-          void typeName
-          void id
-        },
-        list: async (typeName: string): Promise<InstanceRecord[]> => {
-          void typeName
-          return []
-        },
+        create: async (_t: string, data: InstanceCreateInput) => ({ id: data.id ?? 'generated' }),
+        get: async (): Promise<InstanceRecord | null> => null,
+        update: async () => undefined,
+        delete: async () => undefined,
+        list: async () => [],
       },
       link: {
-        create: async (
-          from: InstanceRef,
-          to: InstanceRef,
-          opts?: LinkCreateOptions,
-        ): Promise<{ id: string }> => {
-          void from
-          void to
-          return { id: opts?.id ?? 'generated-link-id' }
-        },
-        delete: async (linkId: string): Promise<void> => {
-          void linkId
-        },
-        list: async (filter?: LinkListFilter): Promise<LinkRecord[]> => {
-          void filter
-          return []
-        },
+        create: async (_from: InstanceRef, _to: InstanceRef, opts?: LinkCreateOptions) => ({
+          id: opts?.id ?? 'generated',
+        }),
+        delete: async () => undefined,
+        list: async (_filter?: LinkListFilter): Promise<LinkRecord[]> => [],
       },
       close: async () => undefined,
     }
 
     expect(typeof stub.migrate).toBe('function')
+    expect(typeof stub.seedFromDna).toBe('function')
+    expect(typeof stub.hasBeenSeeded).toBe('function')
+    expect(typeof stub.resourceType.create).toBe('function')
+    expect(typeof stub.relationshipType.create).toBe('function')
     expect(typeof stub.instance.create).toBe('function')
     expect(typeof stub.link.create).toBe('function')
   })
 
-  it('hybrid create input accepts id-less payloads', () => {
-    const withoutId: InstanceCreateInput = { amount: 1000 }
-    const withId: InstanceCreateInput = { id: 'loan-42', amount: 1000 }
-    expect(withoutId).toBeDefined()
-    expect(withId.id).toBe('loan-42')
+  it('ResourceType records carry current_version and is_seed', () => {
+    const rt = makeResourceType('Loan')
+    expect(rt.current_version).toBe(1)
+    expect(rt.is_seed).toBe(false)
+    expect(rt.category).toBe('resource')
   })
 
-  it('link list filter is fully optional', () => {
-    const empty: LinkListFilter = {}
-    const partial: LinkListFilter = { role: 'primary_borrower' }
-    const full: LinkListFilter = {
-      from: { typeName: 'Loan', id: 'l1' },
-      to: { typeName: 'Borrower', id: 'b1' },
-      role: 'primary_borrower',
+  it('RelationshipType records carry from / to / cardinality', () => {
+    const rrt = makeRelationshipType()
+    expect(rrt.from).toBe('Loan')
+    expect(rrt.to).toBe('Borrower')
+    expect(rrt.cardinality).toBe('many-to-one')
+  })
+
+  it('TypeInUseError is constructible and carries inUseCount + typeName', () => {
+    const err = new TypeInUseError('Loan', 3)
+    expect(err).toBeInstanceOf(Error)
+    expect(err.name).toBe('TypeInUseError')
+    expect(err.typeName).toBe('Loan')
+    expect(err.inUseCount).toBe(3)
+    expect(err.message).toContain('Loan')
+    expect(err.message).toContain('3')
+  })
+
+  it('InstanceRecord can carry _schemaVersion', () => {
+    const rec: InstanceRecord = { id: 'x', _schemaVersion: 2, foo: 'bar' }
+    expect(rec._schemaVersion).toBe(2)
+  })
+
+  it('LinkRecord can carry _schemaVersion', () => {
+    const link: LinkRecord = {
+      id: 'l1',
+      from: { typeName: 'Loan', id: 'l' },
+      to: { typeName: 'Borrower', id: 'b' },
+      _schemaVersion: 1,
     }
-    expect(empty).toBeDefined()
-    expect(partial.role).toBe('primary_borrower')
-    expect(full.from?.typeName).toBe('Loan')
+    expect(link._schemaVersion).toBe(1)
   })
 })

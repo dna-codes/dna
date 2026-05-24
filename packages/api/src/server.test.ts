@@ -52,6 +52,9 @@ describe('server', () => {
       })
       .set('Content-Type', 'application/json')
     expect(create.status).toBe(200)
+    if (create.body.errors) {
+      throw new Error(`createLoan errors: ${JSON.stringify(create.body.errors)}`)
+    }
     const created = create.body.data.createLoan as { id: string; amount: number; status: string }
     expect(created.amount).toBe(1000)
 

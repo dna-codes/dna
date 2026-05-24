@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMembershipsForPerson = exports.getMembershipsForRole = exports.getActorsForOperation = exports.getRulesForOperation = exports.getRules = exports.getRule = exports.getTriggersForOperation = exports.getTriggers = exports.getTasksForOperation = exports.getTasks = exports.getTask = exports.getTriggersForProcess = exports.getProcesses = exports.getProcess = exports.getOperationsForResource = exports.getOperations = exports.getOperation = exports.getMemberships = exports.getMembership = exports.getGroups = exports.getGroup = exports.getRoles = exports.getRole = exports.getPersons = exports.getPerson = exports.getResources = exports.getResource = exports.bookshopInput = exports.OPERATIONAL_PRIMITIVE_VERSIONS = exports.DEFAULT_STYLES = exports.merge = exports.addRelationship = exports.addProcess = exports.addTask = exports.addRule = exports.addTrigger = exports.addOperation = exports.addMembership = exports.addGroup = exports.addRole = exports.addPerson = exports.addResource = exports.createOperationalDna = exports.DnaValidator = exports.layerDirs = exports.documents = exports.schemas = exports.SCHEMA_ROOT = void 0;
+exports.getMembershipsForPerson = exports.getMembershipsForRole = exports.getActorsForOperation = exports.getRulesForOperation = exports.getRules = exports.getRule = exports.getTriggersForOperation = exports.getTriggers = exports.getTasksForOperation = exports.getTasks = exports.getTask = exports.getTriggersForProcess = exports.getProcesses = exports.getProcess = exports.getOperationsForResource = exports.getOperations = exports.getOperation = exports.getMemberships = exports.getMembership = exports.getGroups = exports.getGroup = exports.getRoles = exports.getRole = exports.getPersons = exports.getPerson = exports.getResources = exports.getResource = exports.bookshopInput = exports.OPERATIONAL_PRIMITIVE_VERSIONS = exports.TypeInUseError = exports.DEFAULT_STYLES = exports.merge = exports.addRelationship = exports.addProcess = exports.addTask = exports.addRule = exports.addTrigger = exports.addOperation = exports.addMembership = exports.addGroup = exports.addRole = exports.addPerson = exports.addResource = exports.createOperationalDna = exports.DnaValidator = exports.layerDirs = exports.documents = exports.schemas = exports.SCHEMA_ROOT = void 0;
 exports.resolveSchemaFile = resolveSchemaFile;
 exports.allSchemas = allSchemas;
 const fs = __importStar(require("fs"));
@@ -149,6 +149,8 @@ var merge_1 = require("./merge");
 Object.defineProperty(exports, "merge", { enumerable: true, get: function () { return merge_1.merge; } });
 var adapters_1 = require("./types/adapters");
 Object.defineProperty(exports, "DEFAULT_STYLES", { enumerable: true, get: function () { return adapters_1.DEFAULT_STYLES; } });
+var data_store_1 = require("./types/data-store");
+Object.defineProperty(exports, "TypeInUseError", { enumerable: true, get: function () { return data_store_1.TypeInUseError; } });
 var version_1 = require("./version");
 Object.defineProperty(exports, "OPERATIONAL_PRIMITIVE_VERSIONS", { enumerable: true, get: function () { return version_1.OPERATIONAL_PRIMITIVE_VERSIONS; } });
 var bookshop_1 = require("./fixtures/bookshop");

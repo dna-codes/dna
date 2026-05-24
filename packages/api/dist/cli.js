@@ -47,6 +47,13 @@ async function serveCommand(args, env) {
     const neo4jOpts = resolveNeo4jOptions(env);
     const dna = loadDna(dnaPath);
     const dataStore = (0, neo4j_1.createClient)(neo4jOpts, dna);
+    // Drift warning: if the store has already been seeded but the DNA file
+    // hash differs from the recorded seed hash, log a warning. We don't
+    // refuse to start — the DNA is informational after first boot.
+    const alreadySeeded = await dataStore.hasBeenSeeded();
+    if (alreadySeeded) {
+        console.warn('dna-api: store has been seeded; the DNA file is no longer load-bearing. Schema changes must go through the API.');
+    }
     const server = await (0, server_1.createServer)({ dna, dataStore });
     const handle = await server.listen(port);
     console.log(`dna-api listening on http://localhost:${port}/graphql (DNA: ${dnaPath})`);
