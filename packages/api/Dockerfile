@@ -60,7 +60,6 @@ COPY --from=build /repo/packages/api/package.json packages/api/package.json
 COPY --from=build /repo/packages/api/dist packages/api/dist
 COPY --from=build /repo/packages/api/bin packages/api/bin
 
-ENV NODE_ENV=production
 EXPOSE 4000
 
 # `--init` would be nicer; alpine's default PID 1 works for our needs

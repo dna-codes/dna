@@ -14,6 +14,7 @@
  */
 
 import { ApolloServer } from '@apollo/server'
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default'
 import { expressMiddleware } from '@as-integrations/express4'
 import bodyParser from 'body-parser'
 import cors from 'cors'
@@ -67,13 +68,21 @@ export async function createServer(args: CreateServerArgs): Promise<CreatedServe
   //    stay up between swaps. We expose the *current* Apollo instance to
   //    Express through a single middleware wrapper that forwards to
   //    whichever Apollo instance is live.
-  let apolloServer = new ApolloServer({ schema: manager.getSchema() })
+  const landingPagePlugin = ApolloServerPluginLandingPageLocalDefault({ embed: true })
+
+  let apolloServer = new ApolloServer({
+    schema: manager.getSchema(),
+    plugins: [landingPagePlugin],
+  })
   await apolloServer.start()
 
   let graphqlMiddleware: RequestHandler = expressMiddleware(apolloServer)
 
   manager.onChange(async (newSchema) => {
-    const newApollo = new ApolloServer({ schema: newSchema })
+    const newApollo = new ApolloServer({
+      schema: newSchema,
+      plugins: [landingPagePlugin],
+    })
     await newApollo.start()
     const oldApollo = apolloServer
     apolloServer = newApollo

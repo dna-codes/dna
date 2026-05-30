@@ -19,6 +19,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createServer = createServer;
 const server_1 = require("@apollo/server");
+const default_1 = require("@apollo/server/plugin/landingPage/default");
 const express4_1 = require("@as-integrations/express4");
 const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
@@ -49,11 +50,18 @@ async function createServer(args) {
     //    stay up between swaps. We expose the *current* Apollo instance to
     //    Express through a single middleware wrapper that forwards to
     //    whichever Apollo instance is live.
-    let apolloServer = new server_1.ApolloServer({ schema: manager.getSchema() });
+    const landingPagePlugin = (0, default_1.ApolloServerPluginLandingPageLocalDefault)({ embed: true });
+    let apolloServer = new server_1.ApolloServer({
+        schema: manager.getSchema(),
+        plugins: [landingPagePlugin],
+    });
     await apolloServer.start();
     let graphqlMiddleware = (0, express4_1.expressMiddleware)(apolloServer);
     manager.onChange(async (newSchema) => {
-        const newApollo = new server_1.ApolloServer({ schema: newSchema });
+        const newApollo = new server_1.ApolloServer({
+            schema: newSchema,
+            plugins: [landingPagePlugin],
+        });
         await newApollo.start();
         const oldApollo = apolloServer;
         apolloServer = newApollo;
