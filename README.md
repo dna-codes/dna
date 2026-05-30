@@ -12,6 +12,7 @@ As documented below, it's incredibly flexible with input/output adapters and int
 - [The Three Layers](#the-three-layers)
 - [Cross-domain examples](#cross-domain-examples)
 - [Framework comparisons](#framework-comparisons)
+- [Concepts reference](#concepts-reference)
 - [Operational Layer](#operational-layer)
 - [Product Layer](#product-layer)
 - [Technical Layer](#technical-layer)
@@ -101,6 +102,10 @@ Canonical end-to-end DNA documents demonstrating the model across different busi
 ## Framework comparisons
 
 If you already model your domain in DDD, BPMN, ArchiMate, C4, Event Storming, or run a TOGAF practice, see [`docs/frameworks/`](./docs/frameworks) for concept-by-concept mappings, where DNA intentionally differs, and concrete translations using the examples above. Currently covered: [BPMN](./docs/frameworks/bpmn.md), [Domain-Driven Design](./docs/frameworks/ddd.md), [ArchiMate](./docs/frameworks/archimate.md), [C4 Model](./docs/frameworks/c4.md), [Event Storming](./docs/frameworks/event-storming.md), [TOGAF](./docs/frameworks/togaf.md).
+
+## Concepts reference
+
+A conceptual reference for DNA's metamodel lives in [`docs/concepts/`](./docs/concepts) — the three Layers, the catalog of types with their relationships, perspectives for navigating the graph, and machine-readable schema (`lenses.json`) intended for adapters like `integration/neo4j`. The concepts docs are deliberately abstract (DNA as a graph) and may use names that differ from the DSL primitives documented below; reconciliation is an open thread.
 
 ## Operational Layer
 
@@ -278,7 +283,7 @@ The repo currently publishes five npm packages:
 | [`@dna-codes/dna-core`](./packages/core) | TypeScript bindings + per-layer and cross-layer validator; wraps `@dna-codes/dna-schemas`. Also home to shared adapter contracts (`ParseResult`, `Style`, `Unit`, `StyleMap`, `DEFAULT_STYLES`) and the `DnaDataStore` runtime-data contract |
 | [`@dna-codes/dna-ingest`](./packages/ingest) | Multi-source DNA orchestrator. Fans `[source URI] → integration → input → partial DNA` per source, merges via `dna-core.merge()`, reports conflicts + provenance + non-fatal errors. Imports zero adapters — caller injects them. Defines the `Integration` and `InputAdapter` ports. |
 | [`@dna-codes/dna-adapters`](./packages/adapters) | Unified adapter package — every input parser, output renderer, and integration client lives as a subpath. One version line, one publish per release. |
-| [`@dna-codes/dna-api`](./packages/api) | Registry-native GraphQL API server. Seeds `ResourceType` / `RelationshipType` records from a DNA on first boot; admins author the type system at runtime through the API. Schema regenerates and hot-swaps on type mutations. Backed by `integration/neo4j` with versioned history. |
+| [`@dna-codes/dna-api`](./packages/api) | Registry-native GraphQL API server. Seeds `ResourceType` / `RelationshipType` records from a DNA on first boot; admins author the type system at runtime through the API. Schema regenerates and hot-swaps on type mutations. Backed by `integration/neo4j` with versioned history. Each type carries a `stability` lifecycle marker (`experimental` / `beta` / `stable` / `deprecated`), orthogonal to its schema version — see [Stability lifecycle](./docs/concepts/resource-types.md#stability-lifecycle). |
 
 #### Adapters (subpaths of `@dna-codes/dna-adapters`)
 

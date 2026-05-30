@@ -273,3 +273,90 @@ describe('integration/memory registry fixture round-trip', () => {
     expect(belongsTo[0].to).toEqual({ typeName: 'Instance', id: i2 })
   })
 })
+
+describe('integration/memory stability', () => {
+  async function seeded() {
+    const client = createClient()
+    await client.migrate()
+    await client.seedFromDna(makeLendingDna())
+    return client
+  }
+
+  async function rtByName(client: ReturnType<typeof createClient>, name: string) {
+    const all = await client.resourceType.list()
+    return all.find((rt) => rt.name === name)!
+  }
+
+  it('seeds the four foundational types as stable', async () => {
+    const client = await seeded()
+    for (const name of ['Person', 'Role', 'Group', 'Resource']) {
+      expect((await rtByName(client, name)).stability).toBe('stable')
+    }
+  })
+
+  it('defaults tenant resource and relationship types to experimental', async () => {
+    const client = await seeded()
+    expect((await rtByName(client, 'Loan')).stability).toBe('experimental')
+    const rels = await client.relationshipType.list()
+    expect(rels.find((r) => r.name === 'Loan.borrower')!.stability).toBe('experimental')
+  })
+
+  it('honors a declared stability at seed time', async () => {
+    const client = createClient()
+    await client.migrate()
+    await client.seedFromDna({
+      domain: { name: 'd', resources: [{ name: 'Widget', stability: 'beta' }] },
+      relationships: [
+        { name: 'Widget.maker', from: 'Widget', to: 'Maker', cardinality: 'many-to-one', attribute: 'maker_id', stability: 'stable' },
+      ],
+    } as unknown as OperationalDNA)
+    expect((await rtByName(client, 'Widget')).stability).toBe('beta')
+    const rels = await client.relationshipType.list()
+    expect(rels.find((r) => r.name === 'Widget.maker')!.stability).toBe('stable')
+  })
+
+  it('round-trips stability set at create() and records it on the version', async () => {
+    const client = await seeded()
+    const { id } = await client.resourceType.create({
+      name: 'Invoice',
+      category: 'resource',
+      attribute_schema: [],
+      stability: 'beta',
+    })
+    expect((await client.resourceType.get(id))!.stability).toBe('beta')
+    const versions = await client.resourceType.versions(id)
+    expect(versions[0].stability).toBe('beta')
+  })
+
+  it('setStability transitions without bumping current_version or adding a version', async () => {
+    const client = await seeded()
+    const loan = await rtByName(client, 'Loan')
+    await client.resourceType.setStability(loan.id, 'stable')
+    const after = await client.resourceType.get(loan.id)
+    expect(after!.stability).toBe('stable')
+    expect(after!.current_version).toBe(loan.current_version)
+    expect(await client.resourceType.versions(loan.id)).toHaveLength(1)
+  })
+
+  it('a schema-version bump preserves stability and records it on the new version', async () => {
+    const client = await seeded()
+    const loan = await rtByName(client, 'Loan')
+    await client.resourceType.setStability(loan.id, 'beta')
+    await client.resourceType.update(loan.id, { attribute_schema: [{ name: 'rate', type: 'number' }] })
+    const after = await client.resourceType.get(loan.id)
+    expect(after!.stability).toBe('beta')
+    expect(after!.current_version).toBe(loan.current_version + 1)
+    const versions = await client.resourceType.versions(loan.id)
+    expect(versions[0].version).toBe(loan.current_version + 1)
+    expect(versions[0].stability).toBe('beta')
+  })
+
+  it('relationshipType.setStability transitions without bumping current_version', async () => {
+    const client = await seeded()
+    const rel = (await client.relationshipType.list()).find((r) => r.name === 'Loan.borrower')!
+    await client.relationshipType.setStability(rel.id, 'beta')
+    const after = await client.relationshipType.get(rel.id)
+    expect(after!.stability).toBe('beta')
+    expect(after!.current_version).toBe(rel.current_version)
+  })
+})

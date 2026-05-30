@@ -23,7 +23,12 @@ import type {
   SeedReport,
 } from './data-store'
 
-import { TypeInUseError } from './data-store'
+import {
+  defaultStabilityForType,
+  isFoundationalTypeName,
+  STABILITIES,
+  TypeInUseError,
+} from './data-store'
 
 function makeResourceType(name: string): ResourceType {
   return {
@@ -32,6 +37,7 @@ function makeResourceType(name: string): ResourceType {
     category: 'resource',
     attribute_schema: [{ name: 'foo', type: 'string' }],
     current_version: 1,
+    stability: 'experimental',
     is_seed: false,
   }
 }
@@ -45,6 +51,7 @@ function makeRelationshipType(): RelationshipType {
     cardinality: 'many-to-one',
     attribute: 'borrower_id',
     current_version: 1,
+    stability: 'experimental',
     is_seed: false,
   }
 }
@@ -67,6 +74,7 @@ describe('DnaDataStore type contract', () => {
         get: async (): Promise<ResourceType | null> => null,
         list: async () => [],
         update: async () => undefined,
+        setStability: async () => undefined,
         delete: async () => undefined,
         versions: async (): Promise<ResourceTypeVersion[]> => [],
       },
@@ -75,6 +83,7 @@ describe('DnaDataStore type contract', () => {
         get: async (): Promise<RelationshipType | null> => null,
         list: async () => [],
         update: async () => undefined,
+        setStability: async () => undefined,
         delete: async () => undefined,
         versions: async (): Promise<RelationshipTypeVersion[]> => [],
       },
@@ -126,6 +135,25 @@ describe('DnaDataStore type contract', () => {
     expect(err.inUseCount).toBe(3)
     expect(err.message).toContain('Loan')
     expect(err.message).toContain('3')
+  })
+
+  it('registry types carry a stability marker', () => {
+    expect(makeResourceType('Loan').stability).toBe('experimental')
+    expect(makeRelationshipType().stability).toBe('experimental')
+  })
+
+  it('STABILITIES lists the four lifecycle stages in order', () => {
+    expect(STABILITIES).toEqual(['experimental', 'beta', 'stable', 'deprecated'])
+  })
+
+  it('foundational types default to stable, everything else to experimental', () => {
+    for (const name of ['Person', 'Role', 'Group', 'Resource']) {
+      expect(isFoundationalTypeName(name)).toBe(true)
+      expect(defaultStabilityForType(name)).toBe('stable')
+    }
+    expect(isFoundationalTypeName('Loan')).toBe(false)
+    expect(defaultStabilityForType('Loan')).toBe('experimental')
+    expect(defaultStabilityForType('Loan.borrower')).toBe('experimental')
   })
 
   it('InstanceRecord can carry _schemaVersion', () => {

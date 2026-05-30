@@ -15,10 +15,20 @@
  *   - Inputs for each create / update mutation
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RelationshipTypeUpdateInput = exports.RelationshipTypeInputObject = exports.ResourceTypeUpdateInput = exports.ResourceTypeInputObject = exports.RelationshipTypeVersionType = exports.ResourceTypeVersionType = exports.AttributeSchemaEntryInput = exports.AttributeSchemaEntryType = exports.CardinalityEnum = exports.AttributeTypeEnum = exports.NounCategoryEnum = void 0;
+exports.RelationshipTypeUpdateInput = exports.RelationshipTypeInputObject = exports.ResourceTypeUpdateInput = exports.ResourceTypeInputObject = exports.RelationshipTypeVersionType = exports.ResourceTypeVersionType = exports.AttributeSchemaEntryInput = exports.AttributeSchemaEntryType = exports.CardinalityEnum = exports.AttributeTypeEnum = exports.NounCategoryEnum = exports.StabilityEnum = void 0;
 exports.buildResourceTypeOutputType = buildResourceTypeOutputType;
 exports.buildRelationshipTypeOutputType = buildRelationshipTypeOutputType;
 const graphql_1 = require("graphql");
+const dna_core_1 = require("@dna-codes/dna-core");
+/**
+ * Stability enum, derived from the core `STABILITIES` array so the GraphQL
+ * surface and the core `Stability` union cannot drift. Members are the
+ * upper-cased value names (e.g. `experimental` → `EXPERIMENTAL`).
+ */
+exports.StabilityEnum = new graphql_1.GraphQLEnumType({
+    name: 'Stability',
+    values: Object.fromEntries(dna_core_1.STABILITIES.map((s) => [s.toUpperCase(), { value: s }])),
+});
 exports.NounCategoryEnum = new graphql_1.GraphQLEnumType({
     name: 'NounCategory',
     values: {
@@ -85,6 +95,7 @@ exports.ResourceTypeVersionType = new graphql_1.GraphQLObjectType({
             type: new graphql_1.GraphQLNonNull(new graphql_1.GraphQLList(new graphql_1.GraphQLNonNull(exports.AttributeSchemaEntryType))),
             resolve: (src) => src.attribute_schema,
         },
+        stability: { type: new graphql_1.GraphQLNonNull(exports.StabilityEnum) },
         createdAt: {
             type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLString),
             resolve: (src) => src.created_at,
@@ -104,6 +115,7 @@ exports.RelationshipTypeVersionType = new graphql_1.GraphQLObjectType({
             type: new graphql_1.GraphQLList(new graphql_1.GraphQLNonNull(exports.AttributeSchemaEntryType)),
             resolve: (src) => src.attribute_schema ?? null,
         },
+        stability: { type: new graphql_1.GraphQLNonNull(exports.StabilityEnum) },
         createdAt: {
             type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLString),
             resolve: (src) => src.created_at,
@@ -130,6 +142,7 @@ function buildResourceTypeOutputType(versionsResolver) {
                 type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLInt),
                 resolve: (src) => src.current_version,
             },
+            stability: { type: new graphql_1.GraphQLNonNull(exports.StabilityEnum) },
             description: { type: graphql_1.GraphQLString },
             isSeed: {
                 type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLBoolean),
@@ -161,6 +174,7 @@ function buildRelationshipTypeOutputType(versionsResolver) {
                 type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLInt),
                 resolve: (src) => src.current_version,
             },
+            stability: { type: new graphql_1.GraphQLNonNull(exports.StabilityEnum) },
             description: { type: graphql_1.GraphQLString },
             isSeed: {
                 type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLBoolean),
@@ -182,6 +196,7 @@ exports.ResourceTypeInputObject = new graphql_1.GraphQLInputObjectType({
         attributeSchema: {
             type: new graphql_1.GraphQLNonNull(new graphql_1.GraphQLList(new graphql_1.GraphQLNonNull(exports.AttributeSchemaEntryInput))),
         },
+        stability: { type: exports.StabilityEnum },
         description: { type: graphql_1.GraphQLString },
     }),
 });
@@ -189,6 +204,7 @@ exports.ResourceTypeUpdateInput = new graphql_1.GraphQLInputObjectType({
     name: 'ResourceTypeUpdateInput',
     fields: () => ({
         attributeSchema: { type: new graphql_1.GraphQLList(new graphql_1.GraphQLNonNull(exports.AttributeSchemaEntryInput)) },
+        stability: { type: exports.StabilityEnum },
         description: { type: graphql_1.GraphQLString },
     }),
 });
@@ -203,6 +219,7 @@ exports.RelationshipTypeInputObject = new graphql_1.GraphQLInputObjectType({
         attribute: { type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLString) },
         inverse: { type: graphql_1.GraphQLString },
         attributeSchema: { type: new graphql_1.GraphQLList(new graphql_1.GraphQLNonNull(exports.AttributeSchemaEntryInput)) },
+        stability: { type: exports.StabilityEnum },
         description: { type: graphql_1.GraphQLString },
     }),
 });
@@ -213,6 +230,7 @@ exports.RelationshipTypeUpdateInput = new graphql_1.GraphQLInputObjectType({
         attribute: { type: graphql_1.GraphQLString },
         inverse: { type: graphql_1.GraphQLString },
         attributeSchema: { type: new graphql_1.GraphQLList(new graphql_1.GraphQLNonNull(exports.AttributeSchemaEntryInput)) },
+        stability: { type: exports.StabilityEnum },
         description: { type: graphql_1.GraphQLString },
     }),
 });

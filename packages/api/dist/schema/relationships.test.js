@@ -10,6 +10,7 @@ function makeRT(name, attrs = []) {
         category: 'resource',
         attribute_schema: attrs,
         current_version: 1,
+        stability: 'experimental',
         is_seed: false,
     };
 }
@@ -22,6 +23,7 @@ function makeRRT(cardinality) {
         cardinality,
         attribute: 'borrower_id',
         current_version: 1,
+        stability: 'experimental',
         is_seed: false,
     };
 }

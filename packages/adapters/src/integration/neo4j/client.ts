@@ -39,10 +39,11 @@ import type {
   ResourceTypeUpdate,
   ResourceTypeVersion,
   SeedReport,
+  Stability,
   TypeDeleteOptions,
 } from '@dna-codes/dna-core'
 
-import { TypeInUseError } from '@dna-codes/dna-core'
+import { defaultStabilityForType, TypeInUseError } from '@dna-codes/dna-core'
 
 import {
   CREATE_RELATIONSHIP_TYPE_CYPHER,
@@ -66,6 +67,8 @@ import {
   LIST_RESOURCE_TYPES_CYPHER,
   LIST_RESOURCE_TYPE_VERSIONS_CYPHER,
   METADATA_SCHEMA_CYPHER,
+  SET_RELATIONSHIP_TYPE_STABILITY_CYPHER,
+  SET_RESOURCE_TYPE_STABILITY_CYPHER,
   UPDATE_RELATIONSHIP_TYPE_CYPHER,
   UPDATE_RESOURCE_TYPE_CYPHER,
   WRITE_SEED_MARKER_CYPHER,
@@ -106,6 +109,13 @@ function toAttributeSchema(raw: unknown): AttributeSchema {
   ) as AttributeSchema
 }
 
+const STABILITY_VALUES: readonly string[] = ['experimental', 'beta', 'stable', 'deprecated']
+
+/** Narrow an authored/stored `stability` field to a valid `Stability`, or `undefined`. */
+function asStability(raw: unknown): Stability | undefined {
+  return typeof raw === 'string' && STABILITY_VALUES.includes(raw) ? (raw as Stability) : undefined
+}
+
 function stripReservedAndId(node: Record<string, unknown>): InstanceRecord {
   const id = String(node._id)
   const out: Record<string, unknown> = {}
@@ -139,28 +149,33 @@ function nodePropsFor(
 }
 
 function resourceTypeFromNode(node: Record<string, unknown>): ResourceType {
+  const name = String(node.name)
   return {
     id: String(node.id),
-    name: String(node.name),
+    name,
     category: node.category as NounCategory,
     attribute_schema: parseAttributeSchema(node.attribute_schema),
     current_version:
       typeof node.current_version === 'number' ? node.current_version : Number(node.current_version),
+    // Legacy records predating the field default by identity (foundational → stable, else → experimental).
+    stability: asStability(node.stability) ?? defaultStabilityForType(name),
     is_seed: Boolean(node.is_seed),
     ...(typeof node.description === 'string' ? { description: node.description } : {}),
   }
 }
 
 function relationshipTypeFromNode(node: Record<string, unknown>): RelationshipType {
+  const name = String(node.name)
   return {
     id: String(node.id),
-    name: String(node.name),
+    name,
     from: String(node.from),
     to: String(node.to),
     cardinality: node.cardinality as RelationshipType['cardinality'],
     attribute: String(node.attribute),
     current_version:
       typeof node.current_version === 'number' ? node.current_version : Number(node.current_version),
+    stability: asStability(node.stability) ?? defaultStabilityForType(name),
     is_seed: Boolean(node.is_seed),
     ...(typeof node.inverse === 'string' ? { inverse: node.inverse } : {}),
     ...(typeof node.description === 'string' ? { description: node.description } : {}),
@@ -176,6 +191,8 @@ function resourceTypeVersionFromNode(node: Record<string, unknown>): ResourceTyp
     resource_type_id: String(node.resource_type_id),
     version: typeof node.version === 'number' ? node.version : Number(node.version),
     attribute_schema: parseAttributeSchema(node.attribute_schema),
+    // Version nodes carry no name; legacy snapshots without stability default to experimental.
+    stability: asStability(node.stability) ?? 'experimental',
     created_at: String(node.created_at),
   }
 }
@@ -188,6 +205,7 @@ function relationshipTypeVersionFromNode(node: Record<string, unknown>): Relatio
     attribute_schema: node.attribute_schema !== undefined
       ? parseAttributeSchema(node.attribute_schema)
       : undefined,
+    stability: asStability(node.stability) ?? 'experimental',
     created_at: String(node.created_at),
   }
 }
@@ -315,7 +333,7 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
       const domain = dna.domain ?? {}
       for (const { key, category } of NOUN_KEYS) {
         const list = Array.isArray(domain[key])
-          ? (domain[key] as Array<{ name?: unknown; attributes?: unknown; description?: unknown }>)
+          ? (domain[key] as Array<{ name?: unknown; attributes?: unknown; description?: unknown; stability?: unknown }>)
           : []
         for (const entry of list) {
           if (typeof entry?.name !== 'string') continue
@@ -328,6 +346,7 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
             name: entry.name,
             category,
             attribute_schema: toAttributeSchema(entry.attributes),
+            ...(asStability(entry.stability) ? { stability: asStability(entry.stability)! } : {}),
             ...(typeof entry.description === 'string' ? { description: entry.description } : {}),
           })
           const fetched = await getResourceTypeByName(entry.name)
@@ -369,6 +388,7 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
           cardinality: rel.cardinality as RelationshipType['cardinality'],
           attribute: rel.attribute,
           ...(typeof rel.inverse === 'string' ? { inverse: rel.inverse } : {}),
+          ...(asStability(rel.stability) ? { stability: asStability(rel.stability)! } : {}),
         })
         const fetched = await getRelationshipTypeByName(rel.name)
         if (fetched) {
@@ -414,12 +434,14 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
         validateLabel(input.name)
         const id = input.id && input.id.length > 0 ? input.id : randomUUID()
         const now = new Date().toISOString()
+        const stability = input.stability ?? defaultStabilityForType(input.name)
         const props: Record<string, unknown> = {
           id,
           name: input.name,
           category: input.category,
           attribute_schema: serializeAttributeSchema(input.attribute_schema),
           current_version: 1,
+          stability,
           is_seed: false,
           created_at: now,
           ...(input.description !== undefined ? { description: input.description } : {}),
@@ -434,6 +456,7 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
               resource_type_id: id,
               version: 1,
               attribute_schema: serializeAttributeSchema(input.attribute_schema),
+              stability,
               created_at: now,
             },
           })
@@ -477,9 +500,13 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
           const existing = resourceTypeFromNode(current.records[0].get('rt').properties)
           const newVersion = existing.current_version + 1
           const nextSchema = patch.attribute_schema ?? existing.attribute_schema
+          const nextStability = patch.stability ?? existing.stability
           const updatePatch: Record<string, unknown> = {}
           if (patch.attribute_schema !== undefined) {
             updatePatch.attribute_schema = serializeAttributeSchema(patch.attribute_schema)
+          }
+          if (patch.stability !== undefined) {
+            updatePatch.stability = patch.stability
           }
           if (patch.description !== undefined) {
             updatePatch.description = patch.description
@@ -492,9 +519,22 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
               resource_type_id: id,
               version: newVersion,
               attribute_schema: serializeAttributeSchema(nextSchema),
+              stability: nextStability,
               created_at: new Date().toISOString(),
             },
           })
+        } finally {
+          await s.close()
+        }
+      },
+
+      async setStability(id: string, stability: Stability): Promise<void> {
+        const s = session()
+        try {
+          const result = await s.run(SET_RESOURCE_TYPE_STABILITY_CYPHER, { id, stability })
+          if (result.records.length === 0) {
+            throw new Error(`integration/neo4j: ResourceType ${id} not found`)
+          }
         } finally {
           await s.close()
         }
@@ -541,6 +581,7 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
       async create(input: RelationshipTypeInput): Promise<{ id: string }> {
         const id = input.id && input.id.length > 0 ? input.id : randomUUID()
         const now = new Date().toISOString()
+        const stability = input.stability ?? defaultStabilityForType(input.name)
         const props: Record<string, unknown> = {
           id,
           name: input.name,
@@ -549,6 +590,7 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
           cardinality: input.cardinality,
           attribute: input.attribute,
           current_version: 1,
+          stability,
           is_seed: false,
           created_at: now,
           ...(input.inverse !== undefined ? { inverse: input.inverse } : {}),
@@ -567,6 +609,7 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
               relationship_type_id: id,
               version: 1,
               attribute_schema: serializeAttributeSchema(input.attribute_schema),
+              stability,
               created_at: now,
             },
           })
@@ -607,6 +650,7 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
           const existing = relationshipTypeFromNode(current.records[0].get('rt').properties)
           const newVersion = existing.current_version + 1
           const nextSchema = patch.attribute_schema ?? existing.attribute_schema ?? []
+          const nextStability = patch.stability ?? existing.stability
           const updatePatch: Record<string, unknown> = {}
           if (patch.cardinality !== undefined) updatePatch.cardinality = patch.cardinality
           if (patch.attribute !== undefined) updatePatch.attribute = patch.attribute
@@ -614,6 +658,7 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
           if (patch.attribute_schema !== undefined) {
             updatePatch.attribute_schema = serializeAttributeSchema(patch.attribute_schema)
           }
+          if (patch.stability !== undefined) updatePatch.stability = patch.stability
           if (patch.description !== undefined) updatePatch.description = patch.description
           await s.run(UPDATE_RELATIONSHIP_TYPE_CYPHER, { id, patch: updatePatch, newVersion })
           await s.run(CREATE_RELATIONSHIP_TYPE_VERSION_CYPHER, {
@@ -623,9 +668,22 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
               relationship_type_id: id,
               version: newVersion,
               attribute_schema: serializeAttributeSchema(nextSchema),
+              stability: nextStability,
               created_at: new Date().toISOString(),
             },
           })
+        } finally {
+          await s.close()
+        }
+      },
+
+      async setStability(id: string, stability: Stability): Promise<void> {
+        const s = session()
+        try {
+          const result = await s.run(SET_RELATIONSHIP_TYPE_STABILITY_CYPHER, { id, stability })
+          if (result.records.length === 0) {
+            throw new Error(`integration/neo4j: RelationshipType ${id} not found`)
+          }
         } finally {
           await s.close()
         }

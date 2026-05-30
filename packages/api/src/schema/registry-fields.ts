@@ -22,6 +22,7 @@ import type {
   NounCategory,
   RelationshipType,
   ResourceType,
+  Stability,
 } from '@dna-codes/dna-core'
 
 import type { SchemaManager } from './schema-manager'
@@ -36,6 +37,7 @@ import {
   ResourceTypeUpdateInput,
   ResourceTypeVersionType,
   RelationshipTypeVersionType,
+  StabilityEnum,
 } from './registry-types'
 
 export interface RegistryFieldsArgs {
@@ -149,6 +151,7 @@ export function buildRegistryFields({
             name: string
             category: NounCategory
             attributeSchema: ReadonlyArray<Record<string, unknown>>
+            stability?: Stability
             description?: string
           }
         }
@@ -157,6 +160,7 @@ export function buildRegistryFields({
           name: input.name,
           category: input.category,
           attribute_schema: normalizeAttributeSchemaInput(input.attributeSchema),
+          ...(input.stability !== undefined ? { stability: input.stability } : {}),
           ...(input.description !== undefined ? { description: input.description } : {}),
         })
         await schemaManager.rebuild()
@@ -174,6 +178,7 @@ export function buildRegistryFields({
           id: string
           input: {
             attributeSchema?: ReadonlyArray<Record<string, unknown>>
+            stability?: Stability
             description?: string
           }
         }
@@ -181,9 +186,23 @@ export function buildRegistryFields({
           ...(input.attributeSchema !== undefined
             ? { attribute_schema: normalizeAttributeSchemaInput(input.attributeSchema) }
             : {}),
+          ...(input.stability !== undefined ? { stability: input.stability } : {}),
           ...(input.description !== undefined ? { description: input.description } : {}),
         })
         await schemaManager.rebuild()
+        return dataStore.resourceType.get(id)
+      },
+    },
+    setResourceTypeStability: {
+      type: new GraphQLNonNull(ResourceTypeOutput),
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLID) },
+        stability: { type: new GraphQLNonNull(StabilityEnum) },
+      },
+      resolve: async (_p, args) => {
+        const { id, stability } = args as { id: string; stability: Stability }
+        await dataStore.resourceType.setStability(id, stability)
+        // Stability is orthogonal to the GraphQL schema shape — no rebuild needed.
         return dataStore.resourceType.get(id)
       },
     },
@@ -220,6 +239,7 @@ export function buildRegistryFields({
             attribute: string
             inverse?: string
             attributeSchema?: ReadonlyArray<Record<string, unknown>>
+            stability?: Stability
             description?: string
           }
         }
@@ -234,6 +254,7 @@ export function buildRegistryFields({
           ...(input.attributeSchema !== undefined
             ? { attribute_schema: normalizeAttributeSchemaInput(input.attributeSchema) }
             : {}),
+          ...(input.stability !== undefined ? { stability: input.stability } : {}),
           ...(input.description !== undefined ? { description: input.description } : {}),
         })
         await schemaManager.rebuild()
@@ -254,6 +275,7 @@ export function buildRegistryFields({
             attribute?: string
             inverse?: string
             attributeSchema?: ReadonlyArray<Record<string, unknown>>
+            stability?: Stability
             description?: string
           }
         }
@@ -264,9 +286,22 @@ export function buildRegistryFields({
           ...(input.attributeSchema !== undefined
             ? { attribute_schema: normalizeAttributeSchemaInput(input.attributeSchema) }
             : {}),
+          ...(input.stability !== undefined ? { stability: input.stability } : {}),
           ...(input.description !== undefined ? { description: input.description } : {}),
         })
         await schemaManager.rebuild()
+        return dataStore.relationshipType.get(id)
+      },
+    },
+    setRelationshipTypeStability: {
+      type: new GraphQLNonNull(RelationshipTypeOutput),
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLID) },
+        stability: { type: new GraphQLNonNull(StabilityEnum) },
+      },
+      resolve: async (_p, args) => {
+        const { id, stability } = args as { id: string; stability: Stability }
+        await dataStore.relationshipType.setStability(id, stability)
         return dataStore.relationshipType.get(id)
       },
     },

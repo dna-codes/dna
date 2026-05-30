@@ -9,6 +9,7 @@ function makeResourceType(name, partial) {
         category: partial?.category ?? 'resource',
         attribute_schema: partial?.attribute_schema ?? [],
         current_version: partial?.current_version ?? 1,
+        stability: partial?.stability ?? 'experimental',
         is_seed: partial?.is_seed ?? false,
         ...(partial?.description ? { description: partial.description } : {}),
     };

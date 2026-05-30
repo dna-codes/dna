@@ -25,6 +25,37 @@ the Compositions that compose this type into a DNA sentence. Lens bullets
 use the canonical English sentence as the path field (gerund forms allowed
 for grammatical flow); the JSON path uses pair-anchored type identifiers.
 
+## Stability lifecycle
+
+Every registry type — both `ResourceType` and `RelationshipType` records —
+carries a **`stability`** marker describing how settled the *concept* is,
+following the Kubernetes API-maturity model:
+
+| Stability | Meaning |
+|-----------|---------|
+| `experimental` | May change or be removed; opt-in only. |
+| `beta` | Well-tested and enabled by default, but may still change. |
+| `stable` | Will not be removed or break compatibility. |
+| `deprecated` | Scheduled for removal. |
+
+`stability` is **orthogonal to the schema `version`** (`current_version` on the
+record). The version is a migration handle that tracks *schema shape* — it bumps
+when a type's attributes change. Stability tracks *concept maturity* — whether
+the idea is committed to. A type can be `experimental` at version 1 or `stable`
+at version 3, independently. Transitioning stability does **not** bump the
+version, and a version bump does **not** change stability (each version snapshot
+records the stability in effect when it was written).
+
+**Seeding defaults:** the four foundational types (`Person`, `Role`, `Group`,
+`Resource`) seed as `stable`. Every other type seeded from a DNA document
+defaults to `experimental`, unless the authored definition declares a
+`stability` of its own (an optional base-contract field). Concretely: `User`
+and `Role` are locked-in concepts (`stable`); a freshly authored domain type is
+`experimental` until it earns promotion. See the
+[dna-api](../../packages/api) registry for the GraphQL surface
+(`stability` fields, create/update inputs, and the
+`setResourceTypeStability` / `setRelationshipTypeStability` transition mutations).
+
 ## Operational Layer
 
 How the organization runs — its people, the work they do, and the

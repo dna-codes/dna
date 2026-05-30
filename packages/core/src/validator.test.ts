@@ -253,6 +253,23 @@ describe('DnaValidator — operational/resource', () => {
     const result = validator.validate(doc, 'operational/resource')
     expect(result.valid).toBe(false)
   })
+
+  it('validates a Resource declaring a valid stability (base contract)', () => {
+    const result = validator.validate({ name: 'Loan', stability: 'beta' }, 'operational/resource')
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  it('validates a Resource with stability absent (optional base field)', () => {
+    const result = validator.validate({ name: 'Loan' }, 'operational/resource')
+    expect(result.valid).toBe(true)
+  })
+
+  it('rejects a Resource with an out-of-range stability value', () => {
+    const result = validator.validate({ name: 'Loan', stability: 'ga' }, 'operational/resource')
+    expect(result.valid).toBe(false)
+    expect(result.errors.some((e) => e.instancePath.includes('stability'))).toBe(true)
+  })
 })
 
 describe('DnaValidator — operational/person', () => {

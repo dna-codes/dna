@@ -125,6 +125,32 @@ v1 does NOT retroactively migrate or revalidate existing data when a
 schema changes. The version stamp is the contract — tenants migrate
 data explicitly via `update<Type>` mutations.
 
+### Stability
+
+Each `ResourceType` / `RelationshipType` also carries a `stability`
+marker — `experimental` / `beta` / `stable` / `deprecated` (Kubernetes
+API-maturity model) — describing how settled the *concept* is. It is
+**orthogonal to `current_version`**: `current_version` tracks schema
+*shape*, `stability` tracks concept *maturity*. A type can be
+`experimental` at version 1 or `stable` at version 3.
+
+- The four foundational types (`Person`, `Role`, `Group`, `Resource`)
+  seed as `stable`; every other seeded type defaults to `experimental`
+  unless the authored DNA definition declares a `stability`.
+- `stability` is queryable on both type kinds and on their version
+  history (each version snapshot records the stability in effect when it
+  was written), and is accepted on the create/update inputs.
+- `setResourceTypeStability(id, stability)` and
+  `setRelationshipTypeStability(id, stability)` transition the marker
+  **without** bumping `current_version` or appending a version record —
+  the dedicated orthogonal path. (No schema rebuild: stability does not
+  affect the generated GraphQL shape.)
+
+```sh
+curl -s localhost:4000/graphql -H 'content-type: application/json' \
+  -d '{"query":"mutation { setResourceTypeStability(id: \"<id>\", stability: STABLE) { name stability currentVersion } }"}'
+```
+
 ### Schema hot-reload
 
 `createResourceType` / `updateResourceType` / `deleteResourceType` (and

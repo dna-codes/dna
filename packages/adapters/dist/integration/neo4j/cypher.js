@@ -21,7 +21,7 @@
  * isolation, and the runtime adapter (`client.ts`) imports them by name.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DELETE_LINK_CYPHER = exports.WRITE_SEED_MARKER_CYPHER = exports.HAS_SEED_MARKER_CYPHER = exports.DELETE_LINKS_OF_ROLE_CYPHER = exports.COUNT_LINKS_OF_ROLE_CYPHER = exports.LIST_RELATIONSHIP_TYPE_VERSIONS_CYPHER = exports.DELETE_RELATIONSHIP_TYPE_CYPHER = exports.UPDATE_RELATIONSHIP_TYPE_CYPHER = exports.LIST_RELATIONSHIP_TYPES_CYPHER = exports.GET_RELATIONSHIP_TYPE_BY_NAME_CYPHER = exports.GET_RELATIONSHIP_TYPE_CYPHER = exports.CREATE_RELATIONSHIP_TYPE_VERSION_CYPHER = exports.CREATE_RELATIONSHIP_TYPE_CYPHER = exports.COUNT_INSTANCES_OF_TYPE_CYPHER = exports.LIST_RESOURCE_TYPE_VERSIONS_CYPHER = exports.DELETE_RESOURCE_TYPE_CYPHER = exports.UPDATE_RESOURCE_TYPE_CYPHER = exports.LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER = exports.LIST_RESOURCE_TYPES_CYPHER = exports.GET_RESOURCE_TYPE_BY_NAME_CYPHER = exports.GET_RESOURCE_TYPE_CYPHER = exports.CREATE_RESOURCE_TYPE_VERSION_CYPHER = exports.CREATE_RESOURCE_TYPE_CYPHER = exports.METADATA_SCHEMA_CYPHER = void 0;
+exports.DELETE_LINK_CYPHER = exports.WRITE_SEED_MARKER_CYPHER = exports.HAS_SEED_MARKER_CYPHER = exports.DELETE_LINKS_OF_ROLE_CYPHER = exports.COUNT_LINKS_OF_ROLE_CYPHER = exports.LIST_RELATIONSHIP_TYPE_VERSIONS_CYPHER = exports.DELETE_RELATIONSHIP_TYPE_CYPHER = exports.SET_RELATIONSHIP_TYPE_STABILITY_CYPHER = exports.UPDATE_RELATIONSHIP_TYPE_CYPHER = exports.LIST_RELATIONSHIP_TYPES_CYPHER = exports.GET_RELATIONSHIP_TYPE_BY_NAME_CYPHER = exports.GET_RELATIONSHIP_TYPE_CYPHER = exports.CREATE_RELATIONSHIP_TYPE_VERSION_CYPHER = exports.CREATE_RELATIONSHIP_TYPE_CYPHER = exports.COUNT_INSTANCES_OF_TYPE_CYPHER = exports.LIST_RESOURCE_TYPE_VERSIONS_CYPHER = exports.DELETE_RESOURCE_TYPE_CYPHER = exports.SET_RESOURCE_TYPE_STABILITY_CYPHER = exports.UPDATE_RESOURCE_TYPE_CYPHER = exports.LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER = exports.LIST_RESOURCE_TYPES_CYPHER = exports.GET_RESOURCE_TYPE_BY_NAME_CYPHER = exports.GET_RESOURCE_TYPE_CYPHER = exports.CREATE_RESOURCE_TYPE_VERSION_CYPHER = exports.CREATE_RESOURCE_TYPE_CYPHER = exports.METADATA_SCHEMA_CYPHER = void 0;
 exports.validateLabel = validateLabel;
 exports.labelSchemaCypher = labelSchemaCypher;
 exports.dropLabelSchemaCypher = dropLabelSchemaCypher;
@@ -99,6 +99,10 @@ exports.LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER = 'MATCH (rt:ResourceType {catego
 exports.UPDATE_RESOURCE_TYPE_CYPHER = `MATCH (rt:ResourceType {id: $id})
 SET rt += $patch, rt.current_version = $newVersion
 RETURN rt`;
+/** Set `stability` only — no `current_version` bump, no version record (orthogonal transition). */
+exports.SET_RESOURCE_TYPE_STABILITY_CYPHER = `MATCH (rt:ResourceType {id: $id})
+SET rt.stability = $stability
+RETURN rt`;
 exports.DELETE_RESOURCE_TYPE_CYPHER = `MATCH (rt:ResourceType {id: $id})
 OPTIONAL MATCH (v:ResourceTypeVersion)-[:VERSION_OF]->(rt)
 DETACH DELETE v, rt`;
@@ -119,6 +123,10 @@ exports.GET_RELATIONSHIP_TYPE_BY_NAME_CYPHER = 'MATCH (rt:RelationshipType {name
 exports.LIST_RELATIONSHIP_TYPES_CYPHER = 'MATCH (rt:RelationshipType) RETURN rt ORDER BY rt.name';
 exports.UPDATE_RELATIONSHIP_TYPE_CYPHER = `MATCH (rt:RelationshipType {id: $id})
 SET rt += $patch, rt.current_version = $newVersion
+RETURN rt`;
+/** Set `stability` only — no `current_version` bump, no version record (orthogonal transition). */
+exports.SET_RELATIONSHIP_TYPE_STABILITY_CYPHER = `MATCH (rt:RelationshipType {id: $id})
+SET rt.stability = $stability
 RETURN rt`;
 exports.DELETE_RELATIONSHIP_TYPE_CYPHER = `MATCH (rt:RelationshipType {id: $id})
 OPTIONAL MATCH (v:RelationshipTypeVersion)-[:VERSION_OF]->(rt)

@@ -40,14 +40,16 @@ import type {
   ResourceTypeUpdate,
   ResourceTypeVersion,
   SeedReport,
+  Stability,
   TypeDeleteOptions,
 } from '@dna-codes/dna-core'
 
-import { TypeInUseError } from '@dna-codes/dna-core'
+import { defaultStabilityForType, TypeInUseError } from '@dna-codes/dna-core'
 
 interface NounDnaShape {
   name?: unknown
   attributes?: unknown
+  stability?: unknown
 }
 
 interface RelDnaShape {
@@ -57,6 +59,14 @@ interface RelDnaShape {
   cardinality?: unknown
   attribute?: unknown
   inverse?: unknown
+  stability?: unknown
+}
+
+const STABILITY_VALUES: readonly string[] = ['experimental', 'beta', 'stable', 'deprecated']
+
+/** Narrow an authored `stability` field to a valid `Stability`, or `undefined`. */
+function asStability(raw: unknown): Stability | undefined {
+  return typeof raw === 'string' && STABILITY_VALUES.includes(raw) ? (raw as Stability) : undefined
 }
 
 const NOUN_KEYS: Array<{ key: 'resources' | 'persons' | 'roles' | 'groups'; category: NounCategory }> = [
@@ -114,6 +124,7 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
     id: string,
     version: number,
     schema: AttributeSchema,
+    stability: Stability,
     kind: 'resource' | 'relationship',
   ): void {
     if (kind === 'resource') {
@@ -123,6 +134,7 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
         resource_type_id: id,
         version,
         attribute_schema: schema,
+        stability,
         created_at: new Date().toISOString(),
       })
       resourceTypeVersionsById.set(id, versions)
@@ -133,6 +145,7 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
         relationship_type_id: id,
         version,
         attribute_schema: schema,
+        stability,
         created_at: new Date().toISOString(),
       })
       relationshipTypeVersionsById.set(id, versions)
@@ -144,18 +157,20 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
       throw new Error(`integration/memory: ResourceType "${input.name}" already exists`)
     }
     const id = input.id && input.id.length > 0 ? input.id : randomUUID()
+    const stability = input.stability ?? defaultStabilityForType(input.name)
     const record: ResourceType = {
       id,
       name: input.name,
       category: input.category,
       attribute_schema: input.attribute_schema,
       current_version: 1,
+      stability,
       is_seed: isSeed,
       ...(input.description !== undefined ? { description: input.description } : {}),
     }
     resourceTypes.set(id, record)
     resourceTypeIdByName.set(input.name, id)
-    pushVersion(id, 1, input.attribute_schema, 'resource')
+    pushVersion(id, 1, input.attribute_schema, stability, 'resource')
     return { id }
   }
 
@@ -167,6 +182,7 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
       throw new Error(`integration/memory: RelationshipType "${input.name}" already exists`)
     }
     const id = input.id && input.id.length > 0 ? input.id : randomUUID()
+    const stability = input.stability ?? defaultStabilityForType(input.name)
     const record: RelationshipType = {
       id,
       name: input.name,
@@ -175,6 +191,7 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
       cardinality: input.cardinality,
       attribute: input.attribute,
       current_version: 1,
+      stability,
       is_seed: isSeed,
       ...(input.inverse !== undefined ? { inverse: input.inverse } : {}),
       ...(input.attribute_schema !== undefined ? { attribute_schema: input.attribute_schema } : {}),
@@ -182,7 +199,7 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
     }
     relationshipTypes.set(id, record)
     relationshipTypeIdByName.set(input.name, id)
-    pushVersion(id, 1, input.attribute_schema ?? [], 'relationship')
+    pushVersion(id, 1, input.attribute_schema ?? [], stability, 'relationship')
     return { id }
   }
 
@@ -237,6 +254,7 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
               name: entry.name,
               category,
               attribute_schema: toAttributeSchema(entry.attributes),
+              ...(asStability(entry.stability) ? { stability: asStability(entry.stability)! } : {}),
             },
             true,
           )
@@ -268,6 +286,7 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
             cardinality: rel.cardinality as RelationshipType['cardinality'],
             attribute: rel.attribute,
             ...(typeof rel.inverse === 'string' ? { inverse: rel.inverse } : {}),
+            ...(asStability(rel.stability) ? { stability: asStability(rel.stability)! } : {}),
           },
           true,
         )
@@ -301,14 +320,23 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
         const existing = resourceTypes.get(id)
         if (!existing) throw new Error(`integration/memory: ResourceType ${id} not found`)
         const nextSchema = patch.attribute_schema ?? existing.attribute_schema
+        const nextStability = patch.stability ?? existing.stability
         const next: ResourceType = {
           ...existing,
           ...(patch.attribute_schema !== undefined ? { attribute_schema: patch.attribute_schema } : {}),
+          ...(patch.stability !== undefined ? { stability: patch.stability } : {}),
           ...(patch.description !== undefined ? { description: patch.description } : {}),
           current_version: existing.current_version + 1,
         }
         resourceTypes.set(id, next)
-        pushVersion(id, next.current_version, nextSchema, 'resource')
+        pushVersion(id, next.current_version, nextSchema, nextStability, 'resource')
+      },
+
+      async setStability(id: string, stability: Stability): Promise<void> {
+        const existing = resourceTypes.get(id)
+        if (!existing) throw new Error(`integration/memory: ResourceType ${id} not found`)
+        // Orthogonal to schema version: no current_version bump, no version record.
+        resourceTypes.set(id, { ...existing, stability })
       },
 
       async delete(id: string, opts?: TypeDeleteOptions): Promise<void> {
@@ -356,17 +384,26 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
         const existing = relationshipTypes.get(id)
         if (!existing) throw new Error(`integration/memory: RelationshipType ${id} not found`)
         const nextSchema = patch.attribute_schema ?? existing.attribute_schema ?? []
+        const nextStability = patch.stability ?? existing.stability
         const next: RelationshipType = {
           ...existing,
           ...(patch.cardinality !== undefined ? { cardinality: patch.cardinality } : {}),
           ...(patch.attribute !== undefined ? { attribute: patch.attribute } : {}),
           ...(patch.inverse !== undefined ? { inverse: patch.inverse } : {}),
           ...(patch.attribute_schema !== undefined ? { attribute_schema: patch.attribute_schema } : {}),
+          ...(patch.stability !== undefined ? { stability: patch.stability } : {}),
           ...(patch.description !== undefined ? { description: patch.description } : {}),
           current_version: existing.current_version + 1,
         }
         relationshipTypes.set(id, next)
-        pushVersion(id, next.current_version, nextSchema, 'relationship')
+        pushVersion(id, next.current_version, nextSchema, nextStability, 'relationship')
+      },
+
+      async setStability(id: string, stability: Stability): Promise<void> {
+        const existing = relationshipTypes.get(id)
+        if (!existing) throw new Error(`integration/memory: RelationshipType ${id} not found`)
+        // Orthogonal to schema version: no current_version bump, no version record.
+        relationshipTypes.set(id, { ...existing, stability })
       },
 
       async delete(id: string, opts?: TypeDeleteOptions): Promise<void> {

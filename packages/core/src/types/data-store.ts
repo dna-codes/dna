@@ -40,6 +40,40 @@ import type { OperationalDNA } from './merge'
  */
 export type NounCategory = 'person' | 'role' | 'group' | 'resource'
 
+// ── Stability lifecycle ─────────────────────────────────────────────────────
+
+/**
+ * Maturity of a registry type's *concept* (Kubernetes API-maturity model).
+ * Orthogonal to the numeric schema `version`/`current_version`: a type can be
+ * `experimental` at version 1 or `stable` at version 3, independently. A type
+ * can transition between stability stages without a schema change, and a schema
+ * change does not alter stability. See `defaultStabilityForType` for seed/read
+ * defaults.
+ */
+export type Stability = 'experimental' | 'beta' | 'stable' | 'deprecated'
+
+/** Canonical ordered list of stability values. The single source of truth for the GraphQL enum. */
+export const STABILITIES: readonly Stability[] = ['experimental', 'beta', 'stable', 'deprecated']
+
+/** The four foundational resource-type names, always seeded and always `stable`. */
+export const FOUNDATIONAL_RESOURCE_TYPE_NAMES: readonly string[] = ['Person', 'Role', 'Group', 'Resource']
+
+/** True iff `name` is one of the four foundational resource types. */
+export function isFoundationalTypeName(name: string): boolean {
+  return FOUNDATIONAL_RESOURCE_TYPE_NAMES.includes(name)
+}
+
+/**
+ * The default `stability` for a registry type identified by `name`. Foundational
+ * types (Person/Role/Group/Resource) default to `stable`; every other type
+ * defaults to `experimental`. Used both when seeding/creating a type without an
+ * explicit stability and when reading a legacy record that predates the field.
+ * `is_seed` cannot be used for this because tenant-seeded types are also seeds.
+ */
+export function defaultStabilityForType(name: string): Stability {
+  return isFoundationalTypeName(name) ? 'stable' : 'experimental'
+}
+
 // ── Type system records ────────────────────────────────────────────────────
 
 /**
@@ -78,6 +112,8 @@ export interface ResourceType {
   category: NounCategory
   attribute_schema: AttributeSchema
   current_version: number
+  /** Concept maturity, orthogonal to `current_version`. See {@link Stability}. */
+  stability: Stability
   description?: string
   /** True iff this record was created by `seedFromDna`. Admin-edited types stay `is_seed: false`. */
   is_seed: boolean
@@ -89,6 +125,8 @@ export interface ResourceTypeVersion {
   resource_type_id: string
   version: number
   attribute_schema: AttributeSchema
+  /** The `stability` in effect when this version was written (self-describing history). */
+  stability: Stability
   created_at: string
 }
 
@@ -98,12 +136,16 @@ export interface ResourceTypeInput {
   name: string
   category: NounCategory
   attribute_schema: AttributeSchema
+  /** Optional; when omitted, defaults via {@link defaultStabilityForType}. */
+  stability?: Stability
   description?: string
 }
 
 /** Patch shape for `resourceType.update`. `name` is intentionally absent — names are immutable. */
 export interface ResourceTypeUpdate {
   attribute_schema?: AttributeSchema
+  /** When present, sets stability alongside the schema revision. To transition stability without bumping the version, use `setStability`. */
+  stability?: Stability
   description?: string
 }
 
@@ -118,6 +160,8 @@ export interface RelationshipType {
   inverse?: string
   attribute_schema?: AttributeSchema
   current_version: number
+  /** Concept maturity, orthogonal to `current_version`. See {@link Stability}. */
+  stability: Stability
   description?: string
   is_seed: boolean
 }
@@ -128,6 +172,8 @@ export interface RelationshipTypeVersion {
   relationship_type_id: string
   version: number
   attribute_schema?: AttributeSchema
+  /** The `stability` in effect when this version was written (self-describing history). */
+  stability: Stability
   created_at: string
 }
 
@@ -141,6 +187,8 @@ export interface RelationshipTypeInput {
   attribute: string
   inverse?: string
   attribute_schema?: AttributeSchema
+  /** Optional; when omitted, defaults via {@link defaultStabilityForType}. */
+  stability?: Stability
   description?: string
 }
 
@@ -150,6 +198,8 @@ export interface RelationshipTypeUpdate {
   attribute?: string
   inverse?: string
   attribute_schema?: AttributeSchema
+  /** When present, sets stability alongside the schema revision. To transition stability without bumping the version, use `setStability`. */
+  stability?: Stability
   description?: string
 }
 
@@ -258,6 +308,12 @@ export interface DnaDataStore {
     list(filter?: { category?: NounCategory }): Promise<ResourceType[]>
     /** Update bumps `current_version` and appends a new version record. */
     update(id: string, patch: ResourceTypeUpdate): Promise<void>
+    /**
+     * Transition the live record's `stability` only. Does NOT bump
+     * `current_version` and does NOT append a version record — stability is a
+     * property of the concept, orthogonal to schema revisions.
+     */
+    setStability(id: string, stability: Stability): Promise<void>
     /** Reject with `TypeInUseError` if any Instance exists, unless `cascade: true`. */
     delete(id: string, opts?: TypeDeleteOptions): Promise<void>
     /** Version history in descending version order. */
@@ -270,6 +326,8 @@ export interface DnaDataStore {
     get(id: string): Promise<RelationshipType | null>
     list(): Promise<RelationshipType[]>
     update(id: string, patch: RelationshipTypeUpdate): Promise<void>
+    /** Transition the live record's `stability` only — no version bump. See `resourceType.setStability`. */
+    setStability(id: string, stability: Stability): Promise<void>
     delete(id: string, opts?: TypeDeleteOptions): Promise<void>
     versions(id: string): Promise<RelationshipTypeVersion[]>
   }

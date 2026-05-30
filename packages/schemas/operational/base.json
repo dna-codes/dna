@@ -23,6 +23,11 @@
       "type": "string",
       "description": "The version of this primitive type's schema in effect when the primitive was authored. A migration handle — see operational/versions.json for the current version per type. Any increment MUST be accompanied by at least a semantic minor bump to @dna-codes/dna-schemas."
     },
+    "stability": {
+      "type": "string",
+      "enum": ["experimental", "beta", "stable", "deprecated"],
+      "description": "Optional declared concept maturity (Kubernetes API-maturity model). Orthogonal to `version`. When present, it flows into registry seeding as the seeded type's stability; when absent, the registry's seeding defaults apply (foundational types `stable`, everything else `experimental`)."
+    },
     "description": {
       "type": "string",
       "description": "Human-readable explanation of what this primitive represents."

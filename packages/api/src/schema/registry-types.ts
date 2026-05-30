@@ -26,6 +26,20 @@ import {
   GraphQLString,
 } from 'graphql'
 
+import { STABILITIES } from '@dna-codes/dna-core'
+
+/**
+ * Stability enum, derived from the core `STABILITIES` array so the GraphQL
+ * surface and the core `Stability` union cannot drift. Members are the
+ * upper-cased value names (e.g. `experimental` → `EXPERIMENTAL`).
+ */
+export const StabilityEnum = new GraphQLEnumType({
+  name: 'Stability',
+  values: Object.fromEntries(
+    STABILITIES.map((s) => [s.toUpperCase(), { value: s }]),
+  ),
+})
+
 export const NounCategoryEnum = new GraphQLEnumType({
   name: 'NounCategory',
   values: {
@@ -97,6 +111,7 @@ export const ResourceTypeVersionType: GraphQLObjectType = new GraphQLObjectType(
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(AttributeSchemaEntryType))),
       resolve: (src: Record<string, unknown>) => src.attribute_schema,
     },
+    stability: { type: new GraphQLNonNull(StabilityEnum) },
     createdAt: {
       type: new GraphQLNonNull(GraphQLString),
       resolve: (src: Record<string, unknown>) => src.created_at,
@@ -117,6 +132,7 @@ export const RelationshipTypeVersionType: GraphQLObjectType = new GraphQLObjectT
       type: new GraphQLList(new GraphQLNonNull(AttributeSchemaEntryType)),
       resolve: (src: Record<string, unknown>) => src.attribute_schema ?? null,
     },
+    stability: { type: new GraphQLNonNull(StabilityEnum) },
     createdAt: {
       type: new GraphQLNonNull(GraphQLString),
       resolve: (src: Record<string, unknown>) => src.created_at,
@@ -146,6 +162,7 @@ export function buildResourceTypeOutputType(
         type: new GraphQLNonNull(GraphQLInt),
         resolve: (src: Record<string, unknown>) => src.current_version,
       },
+      stability: { type: new GraphQLNonNull(StabilityEnum) },
       description: { type: GraphQLString },
       isSeed: {
         type: new GraphQLNonNull(GraphQLBoolean),
@@ -180,6 +197,7 @@ export function buildRelationshipTypeOutputType(
         type: new GraphQLNonNull(GraphQLInt),
         resolve: (src: Record<string, unknown>) => src.current_version,
       },
+      stability: { type: new GraphQLNonNull(StabilityEnum) },
       description: { type: GraphQLString },
       isSeed: {
         type: new GraphQLNonNull(GraphQLBoolean),
@@ -202,6 +220,7 @@ export const ResourceTypeInputObject = new GraphQLInputObjectType({
     attributeSchema: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(AttributeSchemaEntryInput))),
     },
+    stability: { type: StabilityEnum },
     description: { type: GraphQLString },
   }),
 })
@@ -210,6 +229,7 @@ export const ResourceTypeUpdateInput = new GraphQLInputObjectType({
   name: 'ResourceTypeUpdateInput',
   fields: () => ({
     attributeSchema: { type: new GraphQLList(new GraphQLNonNull(AttributeSchemaEntryInput)) },
+    stability: { type: StabilityEnum },
     description: { type: GraphQLString },
   }),
 })
@@ -225,6 +245,7 @@ export const RelationshipTypeInputObject = new GraphQLInputObjectType({
     attribute: { type: new GraphQLNonNull(GraphQLString) },
     inverse: { type: GraphQLString },
     attributeSchema: { type: new GraphQLList(new GraphQLNonNull(AttributeSchemaEntryInput)) },
+    stability: { type: StabilityEnum },
     description: { type: GraphQLString },
   }),
 })
@@ -236,6 +257,7 @@ export const RelationshipTypeUpdateInput = new GraphQLInputObjectType({
     attribute: { type: GraphQLString },
     inverse: { type: GraphQLString },
     attributeSchema: { type: new GraphQLList(new GraphQLNonNull(AttributeSchemaEntryInput)) },
+    stability: { type: StabilityEnum },
     description: { type: GraphQLString },
   }),
 })

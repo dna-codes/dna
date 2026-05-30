@@ -107,6 +107,11 @@ export const UPDATE_RESOURCE_TYPE_CYPHER = `MATCH (rt:ResourceType {id: $id})
 SET rt += $patch, rt.current_version = $newVersion
 RETURN rt`
 
+/** Set `stability` only — no `current_version` bump, no version record (orthogonal transition). */
+export const SET_RESOURCE_TYPE_STABILITY_CYPHER = `MATCH (rt:ResourceType {id: $id})
+SET rt.stability = $stability
+RETURN rt`
+
 export const DELETE_RESOURCE_TYPE_CYPHER = `MATCH (rt:ResourceType {id: $id})
 OPTIONAL MATCH (v:ResourceTypeVersion)-[:VERSION_OF]->(rt)
 DETACH DELETE v, rt`
@@ -138,6 +143,11 @@ export const LIST_RELATIONSHIP_TYPES_CYPHER =
 
 export const UPDATE_RELATIONSHIP_TYPE_CYPHER = `MATCH (rt:RelationshipType {id: $id})
 SET rt += $patch, rt.current_version = $newVersion
+RETURN rt`
+
+/** Set `stability` only — no `current_version` bump, no version record (orthogonal transition). */
+export const SET_RELATIONSHIP_TYPE_STABILITY_CYPHER = `MATCH (rt:RelationshipType {id: $id})
+SET rt.stability = $stability
 RETURN rt`
 
 export const DELETE_RELATIONSHIP_TYPE_CYPHER = `MATCH (rt:RelationshipType {id: $id})

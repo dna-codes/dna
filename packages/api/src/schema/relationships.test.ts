@@ -12,6 +12,7 @@ function makeRT(name: string, attrs: ResourceType['attribute_schema'] = []): Res
     category: 'resource',
     attribute_schema: attrs,
     current_version: 1,
+    stability: 'experimental',
     is_seed: false,
   }
 }
@@ -25,6 +26,7 @@ function makeRRT(cardinality: RelationshipType['cardinality']): RelationshipType
     cardinality,
     attribute: 'borrower_id',
     current_version: 1,
+    stability: 'experimental',
     is_seed: false,
   }
 }

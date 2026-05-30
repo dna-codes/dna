@@ -48,6 +48,8 @@ export declare const GET_RESOURCE_TYPE_BY_NAME_CYPHER = "MATCH (rt:ResourceType 
 export declare const LIST_RESOURCE_TYPES_CYPHER = "MATCH (rt:ResourceType) RETURN rt ORDER BY rt.name";
 export declare const LIST_RESOURCE_TYPES_BY_CATEGORY_CYPHER = "MATCH (rt:ResourceType {category: $category}) RETURN rt ORDER BY rt.name";
 export declare const UPDATE_RESOURCE_TYPE_CYPHER = "MATCH (rt:ResourceType {id: $id})\nSET rt += $patch, rt.current_version = $newVersion\nRETURN rt";
+/** Set `stability` only — no `current_version` bump, no version record (orthogonal transition). */
+export declare const SET_RESOURCE_TYPE_STABILITY_CYPHER = "MATCH (rt:ResourceType {id: $id})\nSET rt.stability = $stability\nRETURN rt";
 export declare const DELETE_RESOURCE_TYPE_CYPHER = "MATCH (rt:ResourceType {id: $id})\nOPTIONAL MATCH (v:ResourceTypeVersion)-[:VERSION_OF]->(rt)\nDETACH DELETE v, rt";
 export declare const LIST_RESOURCE_TYPE_VERSIONS_CYPHER = "MATCH (v:ResourceTypeVersion)-[:VERSION_OF]->(rt:ResourceType {id: $id})\nRETURN v ORDER BY v.version DESC";
 export declare const COUNT_INSTANCES_OF_TYPE_CYPHER: (label: string) => string;
@@ -57,6 +59,8 @@ export declare const GET_RELATIONSHIP_TYPE_CYPHER = "MATCH (rt:RelationshipType 
 export declare const GET_RELATIONSHIP_TYPE_BY_NAME_CYPHER = "MATCH (rt:RelationshipType {name: $name}) RETURN rt";
 export declare const LIST_RELATIONSHIP_TYPES_CYPHER = "MATCH (rt:RelationshipType) RETURN rt ORDER BY rt.name";
 export declare const UPDATE_RELATIONSHIP_TYPE_CYPHER = "MATCH (rt:RelationshipType {id: $id})\nSET rt += $patch, rt.current_version = $newVersion\nRETURN rt";
+/** Set `stability` only — no `current_version` bump, no version record (orthogonal transition). */
+export declare const SET_RELATIONSHIP_TYPE_STABILITY_CYPHER = "MATCH (rt:RelationshipType {id: $id})\nSET rt.stability = $stability\nRETURN rt";
 export declare const DELETE_RELATIONSHIP_TYPE_CYPHER = "MATCH (rt:RelationshipType {id: $id})\nOPTIONAL MATCH (v:RelationshipTypeVersion)-[:VERSION_OF]->(rt)\nDETACH DELETE v, rt";
 export declare const LIST_RELATIONSHIP_TYPE_VERSIONS_CYPHER = "MATCH (v:RelationshipTypeVersion)-[:VERSION_OF]->(rt:RelationshipType {id: $id})\nRETURN v ORDER BY v.version DESC";
 export declare const COUNT_LINKS_OF_ROLE_CYPHER = "MATCH ()-[r:LINK {role: $role}]->() RETURN count(r) AS count";

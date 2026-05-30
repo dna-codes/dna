@@ -98,6 +98,7 @@ function buildRegistryFields({ dataStore, schemaManager, }) {
                     name: input.name,
                     category: input.category,
                     attribute_schema: normalizeAttributeSchemaInput(input.attributeSchema),
+                    ...(input.stability !== undefined ? { stability: input.stability } : {}),
                     ...(input.description !== undefined ? { description: input.description } : {}),
                 });
                 await schemaManager.rebuild();
@@ -116,9 +117,23 @@ function buildRegistryFields({ dataStore, schemaManager, }) {
                     ...(input.attributeSchema !== undefined
                         ? { attribute_schema: normalizeAttributeSchemaInput(input.attributeSchema) }
                         : {}),
+                    ...(input.stability !== undefined ? { stability: input.stability } : {}),
                     ...(input.description !== undefined ? { description: input.description } : {}),
                 });
                 await schemaManager.rebuild();
+                return dataStore.resourceType.get(id);
+            },
+        },
+        setResourceTypeStability: {
+            type: new graphql_1.GraphQLNonNull(ResourceTypeOutput),
+            args: {
+                id: { type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLID) },
+                stability: { type: new graphql_1.GraphQLNonNull(registry_types_1.StabilityEnum) },
+            },
+            resolve: async (_p, args) => {
+                const { id, stability } = args;
+                await dataStore.resourceType.setStability(id, stability);
+                // Stability is orthogonal to the GraphQL schema shape — no rebuild needed.
                 return dataStore.resourceType.get(id);
             },
         },
@@ -155,6 +170,7 @@ function buildRegistryFields({ dataStore, schemaManager, }) {
                     ...(input.attributeSchema !== undefined
                         ? { attribute_schema: normalizeAttributeSchemaInput(input.attributeSchema) }
                         : {}),
+                    ...(input.stability !== undefined ? { stability: input.stability } : {}),
                     ...(input.description !== undefined ? { description: input.description } : {}),
                 });
                 await schemaManager.rebuild();
@@ -176,9 +192,22 @@ function buildRegistryFields({ dataStore, schemaManager, }) {
                     ...(input.attributeSchema !== undefined
                         ? { attribute_schema: normalizeAttributeSchemaInput(input.attributeSchema) }
                         : {}),
+                    ...(input.stability !== undefined ? { stability: input.stability } : {}),
                     ...(input.description !== undefined ? { description: input.description } : {}),
                 });
                 await schemaManager.rebuild();
+                return dataStore.relationshipType.get(id);
+            },
+        },
+        setRelationshipTypeStability: {
+            type: new graphql_1.GraphQLNonNull(RelationshipTypeOutput),
+            args: {
+                id: { type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLID) },
+                stability: { type: new graphql_1.GraphQLNonNull(registry_types_1.StabilityEnum) },
+            },
+            resolve: async (_p, args) => {
+                const { id, stability } = args;
+                await dataStore.relationshipType.setStability(id, stability);
                 return dataStore.relationshipType.get(id);
             },
         },

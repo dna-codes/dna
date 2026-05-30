@@ -10,6 +10,7 @@ function makeResourceType(name, category = 'resource') {
         category,
         attribute_schema: [{ name: 'foo', type: 'string' }],
         current_version: 1,
+        stability: 'experimental',
         is_seed: false,
     };
 }

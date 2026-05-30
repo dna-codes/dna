@@ -36,6 +36,29 @@ import type { OperationalDNA } from './merge';
  */
 export type NounCategory = 'person' | 'role' | 'group' | 'resource';
 /**
+ * Maturity of a registry type's *concept* (Kubernetes API-maturity model).
+ * Orthogonal to the numeric schema `version`/`current_version`: a type can be
+ * `experimental` at version 1 or `stable` at version 3, independently. A type
+ * can transition between stability stages without a schema change, and a schema
+ * change does not alter stability. See `defaultStabilityForType` for seed/read
+ * defaults.
+ */
+export type Stability = 'experimental' | 'beta' | 'stable' | 'deprecated';
+/** Canonical ordered list of stability values. The single source of truth for the GraphQL enum. */
+export declare const STABILITIES: readonly Stability[];
+/** The four foundational resource-type names, always seeded and always `stable`. */
+export declare const FOUNDATIONAL_RESOURCE_TYPE_NAMES: readonly string[];
+/** True iff `name` is one of the four foundational resource types. */
+export declare function isFoundationalTypeName(name: string): boolean;
+/**
+ * The default `stability` for a registry type identified by `name`. Foundational
+ * types (Person/Role/Group/Resource) default to `stable`; every other type
+ * defaults to `experimental`. Used both when seeding/creating a type without an
+ * explicit stability and when reading a legacy record that predates the field.
+ * `is_seed` cannot be used for this because tenant-seeded types are also seeds.
+ */
+export declare function defaultStabilityForType(name: string): Stability;
+/**
  * The `attribute_schema` carried by `ResourceType` records is a loose,
  * JSON-Schema-shaped structural type. We mirror the DNA attribute shape
  * (one entry per declared attribute) rather than full JSON-Schema syntax
@@ -61,6 +84,8 @@ export interface ResourceType {
     category: NounCategory;
     attribute_schema: AttributeSchema;
     current_version: number;
+    /** Concept maturity, orthogonal to `current_version`. See {@link Stability}. */
+    stability: Stability;
     description?: string;
     /** True iff this record was created by `seedFromDna`. Admin-edited types stay `is_seed: false`. */
     is_seed: boolean;
@@ -71,6 +96,8 @@ export interface ResourceTypeVersion {
     resource_type_id: string;
     version: number;
     attribute_schema: AttributeSchema;
+    /** The `stability` in effect when this version was written (self-describing history). */
+    stability: Stability;
     created_at: string;
 }
 /** Input shape for `resourceType.create` / `update`. `id` is optional (hybrid assignment). */
@@ -79,11 +106,15 @@ export interface ResourceTypeInput {
     name: string;
     category: NounCategory;
     attribute_schema: AttributeSchema;
+    /** Optional; when omitted, defaults via {@link defaultStabilityForType}. */
+    stability?: Stability;
     description?: string;
 }
 /** Patch shape for `resourceType.update`. `name` is intentionally absent — names are immutable. */
 export interface ResourceTypeUpdate {
     attribute_schema?: AttributeSchema;
+    /** When present, sets stability alongside the schema revision. To transition stability without bumping the version, use `setStability`. */
+    stability?: Stability;
     description?: string;
 }
 /** A live `RelationshipType` record — the class for Links between two ResourceTypes. */
@@ -97,6 +128,8 @@ export interface RelationshipType {
     inverse?: string;
     attribute_schema?: AttributeSchema;
     current_version: number;
+    /** Concept maturity, orthogonal to `current_version`. See {@link Stability}. */
+    stability: Stability;
     description?: string;
     is_seed: boolean;
 }
@@ -106,6 +139,8 @@ export interface RelationshipTypeVersion {
     relationship_type_id: string;
     version: number;
     attribute_schema?: AttributeSchema;
+    /** The `stability` in effect when this version was written (self-describing history). */
+    stability: Stability;
     created_at: string;
 }
 /** Input shape for `relationshipType.create` / `update`. */
@@ -118,6 +153,8 @@ export interface RelationshipTypeInput {
     attribute: string;
     inverse?: string;
     attribute_schema?: AttributeSchema;
+    /** Optional; when omitted, defaults via {@link defaultStabilityForType}. */
+    stability?: Stability;
     description?: string;
 }
 /** Patch shape for `relationshipType.update`. `name`/`from`/`to` are immutable. */
@@ -126,6 +163,8 @@ export interface RelationshipTypeUpdate {
     attribute?: string;
     inverse?: string;
     attribute_schema?: AttributeSchema;
+    /** When present, sets stability alongside the schema revision. To transition stability without bumping the version, use `setStability`. */
+    stability?: Stability;
     description?: string;
 }
 /** Options for `resourceType.delete` / `relationshipType.delete`. */
@@ -222,6 +261,12 @@ export interface DnaDataStore {
         }): Promise<ResourceType[]>;
         /** Update bumps `current_version` and appends a new version record. */
         update(id: string, patch: ResourceTypeUpdate): Promise<void>;
+        /**
+         * Transition the live record's `stability` only. Does NOT bump
+         * `current_version` and does NOT append a version record — stability is a
+         * property of the concept, orthogonal to schema revisions.
+         */
+        setStability(id: string, stability: Stability): Promise<void>;
         /** Reject with `TypeInUseError` if any Instance exists, unless `cascade: true`. */
         delete(id: string, opts?: TypeDeleteOptions): Promise<void>;
         /** Version history in descending version order. */
@@ -235,6 +280,8 @@ export interface DnaDataStore {
         get(id: string): Promise<RelationshipType | null>;
         list(): Promise<RelationshipType[]>;
         update(id: string, patch: RelationshipTypeUpdate): Promise<void>;
+        /** Transition the live record's `stability` only — no version bump. See `resourceType.setStability`. */
+        setStability(id: string, stability: Stability): Promise<void>;
         delete(id: string, opts?: TypeDeleteOptions): Promise<void>;
         versions(id: string): Promise<RelationshipTypeVersion[]>;
     };

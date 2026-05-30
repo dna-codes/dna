@@ -10,6 +10,8 @@
 
 // ── Universal base contract ────────────────────────────────────────────────
 
+import type { Stability } from './data-store'
+
 /**
  * Universal base contract carried by every Operational primitive. Builders
  * auto-assign `id` (UUID v4), `type` (hardcoded per builder), and `version`
@@ -25,6 +27,12 @@ export interface BasePrimitive {
   name: string
   /** Schema version of this primitive type in effect when authored. */
   version: string
+  /**
+   * Optional declared concept maturity. When present on a definition, it flows
+   * into registry seeding as the seeded type's stability; when absent, the
+   * registry's seeding defaults apply. Orthogonal to `version`.
+   */
+  stability?: Stability
   description?: string
 }
 

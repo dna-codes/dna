@@ -155,6 +155,7 @@ export type {
   LinkRecord,
   LinkListFilter,
   NounCategory,
+  Stability,
   AttributeSchema,
   AttributeSchemaEntry,
   ResourceType,
@@ -169,7 +170,13 @@ export type {
   SeedReport,
 } from './types/data-store'
 
-export { TypeInUseError } from './types/data-store'
+export {
+  TypeInUseError,
+  STABILITIES,
+  FOUNDATIONAL_RESOURCE_TYPE_NAMES,
+  isFoundationalTypeName,
+  defaultStabilityForType,
+} from './types/data-store'
 
 export type {
   Action,

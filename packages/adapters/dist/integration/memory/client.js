@@ -22,6 +22,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createClient = createClient;
 const crypto_1 = require("crypto");
 const dna_core_1 = require("@dna-codes/dna-core");
+const STABILITY_VALUES = ['experimental', 'beta', 'stable', 'deprecated'];
+/** Narrow an authored `stability` field to a valid `Stability`, or `undefined`. */
+function asStability(raw) {
+    return typeof raw === 'string' && STABILITY_VALUES.includes(raw) ? raw : undefined;
+}
 const NOUN_KEYS = [
     { key: 'resources', category: 'resource' },
     { key: 'persons', category: 'person' },
@@ -63,7 +68,7 @@ function createClient(_dna) {
     function refEquals(a, b) {
         return a.typeName === b.typeName && a.id === b.id;
     }
-    function pushVersion(id, version, schema, kind) {
+    function pushVersion(id, version, schema, stability, kind) {
         if (kind === 'resource') {
             const versions = resourceTypeVersionsById.get(id) ?? [];
             versions.push({
@@ -71,6 +76,7 @@ function createClient(_dna) {
                 resource_type_id: id,
                 version,
                 attribute_schema: schema,
+                stability,
                 created_at: new Date().toISOString(),
             });
             resourceTypeVersionsById.set(id, versions);
@@ -82,6 +88,7 @@ function createClient(_dna) {
                 relationship_type_id: id,
                 version,
                 attribute_schema: schema,
+                stability,
                 created_at: new Date().toISOString(),
             });
             relationshipTypeVersionsById.set(id, versions);
@@ -92,18 +99,20 @@ function createClient(_dna) {
             throw new Error(`integration/memory: ResourceType "${input.name}" already exists`);
         }
         const id = input.id && input.id.length > 0 ? input.id : (0, crypto_1.randomUUID)();
+        const stability = input.stability ?? (0, dna_core_1.defaultStabilityForType)(input.name);
         const record = {
             id,
             name: input.name,
             category: input.category,
             attribute_schema: input.attribute_schema,
             current_version: 1,
+            stability,
             is_seed: isSeed,
             ...(input.description !== undefined ? { description: input.description } : {}),
         };
         resourceTypes.set(id, record);
         resourceTypeIdByName.set(input.name, id);
-        pushVersion(id, 1, input.attribute_schema, 'resource');
+        pushVersion(id, 1, input.attribute_schema, stability, 'resource');
         return { id };
     }
     function createRelationshipTypeImpl(input, isSeed) {
@@ -111,6 +120,7 @@ function createClient(_dna) {
             throw new Error(`integration/memory: RelationshipType "${input.name}" already exists`);
         }
         const id = input.id && input.id.length > 0 ? input.id : (0, crypto_1.randomUUID)();
+        const stability = input.stability ?? (0, dna_core_1.defaultStabilityForType)(input.name);
         const record = {
             id,
             name: input.name,
@@ -119,6 +129,7 @@ function createClient(_dna) {
             cardinality: input.cardinality,
             attribute: input.attribute,
             current_version: 1,
+            stability,
             is_seed: isSeed,
             ...(input.inverse !== undefined ? { inverse: input.inverse } : {}),
             ...(input.attribute_schema !== undefined ? { attribute_schema: input.attribute_schema } : {}),
@@ -126,7 +137,7 @@ function createClient(_dna) {
         };
         relationshipTypes.set(id, record);
         relationshipTypeIdByName.set(input.name, id);
-        pushVersion(id, 1, input.attribute_schema ?? [], 'relationship');
+        pushVersion(id, 1, input.attribute_schema ?? [], stability, 'relationship');
         return { id };
     }
     function resourceTypeByName(name) {
@@ -173,6 +184,7 @@ function createClient(_dna) {
                         name: entry.name,
                         category,
                         attribute_schema: toAttributeSchema(entry.attributes),
+                        ...(asStability(entry.stability) ? { stability: asStability(entry.stability) } : {}),
                     }, true);
                     report.resourceTypesCreated += 1;
                 }
@@ -198,6 +210,7 @@ function createClient(_dna) {
                     cardinality: rel.cardinality,
                     attribute: rel.attribute,
                     ...(typeof rel.inverse === 'string' ? { inverse: rel.inverse } : {}),
+                    ...(asStability(rel.stability) ? { stability: asStability(rel.stability) } : {}),
                 }, true);
                 report.relationshipTypesCreated += 1;
             }
@@ -225,14 +238,23 @@ function createClient(_dna) {
                 if (!existing)
                     throw new Error(`integration/memory: ResourceType ${id} not found`);
                 const nextSchema = patch.attribute_schema ?? existing.attribute_schema;
+                const nextStability = patch.stability ?? existing.stability;
                 const next = {
                     ...existing,
                     ...(patch.attribute_schema !== undefined ? { attribute_schema: patch.attribute_schema } : {}),
+                    ...(patch.stability !== undefined ? { stability: patch.stability } : {}),
                     ...(patch.description !== undefined ? { description: patch.description } : {}),
                     current_version: existing.current_version + 1,
                 };
                 resourceTypes.set(id, next);
-                pushVersion(id, next.current_version, nextSchema, 'resource');
+                pushVersion(id, next.current_version, nextSchema, nextStability, 'resource');
+            },
+            async setStability(id, stability) {
+                const existing = resourceTypes.get(id);
+                if (!existing)
+                    throw new Error(`integration/memory: ResourceType ${id} not found`);
+                // Orthogonal to schema version: no current_version bump, no version record.
+                resourceTypes.set(id, { ...existing, stability });
             },
             async delete(id, opts) {
                 const existing = resourceTypes.get(id);
@@ -276,17 +298,26 @@ function createClient(_dna) {
                 if (!existing)
                     throw new Error(`integration/memory: RelationshipType ${id} not found`);
                 const nextSchema = patch.attribute_schema ?? existing.attribute_schema ?? [];
+                const nextStability = patch.stability ?? existing.stability;
                 const next = {
                     ...existing,
                     ...(patch.cardinality !== undefined ? { cardinality: patch.cardinality } : {}),
                     ...(patch.attribute !== undefined ? { attribute: patch.attribute } : {}),
                     ...(patch.inverse !== undefined ? { inverse: patch.inverse } : {}),
                     ...(patch.attribute_schema !== undefined ? { attribute_schema: patch.attribute_schema } : {}),
+                    ...(patch.stability !== undefined ? { stability: patch.stability } : {}),
                     ...(patch.description !== undefined ? { description: patch.description } : {}),
                     current_version: existing.current_version + 1,
                 };
                 relationshipTypes.set(id, next);
-                pushVersion(id, next.current_version, nextSchema, 'relationship');
+                pushVersion(id, next.current_version, nextSchema, nextStability, 'relationship');
+            },
+            async setStability(id, stability) {
+                const existing = relationshipTypes.get(id);
+                if (!existing)
+                    throw new Error(`integration/memory: RelationshipType ${id} not found`);
+                // Orthogonal to schema version: no current_version bump, no version record.
+                relationshipTypes.set(id, { ...existing, stability });
             },
             async delete(id, opts) {
                 const existing = relationshipTypes.get(id);

@@ -14,6 +14,12 @@
  *   - Inputs for each create / update mutation
  */
 import { GraphQLEnumType, GraphQLInputObjectType, GraphQLObjectType } from 'graphql';
+/**
+ * Stability enum, derived from the core `STABILITIES` array so the GraphQL
+ * surface and the core `Stability` union cannot drift. Members are the
+ * upper-cased value names (e.g. `experimental` → `EXPERIMENTAL`).
+ */
+export declare const StabilityEnum: GraphQLEnumType;
 export declare const NounCategoryEnum: GraphQLEnumType;
 export declare const AttributeTypeEnum: GraphQLEnumType;
 export declare const CardinalityEnum: GraphQLEnumType;

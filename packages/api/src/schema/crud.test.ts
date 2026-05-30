@@ -12,6 +12,7 @@ function makeResourceType(name: string, category: ResourceType['category'] = 're
     category,
     attribute_schema: [{ name: 'foo', type: 'string' }],
     current_version: 1,
+    stability: 'experimental',
     is_seed: false,
   }
 }

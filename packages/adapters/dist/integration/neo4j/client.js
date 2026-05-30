@@ -42,6 +42,11 @@ function toAttributeSchema(raw) {
         return [];
     return raw.filter((e) => !!e && typeof e === 'object' && typeof e.name === 'string');
 }
+const STABILITY_VALUES = ['experimental', 'beta', 'stable', 'deprecated'];
+/** Narrow an authored/stored `stability` field to a valid `Stability`, or `undefined`. */
+function asStability(raw) {
+    return typeof raw === 'string' && STABILITY_VALUES.includes(raw) ? raw : undefined;
+}
 function stripReservedAndId(node) {
     const id = String(node._id);
     const out = {};
@@ -70,25 +75,30 @@ function nodePropsFor(id, data, now, schemaVersion) {
     };
 }
 function resourceTypeFromNode(node) {
+    const name = String(node.name);
     return {
         id: String(node.id),
-        name: String(node.name),
+        name,
         category: node.category,
         attribute_schema: parseAttributeSchema(node.attribute_schema),
         current_version: typeof node.current_version === 'number' ? node.current_version : Number(node.current_version),
+        // Legacy records predating the field default by identity (foundational → stable, else → experimental).
+        stability: asStability(node.stability) ?? (0, dna_core_1.defaultStabilityForType)(name),
         is_seed: Boolean(node.is_seed),
         ...(typeof node.description === 'string' ? { description: node.description } : {}),
     };
 }
 function relationshipTypeFromNode(node) {
+    const name = String(node.name);
     return {
         id: String(node.id),
-        name: String(node.name),
+        name,
         from: String(node.from),
         to: String(node.to),
         cardinality: node.cardinality,
         attribute: String(node.attribute),
         current_version: typeof node.current_version === 'number' ? node.current_version : Number(node.current_version),
+        stability: asStability(node.stability) ?? (0, dna_core_1.defaultStabilityForType)(name),
         is_seed: Boolean(node.is_seed),
         ...(typeof node.inverse === 'string' ? { inverse: node.inverse } : {}),
         ...(typeof node.description === 'string' ? { description: node.description } : {}),
@@ -103,6 +113,8 @@ function resourceTypeVersionFromNode(node) {
         resource_type_id: String(node.resource_type_id),
         version: typeof node.version === 'number' ? node.version : Number(node.version),
         attribute_schema: parseAttributeSchema(node.attribute_schema),
+        // Version nodes carry no name; legacy snapshots without stability default to experimental.
+        stability: asStability(node.stability) ?? 'experimental',
         created_at: String(node.created_at),
     };
 }
@@ -114,6 +126,7 @@ function relationshipTypeVersionFromNode(node) {
         attribute_schema: node.attribute_schema !== undefined
             ? parseAttributeSchema(node.attribute_schema)
             : undefined,
+        stability: asStability(node.stability) ?? 'experimental',
         created_at: String(node.created_at),
     };
 }
@@ -246,6 +259,7 @@ function createClient(opts, _dna) {
                         name: entry.name,
                         category,
                         attribute_schema: toAttributeSchema(entry.attributes),
+                        ...(asStability(entry.stability) ? { stability: asStability(entry.stability) } : {}),
                         ...(typeof entry.description === 'string' ? { description: entry.description } : {}),
                     });
                     const fetched = await getResourceTypeByName(entry.name);
@@ -285,6 +299,7 @@ function createClient(opts, _dna) {
                     cardinality: rel.cardinality,
                     attribute: rel.attribute,
                     ...(typeof rel.inverse === 'string' ? { inverse: rel.inverse } : {}),
+                    ...(asStability(rel.stability) ? { stability: asStability(rel.stability) } : {}),
                 });
                 const fetched = await getRelationshipTypeByName(rel.name);
                 if (fetched) {
@@ -329,12 +344,14 @@ function createClient(opts, _dna) {
                 (0, cypher_1.validateLabel)(input.name);
                 const id = input.id && input.id.length > 0 ? input.id : (0, crypto_1.randomUUID)();
                 const now = new Date().toISOString();
+                const stability = input.stability ?? (0, dna_core_1.defaultStabilityForType)(input.name);
                 const props = {
                     id,
                     name: input.name,
                     category: input.category,
                     attribute_schema: serializeAttributeSchema(input.attribute_schema),
                     current_version: 1,
+                    stability,
                     is_seed: false,
                     created_at: now,
                     ...(input.description !== undefined ? { description: input.description } : {}),
@@ -349,6 +366,7 @@ function createClient(opts, _dna) {
                             resource_type_id: id,
                             version: 1,
                             attribute_schema: serializeAttributeSchema(input.attribute_schema),
+                            stability,
                             created_at: now,
                         },
                     });
@@ -393,9 +411,13 @@ function createClient(opts, _dna) {
                     const existing = resourceTypeFromNode(current.records[0].get('rt').properties);
                     const newVersion = existing.current_version + 1;
                     const nextSchema = patch.attribute_schema ?? existing.attribute_schema;
+                    const nextStability = patch.stability ?? existing.stability;
                     const updatePatch = {};
                     if (patch.attribute_schema !== undefined) {
                         updatePatch.attribute_schema = serializeAttributeSchema(patch.attribute_schema);
+                    }
+                    if (patch.stability !== undefined) {
+                        updatePatch.stability = patch.stability;
                     }
                     if (patch.description !== undefined) {
                         updatePatch.description = patch.description;
@@ -408,9 +430,22 @@ function createClient(opts, _dna) {
                             resource_type_id: id,
                             version: newVersion,
                             attribute_schema: serializeAttributeSchema(nextSchema),
+                            stability: nextStability,
                             created_at: new Date().toISOString(),
                         },
                     });
+                }
+                finally {
+                    await s.close();
+                }
+            },
+            async setStability(id, stability) {
+                const s = session();
+                try {
+                    const result = await s.run(cypher_1.SET_RESOURCE_TYPE_STABILITY_CYPHER, { id, stability });
+                    if (result.records.length === 0) {
+                        throw new Error(`integration/neo4j: ResourceType ${id} not found`);
+                    }
                 }
                 finally {
                     await s.close();
@@ -458,6 +493,7 @@ function createClient(opts, _dna) {
             async create(input) {
                 const id = input.id && input.id.length > 0 ? input.id : (0, crypto_1.randomUUID)();
                 const now = new Date().toISOString();
+                const stability = input.stability ?? (0, dna_core_1.defaultStabilityForType)(input.name);
                 const props = {
                     id,
                     name: input.name,
@@ -466,6 +502,7 @@ function createClient(opts, _dna) {
                     cardinality: input.cardinality,
                     attribute: input.attribute,
                     current_version: 1,
+                    stability,
                     is_seed: false,
                     created_at: now,
                     ...(input.inverse !== undefined ? { inverse: input.inverse } : {}),
@@ -484,6 +521,7 @@ function createClient(opts, _dna) {
                             relationship_type_id: id,
                             version: 1,
                             attribute_schema: serializeAttributeSchema(input.attribute_schema),
+                            stability,
                             created_at: now,
                         },
                     });
@@ -525,6 +563,7 @@ function createClient(opts, _dna) {
                     const existing = relationshipTypeFromNode(current.records[0].get('rt').properties);
                     const newVersion = existing.current_version + 1;
                     const nextSchema = patch.attribute_schema ?? existing.attribute_schema ?? [];
+                    const nextStability = patch.stability ?? existing.stability;
                     const updatePatch = {};
                     if (patch.cardinality !== undefined)
                         updatePatch.cardinality = patch.cardinality;
@@ -535,6 +574,8 @@ function createClient(opts, _dna) {
                     if (patch.attribute_schema !== undefined) {
                         updatePatch.attribute_schema = serializeAttributeSchema(patch.attribute_schema);
                     }
+                    if (patch.stability !== undefined)
+                        updatePatch.stability = patch.stability;
                     if (patch.description !== undefined)
                         updatePatch.description = patch.description;
                     await s.run(cypher_1.UPDATE_RELATIONSHIP_TYPE_CYPHER, { id, patch: updatePatch, newVersion });
@@ -545,9 +586,22 @@ function createClient(opts, _dna) {
                             relationship_type_id: id,
                             version: newVersion,
                             attribute_schema: serializeAttributeSchema(nextSchema),
+                            stability: nextStability,
                             created_at: new Date().toISOString(),
                         },
                     });
+                }
+                finally {
+                    await s.close();
+                }
+            },
+            async setStability(id, stability) {
+                const s = session();
+                try {
+                    const result = await s.run(cypher_1.SET_RELATIONSHIP_TYPE_STABILITY_CYPHER, { id, stability });
+                    if (result.records.length === 0) {
+                        throw new Error(`integration/neo4j: RelationshipType ${id} not found`);
+                    }
                 }
                 finally {
                     await s.close();
