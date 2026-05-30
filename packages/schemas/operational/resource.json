@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational/resource",
   "title": "Resource",
-  "description": "A Resource is an Entity the organization manages — a thing the system tracks, mutates, or operates on. Loans, Accounts, Products, Documents, Invoices.\n\nResources are one of four noun primitives (alongside Person, Role, and Group); all four share the noun base shape: name, optional attributes[], optional actions[], optional parent. People-specific concerns (scope, memberships, eligibility) live on Person/Role/Group/Membership, not on Resource.",
+  "description": "A Resource is a Structure the organization manages — a thing the system tracks, mutates, or operates on. Loans, Accounts, Products, Documents, Invoices.\n\nResources are one of four noun primitives (alongside Person, Role, and Group); all four share the noun base shape: name, optional attributes[], optional actions[], optional parent. People-specific concerns (scope, memberships, eligibility) live on Person/Role/Group/Membership, not on Resource.",
   "type": "object",
   "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "required": ["name"],

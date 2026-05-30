@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational",
   "title": "OperationalDNA",
-  "description": "A complete Operational DNA document for a business. Operational DNA describes organizational modeling — what the org is and what it does, independent of UI, API, or deployment technology. Modeled around the Actor > Action > Subject triad: Roles act, Subjects (Resource | Person | Role | Group) receive actions.\n\nOrganized in three categories:\n- People: Person, Role, Group, Membership\n- Entities: Resource, Attribute, Relationship\n- Activities: Operation, Task, Step, Process, Trigger, Rule\n\nDomain wraps the noun primitives (Resources, Persons, Roles, Groups). Memberships and Activities live at the top level of the document.",
+  "description": "A complete Operational DNA document for a business. Operational DNA describes organizational modeling — what the org is and what it does, independent of UI, API, or deployment technology. Modeled around the Actor > Action > Subject triad: Roles act, Subjects (Resource | Person | Role | Group) receive actions.\n\nOrganized in three categories:\n- People: Person, Role, Group, Membership\n- Structures: Resource, Attribute, Relationship\n- Activities: Operation, Task, Step, Process, Trigger, Rule\n\nDomain wraps the noun primitives (Resources, Persons, Roles, Groups). Memberships and Activities live at the top level of the document.",
   "type": "object",
   "required": ["domain"],
   "additionalProperties": false,
