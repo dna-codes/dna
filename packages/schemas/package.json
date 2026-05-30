@@ -1,6 +1,6 @@
 {
   "name": "@dna-codes/dna-schemas",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "repository": "github:dna-codes/dna",
   "description": "JSON Schema (Draft 2020-12) definitions for DNA — the declarative language for describing business systems. Language-agnostic, zero dependencies.",
   "keywords": [

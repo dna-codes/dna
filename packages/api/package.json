@@ -1,6 +1,6 @@
 {
   "name": "@dna-codes/dna-api",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "repository": "github:dna-codes/dna",
   "description": "DNA-derived GraphQL API server. Loads an OperationalDNA at startup, generates a GraphQL schema from its noun primitives + relationships + operations, and serves runtime data through @dna-codes/dna-adapters/integration/neo4j.",
   "keywords": [
@@ -42,8 +42,8 @@
   "dependencies": {
     "@apollo/server": "^5.0.0",
     "@as-integrations/express4": "^1.1.2",
-    "@dna-codes/dna-adapters": "^0.9.0",
-    "@dna-codes/dna-core": "^0.9.0",
+    "@dna-codes/dna-adapters": "^0.10.0",
+    "@dna-codes/dna-core": "^0.10.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "body-parser": "^1.20.3",
