@@ -4,6 +4,7 @@
   "title": "Resource",
   "description": "A Resource is the product-level entity — it maps from an Operational Resource and is realized as a Page in UI and a REST resource in API.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["name"],
   "properties": {
     "name": {

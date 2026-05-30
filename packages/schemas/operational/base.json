@@ -2,9 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational/base",
   "title": "BasePrimitive",
-  "description": "The universal base contract shared by every Operational DNA primitive. All per-primitive schemas extend this via allOf.\n\nFields:\n- id: UUID v4 — stable identity for this definition across data stores.\n- type: lowercase primitive discriminator (e.g. 'resource', 'operation'). Constrained to a single const value by each per-primitive schema.\n- name: the human-readable definition name used for cross-references and authoring.\n- version: the version of this primitive type's schema that was in effect when the primitive was authored. Increment is a migration signal — see operational/versions.json for the current version per type.\n- description: optional human-readable explanation.",
+  "description": "The universal base contract shared by every Operational DNA primitive. All per-primitive schemas extend this via allOf.\n\nFields:\n- id: UUID v4 — stable identity for this definition across data stores.\n- type: lowercase primitive discriminator (e.g. 'resource', 'operation'). Constrained to a single const value by each per-primitive schema.\n- name: the human-readable definition name used for cross-references and authoring.\n- version: the version of this primitive type's schema that was in effect when the primitive was authored. Increment is a migration signal — see operational/versions.json for the current version per type.\n\nThe optional `stability` and `description` fields are contributed by the shared `meta/stability` mixin, composed below via allOf — they are layer-agnostic and not redefined here.",
   "type": "object",
   "required": ["id", "type", "name", "version"],
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "properties": {
     "id": {
       "type": "string",
@@ -22,15 +23,6 @@
     "version": {
       "type": "string",
       "description": "The version of this primitive type's schema in effect when the primitive was authored. A migration handle — see operational/versions.json for the current version per type. Any increment MUST be accompanied by at least a semantic minor bump to @dna-codes/dna-schemas."
-    },
-    "stability": {
-      "type": "string",
-      "enum": ["experimental", "beta", "stable", "deprecated"],
-      "description": "Optional declared concept maturity (Kubernetes API-maturity model). Orthogonal to `version`. When present, it flows into registry seeding as the seeded type's stability; when absent, the registry's seeding defaults apply (foundational types `stable`, everything else `experimental`)."
-    },
-    "description": {
-      "type": "string",
-      "description": "Human-readable explanation of what this primitive represents."
     }
   }
 }

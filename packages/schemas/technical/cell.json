@@ -4,6 +4,7 @@
   "title": "Cell",
   "description": "A Cell is a deployed unit: DNA + Adapter + wired Constructs. It is the concrete embodiment of cell-based architecture — it accepts a DNA document, applies an adapter, and produces running software or infrastructure.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["name", "dna", "adapter"],
   "properties": {
     "name": {

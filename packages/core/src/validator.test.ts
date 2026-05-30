@@ -1,4 +1,5 @@
 import { DnaValidator } from './validator'
+import { schemas } from './index'
 
 const TEST_UUID = '550e8400-e29b-41d4-a716-446655440000'
 
@@ -647,6 +648,96 @@ describe('DnaValidator — product/core/operation', () => {
   })
 })
 
+describe('DnaValidator — product/core/user', () => {
+  it('validates a minimal User (name only)', () => {
+    const result = validator.validate({ name: 'Member' }, 'product/core/user')
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  it('validates a User with identity and projected fields', () => {
+    const result = validator.validate({
+      name: 'Member',
+      person: 'Customer',
+      identity: { identifier: 'email', verified: true },
+      fields: [{ name: 'email', type: 'email' }],
+    }, 'product/core/user')
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  it('rejects a User missing required name', () => {
+    const result = validator.validate({ person: 'Customer' }, 'product/core/user')
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.params?.missingProperty === 'name')).toBe(true)
+  })
+
+  it('rejects a User identity missing identifier', () => {
+    const result = validator.validate({ name: 'Member', identity: { verified: true } }, 'product/core/user')
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.params?.missingProperty === 'identifier')).toBe(true)
+  })
+})
+
+describe('DnaValidator — product/core/role', () => {
+  it('validates a minimal Role (name only)', () => {
+    const result = validator.validate({ name: 'Underwriter' }, 'product/core/role')
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  it('validates a Role with scope and permissions', () => {
+    const result = validator.validate({
+      name: 'Underwriter',
+      role: 'Underwriter',
+      scope: 'BankDepartment',
+      permissions: ['Loan.Approve'],
+    }, 'product/core/role')
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  it('rejects a Role missing required name', () => {
+    const result = validator.validate({ role: 'Underwriter' }, 'product/core/role')
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.params?.missingProperty === 'name')).toBe(true)
+  })
+})
+
+describe('DnaValidator — shared stability marker', () => {
+  it('accepts stability on a Product Core primitive', () => {
+    const result = validator.validate({ name: 'Loan', stability: 'beta' }, 'product/core/resource')
+    expect(result.valid).toBe(true)
+  })
+
+  it('accepts stability on a Technical primitive', () => {
+    const result = validator.validate(
+      { name: 'api', dna: 'product/api', adapter: { type: 'nestjs', version: '10' }, stability: 'beta' },
+      'technical/cell',
+    )
+    expect(result.valid).toBe(true)
+  })
+
+  it('rejects an invalid stability value on a Product Core primitive', () => {
+    const result = validator.validate({ name: 'Loan', stability: 'ga' }, 'product/core/resource')
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.schemaPath?.includes('stability'))).toBe(true)
+  })
+
+  it('rejects an invalid stability value on a Technical primitive', () => {
+    const result = validator.validate(
+      { name: 'api', dna: 'product/api', adapter: { type: 'nestjs', version: '10' }, stability: 'ga' },
+      'technical/cell',
+    )
+    expect(result.valid).toBe(false)
+  })
+
+  it('declares experimental as the default stability of the Field primitive', () => {
+    const field = schemas.product.core.field as { properties: { stability: { default?: string } } }
+    expect(field.properties.stability.default).toBe('experimental')
+  })
+})
+
 describe('DnaValidator — product/api/endpoint', () => {
   it('validates a valid Endpoint', () => {
     const result = validator.validate({
@@ -889,6 +980,26 @@ describe('DnaValidator — composite: product/core', () => {
     expect(result.errors).toHaveLength(0)
   })
 
+  it('validates a product core document with users[] and roles[]', () => {
+    // resources[] uses operational/resource (needs the base contract); users[]/roles[]
+    // are Product Core primitives that do NOT, so they are spread in after stamping.
+    const doc = {
+      ...stampOperationalBase({
+        domain: { name: 'lending', path: 'acme.finance.lending' },
+        resources: [{ name: 'Loan', actions: [{ name: 'Apply' }] }],
+      }),
+      users: [
+        { name: 'Member', person: 'Customer', identity: { identifier: 'email', verified: true } },
+      ],
+      roles: [
+        { name: 'Underwriter', role: 'Underwriter', scope: 'BankDepartment', permissions: ['Loan.Approve'] },
+      ],
+    }
+    const result = validator.validate(doc, 'product/core')
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
   it('rejects a product core document missing domain', () => {
     const result = validator.validate({ resources: [] }, 'product/core')
     expect(result.valid).toBe(false)
@@ -981,6 +1092,9 @@ describe('DnaValidator — availableSchemas', () => {
     expect(schemas).toContain('product/core/action')
     expect(schemas).toContain('product/core/operation')
     expect(schemas).toContain('product/core/field')
+    expect(schemas).toContain('product/core/user')
+    expect(schemas).toContain('product/core/role')
+    expect(schemas).toContain('meta/stability')
     expect(schemas).toContain('product/api/endpoint')
     expect(schemas).toContain('product/api/namespace')
     expect(schemas).toContain('product/api/param')
@@ -1008,7 +1122,6 @@ describe('DnaValidator — availableSchemas', () => {
     expect(schemas).not.toContain('operational/user')
     expect(schemas).not.toContain('operational/signal')
     expect(schemas).not.toContain('operational/equation')
-    expect(schemas).not.toContain('product/core/role')
   })
 })
 

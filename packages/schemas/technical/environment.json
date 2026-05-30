@@ -4,6 +4,7 @@
   "title": "Environment",
   "description": "An Environment is a named deployment context. All Technical primitives can be scoped to an Environment.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["name"],
   "properties": {
     "name": {

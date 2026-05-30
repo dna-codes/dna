@@ -4,6 +4,7 @@
   "title": "Zone",
   "description": "A visual container that groups related nodes. Zones represent logical boundaries such as tiers, security boundaries, environments, or domain boundaries.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["id", "name", "type", "nodes"],
   "properties": {
     "id": {

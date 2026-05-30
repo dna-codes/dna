@@ -4,6 +4,7 @@
   "title": "Construct",
   "description": "A Construct is a named infrastructure component with a category and type. Constructs are declared once and referenced by multiple Cells.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["name", "category", "type"],
   "properties": {
     "name": {

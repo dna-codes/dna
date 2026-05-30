@@ -37,7 +37,7 @@ describe('@dna-codes/dna-core', () => {
     })
 
     it('loads product core/api/web schemas under the right namespaces', () => {
-      expect(Object.keys(schemas.product.core).sort()).toEqual(['action', 'field', 'operation', 'resource'])
+      expect(Object.keys(schemas.product.core).sort()).toEqual(['action', 'field', 'operation', 'resource', 'role', 'user'])
       expect(Object.keys(schemas.product.api).sort()).toEqual(['endpoint', 'namespace', 'param', 'schema'])
       expect(Object.keys(schemas.product.web).sort()).toEqual(['block', 'layout', 'page', 'route'])
     })
@@ -79,9 +79,9 @@ describe('@dna-codes/dna-core', () => {
       const ids = all.map((s) => s.$id)
       expect(new Set(ids).size).toBe(ids.length)
 
-      // 15 op + 4 product-core + 4 product-api + 4 product-web + 10 technical = 37 primitives
-      // + 5 aggregates = 42 schemas total
-      expect(all.length).toBe(42)
+      // 1 meta + 15 op + 6 product-core + 4 product-api + 4 product-web + 10 technical = 40 primitives
+      // + 5 aggregates = 45 schemas total
+      expect(all.length).toBe(45)
     })
   })
 

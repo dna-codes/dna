@@ -4,6 +4,7 @@
   "title": "Page",
   "description": "A Page is a discrete screen representing a product Resource. It contains one or more Blocks and maps from a Resource.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["name", "resource"],
   "properties": {
     "name": {

@@ -9,6 +9,9 @@ export type JsonSchema = {
 };
 export type Layer = 'operational' | 'product.core' | 'product.api' | 'product.ui' | 'technical';
 export declare const schemas: {
+    readonly meta: {
+        readonly stability: JsonSchema;
+    };
     readonly operational: {
         readonly action: JsonSchema;
         readonly attribute: JsonSchema;
@@ -32,6 +35,8 @@ export declare const schemas: {
             readonly field: JsonSchema;
             readonly operation: JsonSchema;
             readonly resource: JsonSchema;
+            readonly role: JsonSchema;
+            readonly user: JsonSchema;
         };
         readonly api: {
             readonly endpoint: JsonSchema;

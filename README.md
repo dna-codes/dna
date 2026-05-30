@@ -151,7 +151,9 @@ These say *what kinds of people can hold what kinds of roles in what kinds of gr
 
 Product DNA describes what gets built. It is split into three sub-layers that can be authored independently.
 
-**Core** (`product.core.json`) — materializes Operational concepts into product primitives: `Resource`, `Action`, `Operation`, `Field`. Product `Resource` and `Action` are surface projections of their Operational counterparts — the same vocabulary is reused intentionally. Operational People primitives (Person, Role, Group, Membership) are referenced by product/api cells for auth middleware and product/ui cells for permission guards; how they project into Product Core is an open question (`ROADMAP.md` for details).
+**Core** (`product.core.json`) — materializes Operational concepts into product primitives: `Resource`, `Action`, `Operation`, `Field`, `User`, `Role`. Product `Resource` and `Action` are surface projections of their Operational counterparts — the same vocabulary is reused intentionally. The People primitives now project too: **`User`** is the product-layer projection of Operational `Person` *and* the identity/login subject for auth, and **`Role`** is the projection of Operational `Role` *and* the RBAC role read by product/api auth middleware and product/ui permission guards. `User.identity` (which field authenticates the subject) is a configured product fact; `Role.permissions[]` is a derived rollup of the Operational access Rules that name the role — not an authored ACL. (Group and Membership projection remains open — see `ROADMAP.md`.)
+
+Every primitive in every layer may carry an optional `stability` maturity marker (`experimental` / `beta` / `stable` / `deprecated`), declared once in the shared `meta/stability` schema and composed via `allOf`; e.g. Product Core `Field` declares `experimental`. This is orthogonal to schema version and aligns with the registry's `stability` lifecycle — see [Stability lifecycle](./docs/concepts/resource-types.md#stability-lifecycle).
 
 **API** (`product.api.json`) — REST surface: `Endpoint`, `Namespace`, `Param`, `Schema`
 

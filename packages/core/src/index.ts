@@ -20,6 +20,9 @@ export type JsonSchema = {
 export type Layer = 'operational' | 'product.core' | 'product.api' | 'product.ui' | 'technical'
 
 export const schemas = {
+  meta: {
+    stability: load('meta/stability.json'),
+  },
   operational: {
     action: load('operational/action.json'),
     attribute: load('operational/attribute.json'),
@@ -43,6 +46,8 @@ export const schemas = {
       field: load('product/core/field.json'),
       operation: load('product/core/operation.json'),
       resource: load('product/core/resource.json'),
+      role: load('product/core/role.json'),
+      user: load('product/core/user.json'),
     },
     api: {
       endpoint: load('product/api/endpoint.json'),

@@ -51,9 +51,14 @@
       "description": "Nested fields when type is 'object'. Each entry is itself a Field, recursively.",
       "minItems": 1,
       "items": { "$ref": "https://dna.codes/schemas/product/core/field" }
+    },
+    "stability": {
+      "default": "experimental",
+      "description": "Declared type-maturity of the Field primitive itself — `experimental`. This is a fact about the DNA primitive (its design is still settling), distinct from authored instance maturity. The enum is defined once by the shared `meta/stability` base, composed below via allOf; this only pins the default."
     }
   },
   "allOf": [
+    { "$ref": "https://dna.codes/schemas/meta/stability" },
     {
       "if": { "properties": { "type": { "const": "enum" } }, "required": ["type"] },
       "then": { "required": ["values"] }

@@ -4,6 +4,7 @@
   "title": "Block",
   "description": "A Block is a named, reusable section within a Page. It maps from an Operation and has a structural type (list, detail, form, actions, etc.).",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["name", "type"],
   "properties": {
     "name": {

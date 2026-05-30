@@ -32,6 +32,16 @@
       "description": "Resources referenced by product.api.json or product.ui.json, flattened from the operational domain hierarchy. Each Resource carries its Attributes and Actions inline. Includes Resources that act as Roles (referenced from Rule.allow[].role or Task.actor) — these were previously surfaced separately as `roles[]`.",
       "items": { "$ref": "https://dna.codes/schemas/operational/resource" }
     },
+    "users": {
+      "type": "array",
+      "description": "Product-layer projection of the Operational Persons referenced by the product surfaces — the identity/login subjects. Materialized, not hand-authored.",
+      "items": { "$ref": "https://dna.codes/schemas/product/core/user" }
+    },
+    "roles": {
+      "type": "array",
+      "description": "Product-layer projection of the Operational Roles referenced by the product surfaces — the RBAC roles read by api auth middleware and ui permission guards. Materialized, not hand-authored.",
+      "items": { "$ref": "https://dna.codes/schemas/product/core/role" }
+    },
     "operations": {
       "type": "array",
       "description": "Operations surfaced by product.api.json. Each operation references a Resource+Action pair defined in resources[]. Product Core uses Resource as the singular noun reference (operational's wider Target = Resource | Person | Role | Group is collapsed at this layer).",

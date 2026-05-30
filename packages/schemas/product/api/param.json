@@ -4,6 +4,7 @@
   "title": "Param",
   "description": "A Param is a path, query, or header parameter on an API Endpoint, mapped from an Operational Attribute.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["name", "in", "type"],
   "properties": {
     "name": {

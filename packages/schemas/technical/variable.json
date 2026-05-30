@@ -4,6 +4,7 @@
   "title": "Variable",
   "description": "A Variable is an environment variable or secret reference used by Cells and Constructs.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["name", "source"],
   "properties": {
     "name": {

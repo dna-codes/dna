@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/product/core/role",
+  "title": "Role",
+  "description": "A Role is the product-layer projection of an Operational Role AND the RBAC role consumed by product/api auth middleware and product/ui permission guards. Like every Product Core primitive it is DERIVED, never hand-authored — the product-core-materializer projects it from the operational People primitives and access Rules.\n\nThe `role` mapping names the Operational Role it projects (defaults to `name`). `permissions[]` is a denormalized rollup materialized from the Operational access Rules that name this role — a convenience so guards need not re-traverse the rule graph, NOT a new source of truth.",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The PascalCase name of the role.",
+      "examples": ["Underwriter", "Admin", "Borrower"]
+    },
+    "role": {
+      "type": "string",
+      "description": "The Operational Role this product role projects. Defaults to matching `name` when omitted.",
+      "examples": ["Underwriter", "Doctor", "LeadCounsel"]
+    },
+    "scope": {
+      "type": "string",
+      "description": "The Group or Person within which the role is exercised, mirroring the Operational Role scope.",
+      "examples": ["BankDepartment", "Patient", "Workspace"]
+    },
+    "permissions": {
+      "type": "array",
+      "description": "Derived rollup of the Product Core operations/actions this role may perform, materialized from the Operational access Rules that name the role. A denormalized convenience, not an authored ACL.",
+      "items": { "type": "string" },
+      "examples": [["Loan.Approve", "Loan.Reject"]]
+    }
+  },
+  "examples": [
+    {
+      "name": "Underwriter",
+      "role": "Underwriter",
+      "scope": "BankDepartment",
+      "permissions": ["Loan.Approve"]
+    }
+  ]
+}

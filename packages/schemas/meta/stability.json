@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/meta/stability",
+  "title": "StabilityBase",
+  "description": "Layer-agnostic mixin contributing the optional `stability` maturity marker and an optional `description` to any DNA primitive. Composed via `allOf` by every per-primitive schema across the operational, product (core/api/ui), and technical layers. It is the single source of truth for the maturity enum — kept in lock-step with the `STABILITIES` constant in @dna-codes/dna-core. Pure mixin: it declares no `required` fields and locks neither `additionalProperties` nor `unevaluatedProperties`, so composing it never rejects a primitive's own fields.",
+  "type": "object",
+  "properties": {
+    "stability": {
+      "type": "string",
+      "enum": ["experimental", "beta", "stable", "deprecated"],
+      "description": "Optional declared concept maturity (Kubernetes API-maturity model). Orthogonal to schema version. When present on a primitive that seeds a registry type, it flows into registry seeding as the seeded type's stability; when absent, the registry's seeding defaults apply (foundational types `stable`, everything else `experimental`)."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable explanation of what this primitive represents."
+    }
+  }
+}

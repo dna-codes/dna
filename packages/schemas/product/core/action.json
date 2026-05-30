@@ -4,6 +4,7 @@
   "title": "Action",
   "description": "An Action is a product-level operation — it maps from an Operational Action and is realized as a UI trigger and an API endpoint action.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["name"],
   "properties": {
     "name": {

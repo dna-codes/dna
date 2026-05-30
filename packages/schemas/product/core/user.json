@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/product/core/user",
+  "title": "User",
+  "description": "A User is the product-layer projection of an Operational Person AND the identity/login subject for auth. Like every Product Core primitive it is DERIVED, never hand-authored — the product-core-materializer projects it from the operational People primitives and the product surfaces.\n\nThe `person` mapping names the Operational Person it projects (defaults to `name`). The `identity` facet is genuinely new, product-level information with no operational home: it names which field authenticates the subject, so product/api auth middleware and product/ui sign-in surfaces know what to use. `identity` is a configured product fact, not derived.",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The PascalCase name of the user.",
+      "examples": ["Member", "Customer", "Borrower"]
+    },
+    "person": {
+      "type": "string",
+      "description": "The Operational Person this user projects. Defaults to matching `name` when omitted.",
+      "examples": ["Customer", "Employee", "Patient"]
+    },
+    "fields": {
+      "type": "array",
+      "description": "The fields that describe this user, projected from the Person's Attributes.",
+      "items": { "$ref": "https://dna.codes/schemas/product/core/field" }
+    },
+    "actions": {
+      "type": "array",
+      "description": "The actions that can be performed on this user.",
+      "items": { "$ref": "https://dna.codes/schemas/product/core/action" }
+    },
+    "identity": {
+      "type": "object",
+      "description": "Configured auth facet — names the field(s) that authenticate this subject. Product-level information with no operational home; configured at the product surface, not derived.",
+      "required": ["identifier"],
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "description": "The field whose value authenticates the subject (the login identifier).",
+          "examples": ["email", "username", "phone"]
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Whether the identifier must be verified before it can authenticate.",
+          "default": false
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "name": "Member",
+      "person": "Customer",
+      "identity": { "identifier": "email", "verified": true },
+      "fields": [
+        { "name": "email", "label": "Email", "type": "email", "required": true },
+        { "name": "display_name", "label": "Display Name", "type": "string" }
+      ]
+    }
+  ]
+}

@@ -4,6 +4,7 @@
   "title": "Operation",
   "description": "An Operation is a Resource:Action pair — the unit of user/system interaction at the product level. Product Core Operations are surface projections of Operational Operations; the field name is the same across both layers.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["resource", "action"],
   "properties": {
     "resource": {

@@ -4,6 +4,7 @@
   "title": "Route",
   "description": "A Route is the URL pattern that resolves to a Page. It maps a path to a Resource page.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["path", "page"],
   "properties": {
     "path": {

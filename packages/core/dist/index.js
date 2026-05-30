@@ -45,6 +45,9 @@ function load(rel) {
     return JSON.parse(fs.readFileSync(file, 'utf-8'));
 }
 exports.schemas = {
+    meta: {
+        stability: load('meta/stability.json'),
+    },
     operational: {
         action: load('operational/action.json'),
         attribute: load('operational/attribute.json'),
@@ -68,6 +71,8 @@ exports.schemas = {
             field: load('product/core/field.json'),
             operation: load('product/core/operation.json'),
             resource: load('product/core/resource.json'),
+            role: load('product/core/role.json'),
+            user: load('product/core/user.json'),
         },
         api: {
             endpoint: load('product/api/endpoint.json'),

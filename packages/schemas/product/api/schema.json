@@ -4,6 +4,7 @@
   "title": "Schema",
   "description": "A Schema is a named request/response data shape used by API Endpoints. It maps from a Resource and its Fields.",
   "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
   "required": ["name", "fields"],
   "properties": {
     "name": {
