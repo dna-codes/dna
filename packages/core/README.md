@@ -450,7 +450,7 @@ documents.technical                // shape of technical.json
 
 ### `lenses` — core lens definitions
 
-All six core lens definitions, keyed by camelCase name. Lenses are named graph patterns (nodes + edges) governing both query and command directions — see [`@dna-codes/dna-lenses`](../lenses/).
+All six core lens definitions, keyed by camelCase name. The raw JSON files live in `packages/core/lenses/` and ship with this package. Lenses are named graph patterns (nodes + edges) governing both query and command directions.
 
 ```ts
 import { lenses, allLenses } from '@dna-codes/dna-core'

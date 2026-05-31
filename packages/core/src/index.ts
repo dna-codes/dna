@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 export const SCHEMA_ROOT = path.dirname(require.resolve('@dna-codes/dna-schemas/package.json'))
-export const LENS_ROOT = path.dirname(require.resolve('@dna-codes/dna-lenses/package.json'))
+export const LENS_ROOT = path.join(__dirname, '..', 'lenses')
 
 function load(rel: string): JsonSchema {
   const file = path.join(SCHEMA_ROOT, rel)

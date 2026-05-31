@@ -25,7 +25,7 @@
 
 - [x] 5.1 Add `lenses` object to `packages/core/src/index.ts` exporting all six core lens definitions (loaded from JSON files)
 - [x] 5.2 Add `allLenses()` function to `packages/core/src/index.ts` returning all lens definitions as a flat array, parallel to `allSchemas()`
-- [x] 5.3 Add `@dna-codes/dna-lenses` as a dependency in `packages/core/package.json`
+- [x] 5.3 Lens JSON files ship in `packages/core/lenses/` (folded into core; no separate package)
 
 ## 6. Tests
 

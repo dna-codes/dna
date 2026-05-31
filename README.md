@@ -192,7 +192,7 @@ lenses.accessControl  // { $id, name, nodes[], edges[], sentence }
 allLenses()           // all six lens definitions as a flat array
 ```
 
-See [`packages/lenses/README.md`](./packages/lenses/README.md) for the full LensType format and the six core lens definitions.
+The lens definitions live in `packages/core/lenses/` and are available via `@dna-codes/dna-core`. See [`packages/core/README.md`](./packages/core/README.md#lenses--core-lens-definitions) for the full LensType format and the six core lens definitions.
 
 ## Packages
 
@@ -304,13 +304,12 @@ Legend: ✅ shipped · 🚧 planned (listed below) · 💡 candidate (natural fi
 
 ### Packages
 
-The repo currently publishes six npm packages:
+The repo currently publishes five npm packages:
 
 | Package | Purpose |
 |---|---|
 | [`@dna-codes/dna-schemas`](./packages/schemas) | Canonical JSON Schema (Draft 2020-12) definitions for all three layers — language-agnostic, zero deps |
-| [`@dna-codes/dna-lenses`](./packages/lenses) | Core lens definitions — named graph patterns (nodes + edges) for querying and commanding the DNA graph. Peer to `@dna-codes/dna-schemas`, no runtime deps |
-| [`@dna-codes/dna-core`](./packages/core) | TypeScript bindings + per-layer and cross-layer validator; wraps `@dna-codes/dna-schemas`. Also home to shared adapter contracts (`ParseResult`, `Style`, `Unit`, `StyleMap`, `DEFAULT_STYLES`) and the `DnaDataStore` runtime-data contract |
+| [`@dna-codes/dna-core`](./packages/core) | TypeScript bindings + per-layer and cross-layer validator; wraps `@dna-codes/dna-schemas`. Ships the core lens definitions (`lenses/`) and exports `lenses` / `allLenses()`. Also home to shared adapter contracts and the `DnaDataStore` runtime-data contract |
 | [`@dna-codes/dna-ingest`](./packages/ingest) | Multi-source DNA orchestrator. Fans `[source URI] → integration → input → partial DNA` per source, merges via `dna-core.merge()`, reports conflicts + provenance + non-fatal errors. Imports zero adapters — caller injects them. Defines the `Integration` and `InputAdapter` ports. |
 | [`@dna-codes/dna-adapters`](./packages/adapters) | Unified adapter package — every input parser, output renderer, and integration client lives as a subpath. One version line, one publish per release. |
 | [`@dna-codes/dna-api`](./packages/api) | Registry-native GraphQL API server. Seeds `ResourceType` / `RelationshipType` records from a DNA on first boot; admins author the type system at runtime through the API. Schema regenerates and hot-swaps on type mutations. Backed by `integration/neo4j` with versioned history. Each type carries a `stability` lifecycle marker (`experimental` / `beta` / `stable` / `deprecated`), orthogonal to its schema version — see [Stability lifecycle](./docs/concepts/resource-types.md#stability-lifecycle). |
