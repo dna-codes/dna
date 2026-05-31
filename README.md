@@ -16,6 +16,7 @@ As documented below, it's incredibly flexible with input/output adapters and int
 - [Operational Layer](#operational-layer)
 - [Product Layer](#product-layer)
 - [Technical Layer](#technical-layer)
+- [Lenses](#lenses)
 - [Packages](#packages)
   - [Pipeline](#pipeline)
   - [Naming convention](#naming-convention)
@@ -167,6 +168,32 @@ Primitives: `Cell`, `Construct`, `Environment`, `Node`, `Connection`, `Zone`, `P
 
 A **Cell** is the unit of deployment — it consumes DNA from upper layers and generates concrete artifacts (API code, database migrations, infrastructure templates).
 
+## Lenses
+
+A **Lens** is the third DNA metamodel concept — a named graph pattern of typed node slots and directed edges that governs both directions of graph use:
+
+- **Query direction** — find all subgraphs in the DNA graph matching this pattern
+- **Command direction** — assert a specific binding of this pattern into the graph
+
+Both directions use the same Lens definition. Three structural kinds all use the same format:
+
+| Kind | Edges | Example |
+|------|-------|---------|
+| **Layer** | 0 | `operational` — groups all operational resource types |
+| **Traversal** | 1 | `people` — Person → Group |
+| **Subgraph** | ≥2 | `access-control` — User → Role → Domain / Operation → Resource |
+
+Core lenses ship in `@dna-codes/dna-lenses` and are registered in `@dna-codes/dna-core`:
+
+```typescript
+import { lenses, allLenses } from '@dna-codes/dna-core'
+
+lenses.accessControl  // { $id, name, nodes[], edges[], sentence }
+allLenses()           // all six lens definitions as a flat array
+```
+
+See [`packages/lenses/README.md`](./packages/lenses/README.md) for the full LensType format and the six core lens definitions.
+
 ## Packages
 
 ### Pipeline
@@ -277,11 +304,12 @@ Legend: ✅ shipped · 🚧 planned (listed below) · 💡 candidate (natural fi
 
 ### Packages
 
-The repo currently publishes five npm packages:
+The repo currently publishes six npm packages:
 
 | Package | Purpose |
 |---|---|
 | [`@dna-codes/dna-schemas`](./packages/schemas) | Canonical JSON Schema (Draft 2020-12) definitions for all three layers — language-agnostic, zero deps |
+| [`@dna-codes/dna-lenses`](./packages/lenses) | Core lens definitions — named graph patterns (nodes + edges) for querying and commanding the DNA graph. Peer to `@dna-codes/dna-schemas`, no runtime deps |
 | [`@dna-codes/dna-core`](./packages/core) | TypeScript bindings + per-layer and cross-layer validator; wraps `@dna-codes/dna-schemas`. Also home to shared adapter contracts (`ParseResult`, `Style`, `Unit`, `StyleMap`, `DEFAULT_STYLES`) and the `DnaDataStore` runtime-data contract |
 | [`@dna-codes/dna-ingest`](./packages/ingest) | Multi-source DNA orchestrator. Fans `[source URI] → integration → input → partial DNA` per source, merges via `dna-core.merge()`, reports conflicts + provenance + non-fatal errors. Imports zero adapters — caller injects them. Defines the `Integration` and `InputAdapter` ports. |
 | [`@dna-codes/dna-adapters`](./packages/adapters) | Unified adapter package — every input parser, output renderer, and integration client lives as a subpath. One version line, one publish per release. |

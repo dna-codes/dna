@@ -44,6 +44,8 @@ DNA is a *contract*, not a runtime. Producers (authoring agents, humans) emit JS
 - [API reference (other exports)](#api-reference-other-exports)
   - [`schemas` — typed access to every per-primitive JSON Schema](#schemas--typed-access-to-every-per-primitive-json-schema)
   - [`documents` — per-layer aggregate schemas](#documents--per-layer-aggregate-schemas)
+  - [`lenses` — core lens definitions](#lenses--core-lens-definitions)
+  - [`allLenses()` — flat array](#alllenses--flat-array)
   - [`allSchemas()` — flat array](#allschemas--flat-array)
   - [`resolveSchemaFile(family, name)`](#resolveschemafilefamily-name)
   - [`SCHEMA_ROOT`, `layerDirs`](#schema_root-layerdirs)
@@ -444,6 +446,39 @@ documents.productCore              // shape of product.core.json
 documents.productApi               // shape of product.api.json
 documents.productUi                // shape of product.ui.json
 documents.technical                // shape of technical.json
+```
+
+### `lenses` — core lens definitions
+
+All six core lens definitions, keyed by camelCase name. Lenses are named graph patterns (nodes + edges) governing both query and command directions — see [`@dna-codes/dna-lenses`](../lenses/).
+
+```ts
+import { lenses, allLenses } from '@dna-codes/dna-core'
+
+lenses.operational    // layer lens: all operational resource types
+lenses.product        // layer lens: all product resource types
+lenses.technical      // layer lens: all technical resource types
+lenses.people         // traversal lens: Person → Group
+lenses.accessControl  // subgraph lens: User → Role → Domain / Operation → Resource
+lenses.execution      // subgraph lens: Process → Task ← Trigger
+
+lenses.accessControl.$id
+// → 'https://dna.codes/lenses/access-control'
+
+lenses.accessControl.nodes.length  // 5
+lenses.accessControl.edges.length  // 4
+```
+
+### `allLenses()` — flat array
+
+Returns all six core lens definitions as a flat array, parallel to `allSchemas()`:
+
+```ts
+import { allLenses } from '@dna-codes/dna-core'
+
+const all = allLenses()  // LensDefinition[] — 6 items
+all.map(l => l.$id)
+// → ['https://dna.codes/lenses/operational', ..., 'https://dna.codes/lenses/execution']
 ```
 
 ### `allSchemas()` — flat array

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/lenses/operational",
+  "allOf": [{ "$ref": "https://dna.codes/lenses/base" }],
+  "name": "Operational",
+  "nodes": [
+    { "type": "Person" },
+    { "type": "Group" },
+    { "type": "Role" },
+    { "type": "Membership" },
+    { "type": "Domain" },
+    { "type": "Resource" },
+    { "type": "Operation" },
+    { "type": "Action" },
+    { "type": "Process" },
+    { "type": "Rule" },
+    { "type": "Task" },
+    { "type": "Trigger" }
+  ],
+  "edges": []
+}

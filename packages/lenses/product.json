@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/lenses/product",
+  "allOf": [{ "$ref": "https://dna.codes/lenses/base" }],
+  "name": "Product",
+  "nodes": [
+    { "type": "User" },
+    { "type": "Role" },
+    { "type": "Resource" },
+    { "type": "Operation" },
+    { "type": "Action" },
+    { "type": "Field" },
+    { "type": "Endpoint" },
+    { "type": "Namespace" },
+    { "type": "Param" },
+    { "type": "Schema" },
+    { "type": "Block" },
+    { "type": "Layout" },
+    { "type": "Page" },
+    { "type": "Route" }
+  ],
+  "edges": []
+}

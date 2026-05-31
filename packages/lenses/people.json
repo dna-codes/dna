@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/lenses/people",
+  "allOf": [{ "$ref": "https://dna.codes/lenses/base" }],
+  "name": "People",
+  "sentence": "{{person}} belongs to {{group}}",
+  "nodes": [
+    { "slot": "person", "type": "Person" },
+    { "slot": "group",  "type": "Group"  }
+  ],
+  "edges": [
+    { "from": "person", "to": "group", "via": "Person_Group" }
+  ]
+}

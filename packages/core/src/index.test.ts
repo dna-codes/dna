@@ -1,10 +1,14 @@
 import * as fs from 'fs'
 import * as path from 'path'
+import Ajv from 'ajv/dist/2020'
 import {
   SCHEMA_ROOT,
+  LENS_ROOT,
+  allLenses,
   allSchemas,
   documents,
   layerDirs,
+  lenses,
   resolveSchemaFile,
   schemas,
 } from './index'
@@ -110,6 +114,54 @@ describe('@dna-codes/dna-core', () => {
       expect(fs.existsSync(layerDirs.operational)).toBe(true)
       expect(fs.existsSync(layerDirs.product)).toBe(true)
       expect(fs.existsSync(layerDirs.technical)).toBe(true)
+    })
+  })
+
+  describe('lenses', () => {
+    it('has all six core lens keys and each has a $id', () => {
+      expect(Object.keys(lenses).sort()).toEqual([
+        'accessControl',
+        'execution',
+        'operational',
+        'people',
+        'product',
+        'technical',
+      ])
+      for (const lens of Object.values(lenses)) {
+        expect(typeof lens.$id).toBe('string')
+        expect(lens.$id.startsWith('https://dna.codes/lenses/')).toBe(true)
+      }
+    })
+
+    it('allLenses() returns exactly 6 items', () => {
+      expect(allLenses()).toHaveLength(6)
+    })
+
+    it('validates each core lens against base.json using AJV', () => {
+      const basePath = path.join(LENS_ROOT, 'base.json')
+      const baseSchema = JSON.parse(fs.readFileSync(basePath, 'utf-8'))
+      const ajv = new Ajv({ strict: false })
+      const validate = ajv.compile(baseSchema)
+      for (const lens of allLenses()) {
+        const id = lens.$id
+        const valid = validate(lens)
+        if (!valid) {
+          throw new Error(`Lens "${id}" failed base validation: ${ajv.errorsText(validate.errors)}`)
+        }
+      }
+    })
+
+    it('Access Control lens has 5 nodes and 4 edges', () => {
+      expect(lenses.accessControl.nodes).toHaveLength(5)
+      expect(lenses.accessControl.edges).toHaveLength(4)
+    })
+
+    it('all three layer lenses have nodes and no edges (or empty edges)', () => {
+      for (const key of ['operational', 'product', 'technical'] as const) {
+        const lens = lenses[key]
+        expect(lens.nodes.length).toBeGreaterThan(0)
+        expect(!lens.edges || lens.edges.length === 0).toBe(true)
+      }
     })
   })
 })

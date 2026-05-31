@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": [
     "packages/schemas",
+    "packages/lenses",
     "packages/core",
     "packages/ingest",
     "packages/adapters",

@@ -2,9 +2,15 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 export const SCHEMA_ROOT = path.dirname(require.resolve('@dna-codes/dna-schemas/package.json'))
+export const LENS_ROOT = path.dirname(require.resolve('@dna-codes/dna-lenses/package.json'))
 
 function load(rel: string): JsonSchema {
   const file = path.join(SCHEMA_ROOT, rel)
+  return JSON.parse(fs.readFileSync(file, 'utf-8'))
+}
+
+function loadLens(rel: string): LensDefinition {
+  const file = path.join(LENS_ROOT, rel)
   return JSON.parse(fs.readFileSync(file, 'utf-8'))
 }
 
@@ -14,6 +20,26 @@ export type JsonSchema = {
   title?: string
   description?: string
   type?: string | string[]
+  [key: string]: unknown
+}
+
+export type LensNodeSlot = {
+  slot?: string
+  type: string
+}
+
+export type LensEdge = {
+  from: string
+  to: string
+  via: string
+}
+
+export type LensDefinition = {
+  $id: string
+  name: string
+  nodes: LensNodeSlot[]
+  edges?: LensEdge[]
+  sentence?: string
   [key: string]: unknown
 }
 
@@ -83,6 +109,19 @@ export const documents = {
   productUi: load('product/product.ui.json'),
   technical: load('technical/technical.json'),
 } as const
+
+export const lenses = {
+  operational:   loadLens('operational.json'),
+  product:       loadLens('product.json'),
+  technical:     loadLens('technical.json'),
+  people:        loadLens('people.json'),
+  accessControl: loadLens('access-control.json'),
+  execution:     loadLens('execution.json'),
+} as const
+
+export function allLenses(): LensDefinition[] {
+  return Object.values(lenses) as LensDefinition[]
+}
 
 export const layerDirs: Record<'operational' | 'product' | 'technical', string> = {
   operational: path.join(SCHEMA_ROOT, 'operational'),

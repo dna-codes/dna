@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/lenses/technical",
+  "allOf": [{ "$ref": "https://dna.codes/lenses/base" }],
+  "name": "Technical",
+  "nodes": [
+    { "type": "Cell" },
+    { "type": "Connection" },
+    { "type": "Construct" },
+    { "type": "Environment" },
+    { "type": "Node" },
+    { "type": "Output" },
+    { "type": "Provider" },
+    { "type": "Variable" },
+    { "type": "View" },
+    { "type": "Zone" }
+  ],
+  "edges": []
+}

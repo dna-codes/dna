@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/lenses/execution",
+  "allOf": [{ "$ref": "https://dna.codes/lenses/base" }],
+  "name": "Execution",
+  "sentence": "{{process}} runs through {{task}}, triggered by {{trigger}}",
+  "nodes": [
+    { "slot": "process", "type": "Process" },
+    { "slot": "task",    "type": "Task"    },
+    { "slot": "trigger", "type": "Trigger" }
+  ],
+  "edges": [
+    { "from": "process", "to": "task",    "via": "Process_Task"    },
+    { "from": "trigger", "to": "process", "via": "Trigger_Process" }
+  ]
+}

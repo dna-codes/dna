@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/lenses/access-control",
+  "allOf": [{ "$ref": "https://dna.codes/lenses/base" }],
+  "name": "Access Control",
+  "sentence": "{{subject}} holds {{assignment}} within {{boundary}}, granting {{grant}} against {{target}}",
+  "nodes": [
+    { "slot": "subject",    "type": "User"      },
+    { "slot": "assignment", "type": "Role"      },
+    { "slot": "boundary",   "type": "Domain"    },
+    { "slot": "grant",      "type": "Operation" },
+    { "slot": "target",     "type": "Resource"  }
+  ],
+  "edges": [
+    { "from": "subject",    "to": "assignment", "via": "User_Role"          },
+    { "from": "assignment", "to": "boundary",   "via": "Role_Domain"        },
+    { "from": "assignment", "to": "grant",      "via": "Role_Operation"     },
+    { "from": "grant",      "to": "target",     "via": "Operation_Resource" }
+  ]
+}
