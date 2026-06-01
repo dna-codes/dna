@@ -1,10 +1,28 @@
 export declare const SCHEMA_ROOT: string;
+export declare const LENS_ROOT: string;
 export type JsonSchema = {
     $id?: string;
     $schema?: string;
     title?: string;
     description?: string;
     type?: string | string[];
+    [key: string]: unknown;
+};
+export type LensNodeSlot = {
+    slot?: string;
+    type: string;
+};
+export type LensEdge = {
+    from: string;
+    to: string;
+    via: string;
+};
+export type LensDefinition = {
+    $id: string;
+    name: string;
+    nodes: LensNodeSlot[];
+    edges?: LensEdge[];
+    sentence?: string;
     [key: string]: unknown;
 };
 export type Layer = 'operational' | 'product.core' | 'product.api' | 'product.ui' | 'technical';
@@ -71,6 +89,15 @@ export declare const documents: {
     readonly productUi: JsonSchema;
     readonly technical: JsonSchema;
 };
+export declare const lenses: {
+    readonly operational: LensDefinition;
+    readonly product: LensDefinition;
+    readonly technical: LensDefinition;
+    readonly people: LensDefinition;
+    readonly accessControl: LensDefinition;
+    readonly execution: LensDefinition;
+};
+export declare function allLenses(): LensDefinition[];
 export declare const layerDirs: Record<'operational' | 'product' | 'technical', string>;
 export declare function resolveSchemaFile(family: 'operational' | 'product' | 'technical', name: string): string | null;
 export declare function allSchemas(): JsonSchema[];

@@ -33,15 +33,21 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRulesForOperation = exports.getRules = exports.getRule = exports.getTriggersForOperation = exports.getTriggers = exports.getTasksForOperation = exports.getTasks = exports.getTask = exports.getTriggersForProcess = exports.getProcesses = exports.getProcess = exports.getOperationsForResource = exports.getOperations = exports.getOperation = exports.getMemberships = exports.getMembership = exports.getGroups = exports.getGroup = exports.getRoles = exports.getRole = exports.getPersons = exports.getPerson = exports.getResources = exports.getResource = exports.bookshopInput = exports.OPERATIONAL_PRIMITIVE_VERSIONS = exports.defaultStabilityForType = exports.isFoundationalTypeName = exports.FOUNDATIONAL_RESOURCE_TYPE_NAMES = exports.STABILITIES = exports.TypeInUseError = exports.DEFAULT_STYLES = exports.merge = exports.addRelationship = exports.addProcess = exports.addTask = exports.addRule = exports.addTrigger = exports.addOperation = exports.addMembership = exports.addGroup = exports.addRole = exports.addPerson = exports.addResource = exports.createOperationalDna = exports.DnaValidator = exports.layerDirs = exports.documents = exports.schemas = exports.SCHEMA_ROOT = void 0;
-exports.getMembershipsForPerson = exports.getMembershipsForRole = exports.getActorsForOperation = void 0;
+exports.getRule = exports.getTriggersForOperation = exports.getTriggers = exports.getTasksForOperation = exports.getTasks = exports.getTask = exports.getTriggersForProcess = exports.getProcesses = exports.getProcess = exports.getOperationsForResource = exports.getOperations = exports.getOperation = exports.getMemberships = exports.getMembership = exports.getGroups = exports.getGroup = exports.getRoles = exports.getRole = exports.getPersons = exports.getPerson = exports.getResources = exports.getResource = exports.bookshopInput = exports.OPERATIONAL_PRIMITIVE_VERSIONS = exports.defaultStabilityForType = exports.isFoundationalTypeName = exports.FOUNDATIONAL_RESOURCE_TYPE_NAMES = exports.STABILITIES = exports.TypeInUseError = exports.DEFAULT_STYLES = exports.merge = exports.addRelationship = exports.addProcess = exports.addTask = exports.addRule = exports.addTrigger = exports.addOperation = exports.addMembership = exports.addGroup = exports.addRole = exports.addPerson = exports.addResource = exports.createOperationalDna = exports.DnaValidator = exports.layerDirs = exports.lenses = exports.documents = exports.schemas = exports.LENS_ROOT = exports.SCHEMA_ROOT = void 0;
+exports.getMembershipsForPerson = exports.getMembershipsForRole = exports.getActorsForOperation = exports.getRulesForOperation = exports.getRules = void 0;
+exports.allLenses = allLenses;
 exports.resolveSchemaFile = resolveSchemaFile;
 exports.allSchemas = allSchemas;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 exports.SCHEMA_ROOT = path.dirname(require.resolve('@dna-codes/dna-schemas/package.json'));
+exports.LENS_ROOT = path.join(__dirname, '..', 'lenses');
 function load(rel) {
     const file = path.join(exports.SCHEMA_ROOT, rel);
+    return JSON.parse(fs.readFileSync(file, 'utf-8'));
+}
+function loadLens(rel) {
+    const file = path.join(exports.LENS_ROOT, rel);
     return JSON.parse(fs.readFileSync(file, 'utf-8'));
 }
 exports.schemas = {
@@ -107,6 +113,17 @@ exports.documents = {
     productUi: load('product/product.ui.json'),
     technical: load('technical/technical.json'),
 };
+exports.lenses = {
+    operational: loadLens('operational.json'),
+    product: loadLens('product.json'),
+    technical: loadLens('technical.json'),
+    people: loadLens('people.json'),
+    accessControl: loadLens('access-control.json'),
+    execution: loadLens('execution.json'),
+};
+function allLenses() {
+    return Object.values(exports.lenses);
+}
 exports.layerDirs = {
     operational: path.join(exports.SCHEMA_ROOT, 'operational'),
     product: path.join(exports.SCHEMA_ROOT, 'product'),

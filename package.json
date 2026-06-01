@@ -4,6 +4,7 @@
   "workspaces": [
     "packages/schemas",
     "packages/core",
+    "packages/react",
     "packages/ingest",
     "packages/adapters",
     "packages/api"
