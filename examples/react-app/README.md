@@ -1,4 +1,4 @@
-# DNA React Example — Loan Dashboard
+# DNA Authorization and Audit (React)
 
 Demonstrates `@dna-codes/dna-react` with a Next.js app: client-side permission gates, server-side enforcement, and a unified audit log.
 
