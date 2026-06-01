@@ -1,4 +1,4 @@
-import lendingDna from '../../../../../lending/operational.json'
+import lendingDna from '@/lib/lending-operational.json'
 
 type Rule = { operation: string; rule_type?: string; allow?: { role?: string }[] }
 

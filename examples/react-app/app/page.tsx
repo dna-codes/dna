@@ -1,4 +1,4 @@
-import lendingDna from '../../lending/operational.json'
+import lendingDna from '@/lib/lending-operational.json'
 import { LoanDashboard } from '@/components/LoanDashboard'
 import type { OperationalDNA } from '@dna-codes/dna-core'
 
