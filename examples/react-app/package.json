@@ -8,8 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "@dna-codes/dna-core": "0.11.0",
-    "@dna-codes/dna-react": "0.1.0",
+    "@dna-codes/dna-core": "file:../../packages/core",
+    "@dna-codes/dna-react": "file:../../packages/react",
     "next": "^16.2.6",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"

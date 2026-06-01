@@ -12,12 +12,14 @@ Demonstrates `@dna-codes/dna-react` with a Next.js app: client-side permission g
 
 ## Install
 
+From the **repo root**:
+
 ```bash
 cd examples/react-app
 npm install
 ```
 
-> Requires Node 18+. Packages are installed from npm (`@dna-codes/dna-core` and `@dna-codes/dna-react` are published — not workspace-linked).
+> Requires Node 18+. `@dna-codes/dna-core` and `@dna-codes/dna-react` are referenced via `file:` paths to the local packages — no npm account needed, and the built `dist/` is included in the repo.
 
 ## Run
 
