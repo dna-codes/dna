@@ -11,6 +11,13 @@ See the main `README.md` file for guidance on this specific repository.
 changes are complete. Make all changes on the `main` branch for now.
 3. Make sure to update the README.md after any/every change
 
+## Core modeling principle
+Everything in DNA is modeled as **resources and relationships** — nodes with typed edges in the graph. When designing or extending any layer (Operational, Product, Technical):
+* Every new construct must be defined as a **`resource_type`** (a resource primitive — a named node type in the graph)
+* Every connection between constructs must be defined as a **`relationship_type`** (a relationship primitive — a named, typed, directed edge in the graph)
+
+No behavioral state or structural hierarchy should live outside the graph.
+
 ## Conventions
 * In general, run commands separately, without `&&`
 
