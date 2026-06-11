@@ -1,0 +1,100 @@
+{
+  "name": "mfj-org-chart",
+  "description": "Marshall Fire Justice — mass-tort case management org chart. Three departments under the firm, each led by a director-level position with staff reporting up.",
+  "resources": [
+    { "id": "company:mfj",               "type": "company",    "name": "Marshall Fire Justice" },
+
+    { "id": "dept:case-ops",             "type": "department", "name": "Case Operations" },
+    { "id": "dept:litigation",           "type": "department", "name": "Litigation" },
+    { "id": "dept:client-services",      "type": "department", "name": "Client Services" },
+
+    { "id": "position:case-ops-dir",     "type": "position",   "name": "Case Ops Director",  "description": "Directs case operations across all active mass-tort matters, overseeing intake, qualification, and team assignment workflows." },
+    { "id": "position:case-supervisor",  "type": "position",   "name": "Case Supervisor",    "description": "Supervises daily case processing activities, ensuring qualification standards and client interview quality are maintained." },
+    { "id": "position:case-analyst",     "type": "position",   "name": "Case Analyst",       "description": "Performs detailed case analysis, maintains case records, and supports supervisors with data and documentation." },
+
+    { "id": "position:lead-counsel",     "type": "position",   "name": "Lead Counsel",       "description": "Provides legal leadership on mass-tort matters, directing litigation strategy and supervising associate attorneys and paralegals." },
+    { "id": "position:associate",        "type": "position",   "name": "Associate",          "description": "Handles legal research, drafting, and case work under the direction of Lead Counsel." },
+    { "id": "position:paralegal",        "type": "position",   "name": "Paralegal",          "description": "Supports litigation with document management, filing, and procedural coordination." },
+
+    { "id": "position:client-dir",       "type": "position",   "name": "Client Director",    "description": "Leads the Client Services department, ensuring a high-quality client experience from onboarding through ongoing case updates." },
+    { "id": "position:coordinator",      "type": "position",   "name": "Coordinator",        "description": "Manages client-facing onboarding steps including welcome calls, intake form completion, and coordinator assignments." },
+
+    { "id": "person:marcus-smith",       "type": "person",     "name": "Marcus Smith" },
+    { "id": "person:sarah-lee",          "type": "person",     "name": "Sarah Lee" },
+    { "id": "person:alex-chen",          "type": "person",     "name": "Alex Chen" },
+    { "id": "person:tom-brown",          "type": "person",     "name": "Tom Brown" },
+    { "id": "person:kim-park",           "type": "person",     "name": "Kim Park" },
+    { "id": "person:maria-garcia",       "type": "person",     "name": "Maria Garcia" },
+    { "id": "person:ryan-kim",           "type": "person",     "name": "Ryan Kim" },
+
+    { "id": "process:case-intake",       "type": "process",    "name": "Case Intake", "description": "Structured workflow for receiving, qualifying, interviewing, and opening new mass-tort cases." },
+    { "id": "step:initial-inquiry",      "type": "step",       "name": "Initial Inquiry" },
+    { "id": "step:qualify-case",         "type": "step",       "name": "Qualify Case" },
+    { "id": "step:client-interview",     "type": "step",       "name": "Client Interview" },
+    { "id": "step:open-case",            "type": "step",       "name": "Open Case File" },
+    { "id": "step:assign-team",          "type": "step",       "name": "Assign Case Team" },
+
+    { "id": "process:client-onboarding", "type": "process",    "name": "Client Onboarding", "description": "End-to-end workflow for welcoming and enrolling new clients, from initial welcome call through confirmed enrollment." },
+    { "id": "step:welcome-call",         "type": "step",       "name": "Welcome Call" },
+    { "id": "step:intake-form",          "type": "step",       "name": "Intake Form Completion" },
+    { "id": "step:case-brief",           "type": "step",       "name": "Case Brief Review" },
+    { "id": "step:assign-coordinator",   "type": "step",       "name": "Assign Coordinator" },
+    { "id": "step:confirm-enrollment",   "type": "step",       "name": "Confirm Enrollment" }
+  ],
+  "relationships": [
+    { "id": "rel:case-ops-co",      "type": "belongs_to", "from": "dept:case-ops",            "to": "company:mfj"              },
+    { "id": "rel:litigation-co",    "type": "belongs_to", "from": "dept:litigation",          "to": "company:mfj"              },
+    { "id": "rel:client-svc-co",    "type": "belongs_to", "from": "dept:client-services",     "to": "company:mfj"              },
+
+    { "id": "rel:dir-dept",         "type": "belongs_to", "from": "position:case-ops-dir",    "to": "dept:case-ops"            },
+    { "id": "rel:counsel-dept",     "type": "belongs_to", "from": "position:lead-counsel",    "to": "dept:litigation"          },
+    { "id": "rel:cdir-dept",        "type": "belongs_to", "from": "position:client-dir",      "to": "dept:client-services"     },
+
+    { "id": "rel:supervisor-dir",   "type": "reports_to", "from": "position:case-supervisor", "to": "position:case-ops-dir"    },
+    { "id": "rel:analyst-sup",      "type": "reports_to", "from": "position:case-analyst",    "to": "position:case-supervisor" },
+    { "id": "rel:associate-csl",    "type": "reports_to", "from": "position:associate",       "to": "position:lead-counsel"    },
+    { "id": "rel:paralegal-csl",    "type": "reports_to", "from": "position:paralegal",       "to": "position:lead-counsel"    },
+    { "id": "rel:coord-cdir",       "type": "reports_to", "from": "position:coordinator",     "to": "position:client-dir"      },
+
+    { "id": "rel:marcus-dir",       "type": "fills",      "from": "person:marcus-smith",      "to": "position:case-ops-dir"    },
+    { "id": "rel:sarah-sup",        "type": "fills",      "from": "person:sarah-lee",         "to": "position:case-supervisor" },
+    { "id": "rel:alex-analyst",     "type": "fills",      "from": "person:alex-chen",         "to": "position:case-analyst"    },
+    { "id": "rel:tom-counsel",      "type": "fills",      "from": "person:tom-brown",         "to": "position:lead-counsel"    },
+    { "id": "rel:kim-assoc",        "type": "fills",      "from": "person:kim-park",          "to": "position:associate"       },
+    { "id": "rel:maria-cdir",       "type": "fills",      "from": "person:maria-garcia",      "to": "position:client-dir"      },
+    { "id": "rel:ryan-coord",       "type": "fills",      "from": "person:ryan-kim",          "to": "position:coordinator"     },
+
+    { "id": "rel:ci-mfj",           "type": "belongs_to", "from": "process:case-intake",        "to": "company:mfj"                      },
+    { "id": "rel:inquiry-ci",       "type": "belongs_to", "from": "step:initial-inquiry",       "to": "process:case-intake"              },
+    { "id": "rel:qualify-ci",       "type": "belongs_to", "from": "step:qualify-case",          "to": "process:case-intake"              },
+    { "id": "rel:interview-ci",     "type": "belongs_to", "from": "step:client-interview",      "to": "process:case-intake"              },
+    { "id": "rel:open-ci",          "type": "belongs_to", "from": "step:open-case",             "to": "process:case-intake"              },
+    { "id": "rel:assign-team-ci",   "type": "belongs_to", "from": "step:assign-team",           "to": "process:case-intake"              },
+
+    { "id": "rel:inquiry-qualify",  "type": "next_step",  "from": "step:initial-inquiry",       "to": "step:qualify-case"                },
+    { "id": "rel:qualify-interview","type": "next_step",  "from": "step:qualify-case",          "to": "step:client-interview"            },
+    { "id": "rel:interview-open",   "type": "next_step",  "from": "step:client-interview",      "to": "step:open-case"                   },
+    { "id": "rel:open-assign",      "type": "next_step",  "from": "step:open-case",             "to": "step:assign-team"                 },
+
+    { "id": "rel:inquiry-assigned", "type": "assigned_to","from": "step:initial-inquiry",       "to": "position:case-ops-dir"            },
+    { "id": "rel:qualify-assigned", "type": "assigned_to","from": "step:qualify-case",          "to": "position:case-supervisor"         },
+    { "id": "rel:interview-assigned","type":"assigned_to","from": "step:client-interview",      "to": "position:case-supervisor"         },
+
+    { "id": "rel:co-mfj",           "type": "belongs_to", "from": "process:client-onboarding",  "to": "company:mfj"                      },
+    { "id": "rel:welcome-co",       "type": "belongs_to", "from": "step:welcome-call",          "to": "process:client-onboarding"        },
+    { "id": "rel:form-co",          "type": "belongs_to", "from": "step:intake-form",           "to": "process:client-onboarding"        },
+    { "id": "rel:brief-co",         "type": "belongs_to", "from": "step:case-brief",            "to": "process:client-onboarding"        },
+    { "id": "rel:assigncoord-co",   "type": "belongs_to", "from": "step:assign-coordinator",    "to": "process:client-onboarding"        },
+    { "id": "rel:confirm-co",       "type": "belongs_to", "from": "step:confirm-enrollment",    "to": "process:client-onboarding"        },
+
+    { "id": "rel:welcome-form",     "type": "next_step",  "from": "step:welcome-call",          "to": "step:intake-form"                 },
+    { "id": "rel:form-brief",       "type": "next_step",  "from": "step:intake-form",           "to": "step:case-brief"                  },
+    { "id": "rel:brief-assigncoord","type": "next_step",  "from": "step:case-brief",            "to": "step:assign-coordinator"          },
+    { "id": "rel:assigncoord-confirm","type":"next_step", "from": "step:assign-coordinator",    "to": "step:confirm-enrollment"          },
+
+    { "id": "rel:welcome-assigned", "type": "assigned_to","from": "step:welcome-call",          "to": "position:coordinator"             },
+    { "id": "rel:form-assigned",    "type": "assigned_to","from": "step:intake-form",           "to": "position:coordinator"             },
+    { "id": "rel:brief-assigned",   "type": "assigned_to","from": "step:case-brief",            "to": "position:case-supervisor"         },
+    { "id": "rel:assigncoord-assigned","type":"assigned_to","from":"step:assign-coordinator",  "to": "position:client-dir"              }
+  ]
+}

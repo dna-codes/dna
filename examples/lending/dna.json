@@ -1,0 +1,93 @@
+{
+  "name": "clearpath-lending",
+  "description": "ClearPath Lending — consumer lending company with Origination, Underwriting, Servicing, and Collections departments.",
+  "resources": [
+    { "id": "company:clearpath",              "type": "company",    "name": "ClearPath Lending" },
+
+    { "id": "dept:origination",               "type": "department", "name": "Origination" },
+    { "id": "dept:underwriting",              "type": "department", "name": "Underwriting" },
+    { "id": "dept:servicing",                 "type": "department", "name": "Servicing" },
+    { "id": "dept:collections",               "type": "department", "name": "Collections" },
+
+    { "id": "position:origination-dir",       "type": "position",   "name": "Origination Director",    "description": "Leads the loan origination team, overseeing application intake, loan officer performance, and pipeline throughput." },
+    { "id": "position:loan-officer",          "type": "position",   "name": "Loan Officer",            "description": "Guides applicants through the loan process from initial intake to funding, serving as the primary borrower contact." },
+    { "id": "position:closing-coordinator",   "type": "position",   "name": "Closing Coordinator",     "description": "Prepares and coordinates all documentation and scheduling required to close a loan on time." },
+    { "id": "position:chief-underwriter",     "type": "position",   "name": "Chief Underwriter",       "description": "Sets underwriting policy and makes final credit decisions on loan approvals, denials, and exceptions." },
+    { "id": "position:underwriter",           "type": "position",   "name": "Underwriter",             "description": "Analyzes borrower creditworthiness and risk profile to prepare recommendations for the approval decision." },
+    { "id": "position:servicing-mgr",         "type": "position",   "name": "Servicing Manager",       "description": "Manages the ongoing servicing of funded loans, including payment processing, escrow, and borrower inquiries." },
+    { "id": "position:collections-lead",      "type": "position",   "name": "Collections Lead",        "description": "Leads collection efforts on delinquent accounts, managing outreach strategy and recovery workflows." },
+
+    { "id": "person:rachel-burns",            "type": "person",     "name": "Rachel Burns" },
+    { "id": "person:james-nguyen",            "type": "person",     "name": "James Nguyen" },
+    { "id": "person:priya-shah",              "type": "person",     "name": "Priya Shah" },
+    { "id": "person:marcus-lee",              "type": "person",     "name": "Marcus Lee" },
+    { "id": "person:diana-torres",            "type": "person",     "name": "Diana Torres" },
+
+    { "id": "process:loan-application",       "type": "process",    "name": "Loan Application", "description": "End-to-end workflow for receiving, evaluating, and deciding on a consumer loan application." },
+    { "id": "step:intake",                    "type": "step",       "name": "Application Intake" },
+    { "id": "step:credit-check",              "type": "step",       "name": "Credit Check" },
+    { "id": "step:underwriting-review",       "type": "step",       "name": "Underwriting Review" },
+    { "id": "step:approval-decision",         "type": "step",       "name": "Approval Decision" },
+    { "id": "step:offer-generation",          "type": "step",       "name": "Offer Generation" },
+
+    { "id": "process:loan-closing",           "type": "process",    "name": "Loan Closing", "description": "Workflow for preparing, reviewing, signing, and funding an approved loan through to disbursement." },
+    { "id": "step:prepare-docs",              "type": "step",       "name": "Prepare Closing Documents" },
+    { "id": "step:compliance-review",         "type": "step",       "name": "Compliance Review" },
+    { "id": "step:schedule-closing",          "type": "step",       "name": "Schedule Closing Date" },
+    { "id": "step:sign-docs",                 "type": "step",       "name": "Execute Signing" },
+    { "id": "step:fund-loan",                 "type": "step",       "name": "Fund the Loan" }
+  ],
+  "relationships": [
+    { "id": "rel:orig-cp",           "type": "belongs_to", "from": "dept:origination",             "to": "company:clearpath"               },
+    { "id": "rel:uw-cp",             "type": "belongs_to", "from": "dept:underwriting",            "to": "company:clearpath"               },
+    { "id": "rel:svc-cp",            "type": "belongs_to", "from": "dept:servicing",               "to": "company:clearpath"               },
+    { "id": "rel:col-cp",            "type": "belongs_to", "from": "dept:collections",             "to": "company:clearpath"               },
+
+    { "id": "rel:origdir-orig",      "type": "belongs_to", "from": "position:origination-dir",     "to": "dept:origination"                },
+    { "id": "rel:chiefuw-uw",        "type": "belongs_to", "from": "position:chief-underwriter",   "to": "dept:underwriting"               },
+    { "id": "rel:svcmgr-svc",        "type": "belongs_to", "from": "position:servicing-mgr",       "to": "dept:servicing"                  },
+    { "id": "rel:collead-col",       "type": "belongs_to", "from": "position:collections-lead",    "to": "dept:collections"                },
+
+    { "id": "rel:lo-origdir",        "type": "reports_to", "from": "position:loan-officer",        "to": "position:origination-dir"        },
+    { "id": "rel:cc-origdir",        "type": "reports_to", "from": "position:closing-coordinator", "to": "position:origination-dir"        },
+    { "id": "rel:uw-chiefuw",        "type": "reports_to", "from": "position:underwriter",         "to": "position:chief-underwriter"      },
+
+    { "id": "rel:rachel-origdir",    "type": "fills",      "from": "person:rachel-burns",          "to": "position:origination-dir"        },
+    { "id": "rel:james-lo",          "type": "fills",      "from": "person:james-nguyen",          "to": "position:loan-officer"           },
+    { "id": "rel:priya-chiefuw",     "type": "fills",      "from": "person:priya-shah",            "to": "position:chief-underwriter"      },
+    { "id": "rel:marcus-uw",         "type": "fills",      "from": "person:marcus-lee",            "to": "position:underwriter"            },
+    { "id": "rel:diana-svcmgr",      "type": "fills",      "from": "person:diana-torres",          "to": "position:servicing-mgr"          },
+
+    { "id": "rel:la-cp",             "type": "belongs_to", "from": "process:loan-application",     "to": "company:clearpath"               },
+    { "id": "rel:intake-la",         "type": "belongs_to", "from": "step:intake",                  "to": "process:loan-application"        },
+    { "id": "rel:credit-la",         "type": "belongs_to", "from": "step:credit-check",            "to": "process:loan-application"        },
+    { "id": "rel:review-la",         "type": "belongs_to", "from": "step:underwriting-review",     "to": "process:loan-application"        },
+    { "id": "rel:decision-la",       "type": "belongs_to", "from": "step:approval-decision",       "to": "process:loan-application"        },
+    { "id": "rel:offer-la",          "type": "belongs_to", "from": "step:offer-generation",        "to": "process:loan-application"        },
+
+    { "id": "rel:intake-credit",     "type": "next_step",  "from": "step:intake",                  "to": "step:credit-check"               },
+    { "id": "rel:credit-review",     "type": "next_step",  "from": "step:credit-check",            "to": "step:underwriting-review"        },
+    { "id": "rel:review-decision",   "type": "next_step",  "from": "step:underwriting-review",     "to": "step:approval-decision"          },
+    { "id": "rel:decision-offer",    "type": "next_step",  "from": "step:approval-decision",       "to": "step:offer-generation"           },
+
+    { "id": "rel:intake-assigned",   "type": "assigned_to","from": "step:intake",                  "to": "position:loan-officer"           },
+    { "id": "rel:review-assigned",   "type": "assigned_to","from": "step:underwriting-review",     "to": "position:underwriter"            },
+    { "id": "rel:decision-assigned", "type": "assigned_to","from": "step:approval-decision",       "to": "position:chief-underwriter"      },
+
+    { "id": "rel:lc-cp",             "type": "belongs_to", "from": "process:loan-closing",         "to": "company:clearpath"               },
+    { "id": "rel:prepare-lc",        "type": "belongs_to", "from": "step:prepare-docs",            "to": "process:loan-closing"            },
+    { "id": "rel:compliance-lc",     "type": "belongs_to", "from": "step:compliance-review",       "to": "process:loan-closing"            },
+    { "id": "rel:schedule-lc",       "type": "belongs_to", "from": "step:schedule-closing",        "to": "process:loan-closing"            },
+    { "id": "rel:sign-lc",           "type": "belongs_to", "from": "step:sign-docs",               "to": "process:loan-closing"            },
+    { "id": "rel:fund-lc",           "type": "belongs_to", "from": "step:fund-loan",               "to": "process:loan-closing"            },
+
+    { "id": "rel:prepare-compliance","type": "next_step",  "from": "step:prepare-docs",            "to": "step:compliance-review"          },
+    { "id": "rel:compliance-sched",  "type": "next_step",  "from": "step:compliance-review",       "to": "step:schedule-closing"           },
+    { "id": "rel:sched-sign",        "type": "next_step",  "from": "step:schedule-closing",        "to": "step:sign-docs"                  },
+    { "id": "rel:sign-fund",         "type": "next_step",  "from": "step:sign-docs",               "to": "step:fund-loan"                  },
+
+    { "id": "rel:prepare-assigned",  "type": "assigned_to","from": "step:prepare-docs",            "to": "position:closing-coordinator"    },
+    { "id": "rel:compliance-assigned","type":"assigned_to","from": "step:compliance-review",       "to": "position:chief-underwriter"      },
+    { "id": "rel:fund-assigned",     "type": "assigned_to","from": "step:fund-loan",               "to": "position:loan-officer"           }
+  ]
+}

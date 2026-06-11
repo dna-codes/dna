@@ -1,0 +1,98 @@
+{
+  "name": "apex-commerce",
+  "description": "Apex Commerce — e-commerce enterprise with Catalog, Orders, Fulfillment, and Payments departments.",
+  "resources": [
+    { "id": "company:apex",              "type": "company",    "name": "Apex Commerce" },
+
+    { "id": "dept:catalog",              "type": "department", "name": "Catalog" },
+    { "id": "dept:orders",               "type": "department", "name": "Orders" },
+    { "id": "dept:fulfillment",          "type": "department", "name": "Fulfillment" },
+    { "id": "dept:payments",             "type": "department", "name": "Payments" },
+
+    { "id": "position:chief-merchant",   "type": "position",   "name": "Chief Merchant",        "description": "Owns the product catalog strategy and coordinates across catalog, orders, fulfillment, and payments to drive commercial outcomes." },
+    { "id": "position:catalog-mgr",      "type": "position",   "name": "Catalog Manager",       "description": "Maintains product catalog accuracy and completeness, ensuring listings meet quality and metadata standards." },
+    { "id": "position:orders-dir",       "type": "position",   "name": "Orders Director",       "description": "Oversees the end-to-end order lifecycle, from receipt through handoff to fulfillment, and resolves order exceptions." },
+    { "id": "position:fulfillment-mgr",  "type": "position",   "name": "Fulfillment Manager",   "description": "Manages warehouse pick-pack operations and coordinates fulfillment staff to meet SLA targets." },
+    { "id": "position:fulfillment-assoc","type": "position",   "name": "Fulfillment Associate", "description": "Executes physical pick, pack, and ship tasks and confirms successful delivery with carriers." },
+    { "id": "position:payments-dir",     "type": "position",   "name": "Payments Director",     "description": "Leads the payments function, overseeing transaction processing, dispute resolution, and fraud escalation." },
+    { "id": "position:payments-analyst", "type": "position",   "name": "Payments Analyst",      "description": "Monitors payment transactions, logs incidents, and executes retry workflows to recover failed payments." },
+    { "id": "position:fraud-analyst",    "type": "position",   "name": "Fraud Analyst",         "description": "Detects and investigates fraudulent payment activity, triaging incidents before escalation." },
+
+    { "id": "person:jordan-taylor",      "type": "person",     "name": "Jordan Taylor" },
+    { "id": "person:maya-chen",          "type": "person",     "name": "Maya Chen" },
+    { "id": "person:carlos-rivera",      "type": "person",     "name": "Carlos Rivera" },
+    { "id": "person:lisa-kim",           "type": "person",     "name": "Lisa Kim" },
+    { "id": "person:sam-patel",          "type": "person",     "name": "Sam Patel" },
+    { "id": "person:devon-walsh",        "type": "person",     "name": "Devon Walsh" },
+
+    { "id": "process:order-fulfillment", "type": "process",    "name": "Order Fulfillment", "description": "End-to-end workflow for processing a customer order from receipt to confirmed delivery." },
+    { "id": "step:receive-order",        "type": "step",       "name": "Receive Order" },
+    { "id": "step:verify-payment",       "type": "step",       "name": "Verify Payment" },
+    { "id": "step:pick-pack",            "type": "step",       "name": "Pick & Pack" },
+    { "id": "step:ship-order",           "type": "step",       "name": "Ship Order" },
+    { "id": "step:confirm-delivery",     "type": "step",       "name": "Confirm Delivery" },
+
+    { "id": "process:payment-failure",   "type": "process",    "name": "Payment Failure Response", "description": "Structured response workflow triggered when a payment transaction fails, covering detection, logging, merchant notification, retry, and escalation." },
+    { "id": "step:detect-failure",       "type": "step",       "name": "Detect Failure" },
+    { "id": "step:log-incident",         "type": "step",       "name": "Log Incident" },
+    { "id": "step:notify-merchant",      "type": "step",       "name": "Notify Merchant" },
+    { "id": "step:retry-payment",        "type": "step",       "name": "Retry Payment" },
+    { "id": "step:escalate-payment",     "type": "step",       "name": "Escalate to Payments" }
+  ],
+  "relationships": [
+    { "id": "rel:catalog-apex",           "type": "belongs_to", "from": "dept:catalog",               "to": "company:apex"              },
+    { "id": "rel:orders-apex",            "type": "belongs_to", "from": "dept:orders",                "to": "company:apex"              },
+    { "id": "rel:fulfillment-apex",       "type": "belongs_to", "from": "dept:fulfillment",           "to": "company:apex"              },
+    { "id": "rel:payments-apex",          "type": "belongs_to", "from": "dept:payments",              "to": "company:apex"              },
+
+    { "id": "rel:chief-catalog",          "type": "belongs_to", "from": "position:chief-merchant",    "to": "dept:catalog"              },
+    { "id": "rel:orders-dir-orders",      "type": "belongs_to", "from": "position:orders-dir",        "to": "dept:orders"               },
+    { "id": "rel:fulfillment-mgr-dept",   "type": "belongs_to", "from": "position:fulfillment-mgr",   "to": "dept:fulfillment"          },
+    { "id": "rel:payments-dir-dept",      "type": "belongs_to", "from": "position:payments-dir",      "to": "dept:payments"             },
+
+    { "id": "rel:catalog-mgr-chief",      "type": "reports_to", "from": "position:catalog-mgr",       "to": "position:chief-merchant"   },
+    { "id": "rel:assoc-mgr",              "type": "reports_to", "from": "position:fulfillment-assoc", "to": "position:fulfillment-mgr"  },
+    { "id": "rel:analyst-dir",            "type": "reports_to", "from": "position:payments-analyst",  "to": "position:payments-dir"     },
+    { "id": "rel:fraud-dir",              "type": "reports_to", "from": "position:fraud-analyst",     "to": "position:payments-dir"     },
+
+    { "id": "rel:jordan-chief",           "type": "fills",      "from": "person:jordan-taylor",       "to": "position:chief-merchant"   },
+    { "id": "rel:maya-orders",            "type": "fills",      "from": "person:maya-chen",           "to": "position:orders-dir"       },
+    { "id": "rel:carlos-fulfillment",     "type": "fills",      "from": "person:carlos-rivera",       "to": "position:fulfillment-mgr"  },
+    { "id": "rel:lisa-payments",          "type": "fills",      "from": "person:lisa-kim",            "to": "position:payments-dir"     },
+    { "id": "rel:sam-analyst",            "type": "fills",      "from": "person:sam-patel",           "to": "position:payments-analyst" },
+    { "id": "rel:devon-assoc",            "type": "fills",      "from": "person:devon-walsh",         "to": "position:fulfillment-assoc"},
+
+    { "id": "rel:of-apex",               "type": "belongs_to", "from": "process:order-fulfillment",  "to": "company:apex"              },
+    { "id": "rel:receive-of",            "type": "belongs_to", "from": "step:receive-order",         "to": "process:order-fulfillment" },
+    { "id": "rel:verify-of",             "type": "belongs_to", "from": "step:verify-payment",        "to": "process:order-fulfillment" },
+    { "id": "rel:pick-of",               "type": "belongs_to", "from": "step:pick-pack",             "to": "process:order-fulfillment" },
+    { "id": "rel:ship-of",               "type": "belongs_to", "from": "step:ship-order",            "to": "process:order-fulfillment" },
+    { "id": "rel:confirm-of",            "type": "belongs_to", "from": "step:confirm-delivery",      "to": "process:order-fulfillment" },
+
+    { "id": "rel:receive-verify",        "type": "next_step",  "from": "step:receive-order",         "to": "step:verify-payment"       },
+    { "id": "rel:verify-pick",           "type": "next_step",  "from": "step:verify-payment",        "to": "step:pick-pack"            },
+    { "id": "rel:pick-ship",             "type": "next_step",  "from": "step:pick-pack",             "to": "step:ship-order"           },
+    { "id": "rel:ship-confirm",          "type": "next_step",  "from": "step:ship-order",            "to": "step:confirm-delivery"     },
+
+    { "id": "rel:receive-assigned",      "type": "assigned_to","from": "step:receive-order",         "to": "position:orders-dir"       },
+    { "id": "rel:pick-assigned",         "type": "assigned_to","from": "step:pick-pack",             "to": "position:fulfillment-mgr"  },
+    { "id": "rel:ship-assigned",         "type": "assigned_to","from": "step:ship-order",            "to": "position:fulfillment-assoc"},
+
+    { "id": "rel:pf-apex",               "type": "belongs_to", "from": "process:payment-failure",    "to": "company:apex"              },
+    { "id": "rel:detect-pf",             "type": "belongs_to", "from": "step:detect-failure",        "to": "process:payment-failure"   },
+    { "id": "rel:log-pf",                "type": "belongs_to", "from": "step:log-incident",          "to": "process:payment-failure"   },
+    { "id": "rel:notify-pf",             "type": "belongs_to", "from": "step:notify-merchant",       "to": "process:payment-failure"   },
+    { "id": "rel:retry-pf",              "type": "belongs_to", "from": "step:retry-payment",         "to": "process:payment-failure"   },
+    { "id": "rel:escalate-pf",           "type": "belongs_to", "from": "step:escalate-payment",      "to": "process:payment-failure"   },
+
+    { "id": "rel:detect-log",            "type": "next_step",  "from": "step:detect-failure",        "to": "step:log-incident"         },
+    { "id": "rel:log-notify",            "type": "next_step",  "from": "step:log-incident",          "to": "step:notify-merchant"      },
+    { "id": "rel:notify-retry",          "type": "next_step",  "from": "step:notify-merchant",       "to": "step:retry-payment"        },
+    { "id": "rel:retry-escalate",        "type": "next_step",  "from": "step:retry-payment",         "to": "step:escalate-payment"     },
+
+    { "id": "rel:detect-assigned",       "type": "assigned_to","from": "step:detect-failure",        "to": "position:fraud-analyst"    },
+    { "id": "rel:log-assigned",          "type": "assigned_to","from": "step:log-incident",          "to": "position:payments-analyst" },
+    { "id": "rel:notify-assigned",       "type": "assigned_to","from": "step:notify-merchant",       "to": "position:payments-dir"     },
+    { "id": "rel:retry-assigned",        "type": "assigned_to","from": "step:retry-payment",         "to": "position:payments-analyst" }
+  ]
+}

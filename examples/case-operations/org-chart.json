@@ -1,0 +1,130 @@
+{
+  "name": "case-operations",
+  "description": "Mass-tort case operations hierarchy. Each Person fills a Position; each Position belongs to the CaseOps Group within the marshall Domain.",
+  "resources": [
+    {
+      "id": "domain:marshall",
+      "type": "domain",
+      "name": "marshall"
+    },
+    {
+      "id": "group:CaseOps",
+      "type": "group",
+      "name": "CaseOps"
+    },
+    {
+      "id": "position:COO",
+      "type": "position",
+      "name": "COO"
+    },
+    {
+      "id": "position:CaseOperationsOfficer",
+      "type": "position",
+      "name": "CaseOperationsOfficer"
+    },
+    {
+      "id": "position:CaseSupervisor",
+      "type": "position",
+      "name": "CaseSupervisor"
+    },
+    {
+      "id": "position:CaseAnalyst",
+      "type": "position",
+      "name": "CaseAnalyst"
+    },
+    {
+      "id": "person:Jane",
+      "type": "person",
+      "name": "Jane"
+    },
+    {
+      "id": "person:Marcus",
+      "type": "person",
+      "name": "Marcus"
+    },
+    {
+      "id": "person:Sarah",
+      "type": "person",
+      "name": "Sarah"
+    },
+    {
+      "id": "person:Alex",
+      "type": "person",
+      "name": "Alex"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel:CaseOps-marshall",
+      "type": "part_of",
+      "from": "group:CaseOps",
+      "to": "domain:marshall"
+    },
+    {
+      "id": "rel:COO-CaseOps",
+      "type": "belongs_to",
+      "from": "position:COO",
+      "to": "group:CaseOps"
+    },
+    {
+      "id": "rel:CaseOperationsOfficer-CaseOps",
+      "type": "belongs_to",
+      "from": "position:CaseOperationsOfficer",
+      "to": "group:CaseOps"
+    },
+    {
+      "id": "rel:CaseSupervisor-CaseOps",
+      "type": "belongs_to",
+      "from": "position:CaseSupervisor",
+      "to": "group:CaseOps"
+    },
+    {
+      "id": "rel:CaseAnalyst-CaseOps",
+      "type": "belongs_to",
+      "from": "position:CaseAnalyst",
+      "to": "group:CaseOps"
+    },
+    {
+      "id": "rel:CaseOperationsOfficer-reports_to-COO",
+      "type": "reports_to",
+      "from": "position:CaseOperationsOfficer",
+      "to": "position:COO"
+    },
+    {
+      "id": "rel:CaseSupervisor-reports_to-CaseOperationsOfficer",
+      "type": "reports_to",
+      "from": "position:CaseSupervisor",
+      "to": "position:CaseOperationsOfficer"
+    },
+    {
+      "id": "rel:CaseAnalyst-reports_to-CaseSupervisor",
+      "type": "reports_to",
+      "from": "position:CaseAnalyst",
+      "to": "position:CaseSupervisor"
+    },
+    {
+      "id": "rel:Jane-fills-COO",
+      "type": "fills",
+      "from": "person:Jane",
+      "to": "position:COO"
+    },
+    {
+      "id": "rel:Marcus-fills-CaseOperationsOfficer",
+      "type": "fills",
+      "from": "person:Marcus",
+      "to": "position:CaseOperationsOfficer"
+    },
+    {
+      "id": "rel:Sarah-fills-CaseSupervisor",
+      "type": "fills",
+      "from": "person:Sarah",
+      "to": "position:CaseSupervisor"
+    },
+    {
+      "id": "rel:Alex-fills-CaseAnalyst",
+      "type": "fills",
+      "from": "person:Alex",
+      "to": "position:CaseAnalyst"
+    }
+  ]
+}

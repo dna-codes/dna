@@ -6,3 +6,7 @@ node_modules
 
 # Local-dev DNA copies that the api docker-compose mounts.
 packages/api/dna.json
+
+# Private/client DNA fixtures — real data not committed; stubs are committed for build compatibility.
+# Replace the stub locally with the real fixture; don't stage changes to it.
+examples/audiobook-distributor/dna.json
