@@ -1,0 +1,384 @@
+{
+  "environments": [
+    {
+      "name": "dev",
+      "description": "Local and CI development environment."
+    },
+    {
+      "name": "prod",
+      "description": "Production environment serving live traffic."
+    }
+  ],
+  "providers": [
+    {
+      "name": "aws",
+      "type": "cloud",
+      "region": "us-east-1",
+      "description": "Primary cloud provider for compute, storage, and networking."
+    },
+    {
+      "name": "auth0",
+      "type": "auth",
+      "description": "Auth0 identity provider for JWT-based authentication.",
+      "config": {
+        "domain": "acme.auth0.com",
+        "audience": "https://api.acme.finance",
+        "roleClaim": "https://acme.finance/roles"
+      }
+    }
+  ],
+  "constructs": [
+    {
+      "name": "primary-db",
+      "category": "storage",
+      "type": "database",
+      "provider": "aws",
+      "description": "Primary Postgres database for all lending domain data.",
+      "config": {
+        "engine": "postgres",
+        "version": "15",
+        "instance_class": "db.t3.medium"
+      }
+    },
+    {
+      "name": "primary-db",
+      "category": "storage",
+      "type": "database",
+      "provider": "aws",
+      "environment": "dev",
+      "description": "Dev database — smaller instance.",
+      "config": {
+        "engine": "postgres",
+        "version": "15",
+        "instance_class": "db.t3.micro"
+      }
+    },
+    {
+      "name": "event-bus",
+      "category": "storage",
+      "type": "queue",
+      "provider": "aws",
+      "description": "Event bus for cross-domain async Signals — EventBridge with SQS subscriber targets.",
+      "config": {
+        "engine": "eventbridge"
+      }
+    },
+    {
+      "name": "event-bus",
+      "category": "storage",
+      "type": "queue",
+      "provider": "aws",
+      "environment": "dev",
+      "description": "Local RabbitMQ for event bus in development.",
+      "config": {
+        "engine": "rabbitmq",
+        "version": "3",
+        "port": 5672,
+        "management_port": 15672
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "DATABASE_URL",
+      "source": "secret",
+      "description": "Postgres connection string for the primary database.",
+      "required": true
+    },
+    {
+      "name": "RAILS_ENV",
+      "source": "literal",
+      "value": "development",
+      "environment": "dev",
+      "required": false
+    },
+    {
+      "name": "RAILS_ENV",
+      "source": "literal",
+      "value": "production",
+      "environment": "prod",
+      "required": false
+    },
+    {
+      "name": "VITE_API_URL",
+      "source": "output",
+      "value": "api-cell-rails.api_url",
+      "description": "API base URL injected into the React UI at build time.",
+      "required": true
+    }
+  ],
+  "profiles": {
+    "default": [
+      "api-cell-rails",
+      "ui-cell",
+      "event-bus-cell"
+    ]
+  },
+  "cells": [
+    {
+      "name": "api-cell",
+      "description": "Reads Product API DNA and generates a dynamic Express runtime interpreter.",
+      "dna": "lending/product.api",
+      "adapter": {
+        "type": "node/express",
+        "config": {
+          "core_dna": "lending/product.core",
+          "port": 3001
+        }
+      },
+      "constructs": [
+        "primary-db",
+        "event-bus"
+      ],
+      "variables": [
+        {
+          "name": "DATABASE_URL",
+          "source": "secret",
+          "required": true
+        },
+        {
+          "name": "EVENT_BUS_URL",
+          "source": "secret",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "api-cell-nestjs",
+      "description": "Reads Product API DNA and generates a NestJS application with controllers, services, and modules.",
+      "dna": "lending/product.api",
+      "adapter": {
+        "type": "node/nestjs",
+        "config": {
+          "core_dna": "lending/product.core",
+          "port": 3002
+        }
+      },
+      "constructs": [
+        "primary-db",
+        "event-bus"
+      ],
+      "variables": [
+        {
+          "name": "DATABASE_URL",
+          "source": "secret",
+          "required": true
+        },
+        {
+          "name": "EVENT_BUS_URL",
+          "source": "secret",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "api-cell-rails",
+      "description": "Reads Product API DNA and generates a Rails API-mode application with controllers, models, and migrations.",
+      "dna": "lending/product.api",
+      "adapter": {
+        "type": "ruby/rails",
+        "config": {
+          "core_dna": "lending/product.core",
+          "port": 3000
+        }
+      },
+      "constructs": [
+        "primary-db",
+        "event-bus"
+      ],
+      "variables": [
+        {
+          "name": "DATABASE_URL",
+          "source": "secret",
+          "required": true
+        },
+        {
+          "name": "RAILS_ENV",
+          "source": "env",
+          "required": false
+        },
+        {
+          "name": "EVENT_BUS_URL",
+          "source": "secret",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "api_url",
+          "cell": "api-cell-rails",
+          "value": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "name": "ui-cell",
+      "description": "Reads Product UI DNA and produces the Vite + React loan dashboard.",
+      "dna": "lending/product.ui",
+      "adapter": {
+        "type": "vite/react",
+        "version": "5",
+        "config": {
+          "core_dna": "lending/product.core",
+          "api_dna": "lending/product.api",
+          "api_base": "http://localhost:3000"
+        }
+      },
+      "constructs": [],
+      "variables": [
+        {
+          "name": "VITE_API_URL",
+          "source": "output",
+          "value": "api-cell-rails.api_url",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "vue-ui-cell",
+      "description": "Reads Product UI DNA and produces the Vite + Vue loan dashboard.",
+      "dna": "lending/product.ui",
+      "adapter": {
+        "type": "vite/vue",
+        "version": "5",
+        "config": {
+          "core_dna": "lending/product.core",
+          "api_dna": "lending/product.api",
+          "api_base": "http://localhost:3000"
+        }
+      },
+      "constructs": [],
+      "variables": []
+    },
+    {
+      "name": "ui-cell-next",
+      "description": "Reads Product UI DNA and produces the Next.js + React loan dashboard.",
+      "dna": "lending/product.ui",
+      "adapter": {
+        "type": "next/react",
+        "version": "14",
+        "config": {
+          "core_dna": "lending/product.core",
+          "api_dna": "lending/product.api",
+          "api_base": "http://localhost:3000"
+        }
+      },
+      "constructs": [],
+      "variables": []
+    }
+  ],
+  "views": [
+    {
+      "name": "deployment",
+      "description": "Cell deployment topology — Rails API, React UI, Postgres DB, Event Bus.",
+      "layout": {
+        "type": "hierarchical",
+        "direction": "TB"
+      },
+      "nodes": [
+        {
+          "id": "api-cell-rails",
+          "name": "API Cell (Rails)",
+          "type": "cell",
+          "status": "planned",
+          "source": "technical:cell:api-cell-rails",
+          "position": {
+            "x": 100,
+            "y": 160
+          },
+          "metadata": {
+            "adapter": "ruby/rails"
+          }
+        },
+        {
+          "id": "ui-cell",
+          "name": "UI Cell (React)",
+          "type": "cell",
+          "status": "planned",
+          "source": "technical:cell:ui-cell",
+          "position": {
+            "x": 500,
+            "y": 160
+          },
+          "metadata": {
+            "adapter": "vite/react"
+          }
+        },
+        {
+          "id": "event-bus-cell",
+          "name": "Event Bus",
+          "type": "cell",
+          "status": "planned",
+          "source": "technical:cell:event-bus-cell",
+          "position": {
+            "x": 300,
+            "y": 320
+          },
+          "metadata": {
+            "adapter": "node/event-bus"
+          }
+        },
+        {
+          "id": "primary-db",
+          "name": "Primary DB",
+          "type": "construct",
+          "status": "planned",
+          "source": "technical:construct:primary-db",
+          "position": {
+            "x": 100,
+            "y": 480
+          },
+          "metadata": {
+            "category": "storage",
+            "engine": "postgres"
+          }
+        }
+      ],
+      "connections": [
+        {
+          "id": "rails-to-db",
+          "source": "api-cell-rails",
+          "target": "primary-db",
+          "type": "depends-on",
+          "label": "reads/writes"
+        },
+        {
+          "id": "ui-to-rails",
+          "source": "ui-cell",
+          "target": "api-cell-rails",
+          "type": "communicates-with",
+          "label": "REST"
+        },
+        {
+          "id": "rails-to-bus",
+          "source": "api-cell-rails",
+          "target": "event-bus-cell",
+          "type": "publishes-to",
+          "label": "Signals"
+        }
+      ],
+      "zones": [
+        {
+          "id": "compute-tier",
+          "name": "Compute",
+          "type": "tier",
+          "nodes": [
+            "api-cell-rails",
+            "ui-cell",
+            "event-bus-cell"
+          ],
+          "description": "Application cells."
+        },
+        {
+          "id": "storage-tier",
+          "name": "Storage",
+          "type": "tier",
+          "nodes": [
+            "primary-db"
+          ],
+          "description": "Database cell and construct."
+        }
+      ]
+    }
+  ]
+}

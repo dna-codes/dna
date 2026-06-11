@@ -1,0 +1,1 @@
+{"version":3,"file":"docker.js","sourceRoot":"","sources":["../../../src/adapters/vite/docker.ts"],"names":[],"mappings":";;AAAA,gDAiBC;AAED,8CAeC;AAED,oDAMC;AA1CD,SAAgB,kBAAkB;IAChC,sEAAsE;IACtE,wEAAwE;IACxE,uDAAuD;IACvD,OAAO;;;;;;;;;;;;CAYR,CAAA;AACD,CAAC;AAED,SAAgB,iBAAiB;IAC/B,OAAO;;;;;;;;;;;;;CAaR,CAAA;AACD,CAAC;AAED,SAAgB,oBAAoB;IAClC,OAAO;;;;CAIR,CAAA;AACD,CAAC"}

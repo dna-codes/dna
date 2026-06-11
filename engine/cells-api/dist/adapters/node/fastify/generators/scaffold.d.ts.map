@@ -1,0 +1,1 @@
+{"version":3,"file":"scaffold.d.ts","sourceRoot":"","sources":["../../../../../src/adapters/node/fastify/generators/scaffold.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAE,MAAM,IAAI,CAAA;AAElC,wBAAgB,mBAAmB,CAAC,OAAO,EAAE,MAAM,EAAE,OAAO,GAAE,aAAqB,GAAG,MAAM,CA+E3F;AAED,wBAAgB,gBAAgB,IAAI,MAAM,CAsBzC;AAED,wBAAgB,WAAW,IAAI,MAAM,CAKpC"}

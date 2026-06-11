@@ -3,9 +3,45 @@ DNA is a description language for business systems — your digital DNA. Once de
 
 A DSL written in JSON/YAML, it describes a business at three intentionally decoupled layers — what the business does, what gets built, and how it gets built — and provides tooling to validate those descriptions and render them as documentation.
 
-As documented below, it's incredibly flexible with input/output adapters and integrations, but it's particularly useful in conjunction with [cell-based architecture](https://github.com/upgrade-solutions/cell-based-architecture). Below is a visual that represents the general scope of DNA.
+Below is a visual that represents the general scope of DNA.
 
 <img width="2700" height="1490" alt="image" src="https://github.com/user-attachments/assets/6e8fbacf-ff04-4bca-be89-8142f021bcf2" />
+
+## Ecosystem
+
+This repo is the single source of truth for the DNA language and all published tooling. It is organized into three tiers:
+
+| Tier | Directory | Published as | What it is |
+|---|---|---|---|
+| **Packages** | `packages/` | `@dna-codes/dna-*` | The DNA language SDK — schemas, TypeScript bindings, React hooks, adapters. Language-agnostic, zero behavioral opinion. |
+| **Engine** | `engine/` | `@dna-codes/cells*` | The framework and tools that read DNA and produce things — the `cba` CLI, cell engines (api, db, ui), and architecture viewer. |
+| **Platform** | separate repos | not published | Deployed applications that consume the above (`dna-platform/`, `dna-codes-site/`, etc.). |
+
+**Where does a new thing go?**
+- New SDK package (language primitives, bindings, adapters) → `packages/`
+- New tool or framework package (reads DNA, produces artifacts, ships a CLI) → `engine/`
+- New deployed application → a separate platform repo
+
+```
+dna/                         ← this repo
+  packages/
+    schemas/                 @dna-codes/dna-schemas     JSON Schema spec
+    core/                    @dna-codes/dna-core         TS bindings + validator
+    react/                   @dna-codes/dna-react        React hooks
+    ingest/                  @dna-codes/dna-ingest       multi-source orchestrator
+    adapters/                @dna-codes/dna-adapters     input/output/integration
+    api/                     @dna-codes/dna-api          GraphQL server
+  engine/
+    cba/                     @dna-codes/cells            CLI (cba binary)
+    cba-viz/                 @dna-codes/cells-viz        architecture viewer
+    cells-api/               @dna-codes/cells-api        DNA → API code cell
+    cells-db/                @dna-codes/cells-db         DNA → DB schema cell
+    cells-ui/                @dna-codes/cells-ui         DNA → UI components cell
+    fixtures/                test fixture DNA documents
+  apps/
+    graph-studio/            dna-graph-studio            visual graph explorer
+  examples/                  reference DNA documents
+```
 
 ## Contents
 
@@ -302,9 +338,15 @@ Probabilistic-only layers rely on LLM inference from prose; they're the weakest 
 
 Legend: ✅ shipped · 🚧 planned (listed below) · 💡 candidate (natural fit, not yet committed)
 
-### Packages
+### Apps
 
-The repo currently publishes six npm packages:
+| App | Purpose |
+|---|---|
+| [`apps/graph-studio`](./apps/graph-studio) | Full-stack Next.js 16 app — visual lenses into Neo4j-backed DNA graphs. First lens: Org Chart (domain → group → role → person containment + membership edges). JointJS+ for rendering, XState v5 for navigation and canvas interaction state. See [apps/graph-studio/README.md](./apps/graph-studio/README.md). |
+
+### Packages (`packages/`)
+
+Six SDK packages — the DNA language layer:
 
 | Package | Purpose |
 |---|---|
@@ -314,6 +356,18 @@ The repo currently publishes six npm packages:
 | [`@dna-codes/dna-ingest`](./packages/ingest) | Multi-source DNA orchestrator. Fans `[source URI] → integration → input → partial DNA` per source, merges via `dna-core.merge()`, reports conflicts + provenance + non-fatal errors. Imports zero adapters — caller injects them. Defines the `Integration` and `InputAdapter` ports. |
 | [`@dna-codes/dna-adapters`](./packages/adapters) | Unified adapter package — every input parser, output renderer, and integration client lives as a subpath. One version line, one publish per release. |
 | [`@dna-codes/dna-api`](./packages/api) | Registry-native GraphQL API server. Seeds `ResourceType` / `RelationshipType` records from a DNA on first boot; admins author the type system at runtime through the API. Schema regenerates and hot-swaps on type mutations. Backed by `integration/neo4j` with versioned history. Each type carries a `stability` lifecycle marker (`experimental` / `beta` / `stable` / `deprecated`), orthogonal to its schema version — see [Stability lifecycle](./docs/concepts/resource-types.md#stability-lifecycle). |
+
+### Engine (`engine/`)
+
+Five framework and tooling packages — the cell-based architecture layer:
+
+| Package | Purpose |
+|---|---|
+| [`@dna-codes/cells`](./engine/cba) | Unified CLI (`cba` binary) for the full cell-based architecture lifecycle: discover, design, develop, deliver |
+| [`@dna-codes/cells-viz`](./engine/cba-viz) | Interactive architecture viewer — Vite + React + JointJS |
+| [`@dna-codes/cells-api`](./engine/cells-api) | DNA → REST/GraphQL API code cell |
+| [`@dna-codes/cells-db`](./engine/cells-db) | DNA → database schema / migrations cell |
+| [`@dna-codes/cells-ui`](./engine/cells-ui) | DNA → UI components / pages cell |
 
 #### Adapters (subpaths of `@dna-codes/dna-adapters`)
 

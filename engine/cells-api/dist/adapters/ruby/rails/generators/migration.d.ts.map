@@ -1,0 +1,1 @@
+{"version":3,"file":"migration.d.ts","sourceRoot":"","sources":["../../../../../src/adapters/ruby/rails/generators/migration.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAa,MAAM,mBAAmB,CAAA;AAU3D,wBAAgB,iBAAiB,CAAC,KAAK,EAAE,YAAY,EAAE,EAAE,SAAS,EAAE,MAAM,GAAG,MAAM,CA6BlF;AAED,yEAAyE;AACzE,wBAAgB,iBAAiB,CAAC,SAAS,EAAE,MAAM,GAAG,MAAM,CAE3D"}

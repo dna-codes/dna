@@ -1,0 +1,20 @@
+export declare function rendererContext(): string;
+export declare function rendererTypes(): string;
+export declare function rendererDnaLoader(): string;
+export declare function rendererApiHook(): string;
+export declare function rendererDnaProvider(): string;
+export declare function rendererRootLayout(): string;
+export declare function rendererAppLayout(): string;
+export declare function rendererAppPage(): string;
+export declare function rendererCatchAllPage(): string;
+export declare function rendererLayout(): string;
+export declare function rendererPage(): string;
+export declare function rendererBlock(): string;
+export declare function rendererFormBlock(): string;
+export declare function rendererTableBlock(): string;
+export declare function rendererDetailBlock(): string;
+export declare function rendererActionsBlock(): string;
+export declare function rendererEmptyStateBlock(): string;
+export declare function rendererFlagsContext(): string;
+export declare function rendererRules(): string;
+//# sourceMappingURL=renderer.d.ts.map

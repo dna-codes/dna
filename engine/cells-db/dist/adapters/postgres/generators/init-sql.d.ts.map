@@ -1,0 +1,1 @@
+{"version":3,"file":"init-sql.d.ts","sourceRoot":"","sources":["../../../../src/adapters/postgres/generators/init-sql.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,gBAAgB,CAAA;AAEhD,wBAAgB,eAAe,CAAC,MAAM,EAAE,eAAe,GAAG,MAAM,CA2B/D"}

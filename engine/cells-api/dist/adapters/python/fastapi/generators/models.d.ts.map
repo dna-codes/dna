@@ -1,0 +1,1 @@
+{"version":3,"file":"models.d.ts","sourceRoot":"","sources":["../../../../../src/adapters/python/fastapi/generators/models.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAa,MAAM,mBAAmB,CAAA;AA6B3D,wBAAgB,aAAa,CAAC,IAAI,EAAE,YAAY,GAAG,MAAM,CA6BxD;AAWD,iEAAiE;AACjE,wBAAgB,kBAAkB,CAAC,KAAK,EAAE,YAAY,EAAE,GAAG,MAAM,CAUhE"}

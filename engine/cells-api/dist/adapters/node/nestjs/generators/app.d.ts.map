@@ -1,0 +1,1 @@
+{"version":3,"file":"app.d.ts","sourceRoot":"","sources":["../../../../../src/adapters/node/nestjs/generators/app.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,SAAS,EAAE,MAAM,mBAAmB,CAAA;AAEvD,wBAAgB,iBAAiB,CAAC,SAAS,EAAE,QAAQ,EAAE,GAAG,MAAM,CAoB/D;AAED,wBAAgB,YAAY,CAAC,SAAS,EAAE,SAAS,EAAE,IAAI,SAAO,GAAG,MAAM,CA+CtE"}

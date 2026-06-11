@@ -1,0 +1,1 @@
+{"version":3,"file":"scaffold.d.ts","sourceRoot":"","sources":["../../../../../src/adapters/node/nestjs/generators/scaffold.ts"],"names":[],"mappings":"AAAA,wBAAgB,mBAAmB,CAAC,OAAO,EAAE,MAAM,GAAG,MAAM,CAwC3D;AAED,wBAAgB,gBAAgB,IAAI,MAAM,CAwBzC;AAED,wBAAgB,qBAAqB,IAAI,MAAM,CAS9C;AAED,wBAAgB,WAAW,CAAC,IAAI,SAAO,GAAG,MAAM,CAK/C;AAED,OAAO,EAAE,qBAAqB,EAAE,MAAM,sBAAsB,CAAA"}

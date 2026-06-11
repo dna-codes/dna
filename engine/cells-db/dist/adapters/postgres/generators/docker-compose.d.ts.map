@@ -1,0 +1,1 @@
+{"version":3,"file":"docker-compose.d.ts","sourceRoot":"","sources":["../../../../src/adapters/postgres/generators/docker-compose.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,iBAAiB,EAAE,MAAM,gBAAgB,CAAA;AAEnE,wBAAgB,qBAAqB,CACnC,aAAa,EAAE,eAAe,EAC9B,eAAe,EAAE,iBAAiB,GACjC,MAAM,CAsBR"}

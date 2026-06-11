@@ -1,0 +1,1 @@
+{"version":3,"file":"openapi.d.ts","sourceRoot":"","sources":["../../../../../src/adapters/ruby/rails/generators/openapi.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAA6B,MAAM,mBAAmB,CAAA;AAuE5E,wBAAgB,mBAAmB,CAAC,GAAG,EAAE,aAAa,GAAG,MAAM,CAwD9D;AAED,wBAAgB,sBAAsB,CAAC,SAAS,EAAE;IAAE,IAAI,EAAE,MAAM,CAAA;CAAE,GAAG,MAAM,CAgD1E"}

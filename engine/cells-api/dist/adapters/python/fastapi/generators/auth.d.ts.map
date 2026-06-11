@@ -1,0 +1,1 @@
+{"version":3,"file":"auth.d.ts","sourceRoot":"","sources":["../../../../../src/adapters/python/fastapi/generators/auth.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,kBAAkB,EAAE,MAAM,mBAAmB,CAAA;AAEtD,wBAAgB,YAAY,CAAC,UAAU,CAAC,EAAE,kBAAkB,GAAG,MAAM,CAuHpE;AAGD;;;;GAIG;AACH,wBAAgB,aAAa,IAAI,MAAM,CAetC"}

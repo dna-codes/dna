@@ -1,0 +1,94 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.dtoClassName = dtoClassName;
+exports.dtoFileName = dtoFileName;
+exports.generateDto = generateDto;
+const utils_1 = require("../../../../utils");
+const VALIDATOR_DECORATOR = {
+    string: ['@IsString()'],
+    text: ['@IsString()'],
+    number: ['@IsNumber()'],
+    boolean: ['@IsBoolean()'],
+    date: ['@IsDateString()'],
+    datetime: ['@IsDateString()'],
+    enum: [], // handled separately via @IsIn
+    reference: ['@IsString()'],
+};
+const TS_TYPE = {
+    string: 'string',
+    text: 'string',
+    number: 'number',
+    boolean: 'boolean',
+    date: 'string',
+    datetime: 'string',
+    enum: 'string',
+    reference: 'string',
+};
+function dtoClassName(action, resource) {
+    return `${action}${resource}Dto`;
+}
+function dtoFileName(action, resource) {
+    return `${(0, utils_1.toKebabCase)(action)}-${(0, utils_1.toKebabCase)(resource)}.dto`;
+}
+function fieldLines(field) {
+    const decorators = [];
+    if (field.required) {
+        decorators.push('@ApiProperty()');
+    }
+    else {
+        decorators.push('@ApiProperty({ required: false })');
+        decorators.push('@IsOptional()');
+    }
+    if (field.type === 'enum' && field.values?.length) {
+        decorators.push(`@IsIn([${field.values.map(v => `'${v}'`).join(', ')}])`);
+    }
+    else {
+        decorators.push(...(VALIDATOR_DECORATOR[field.type] ?? ['@IsString()']));
+    }
+    const tsType = TS_TYPE[field.type] ?? 'string';
+    const optional = field.required ? '' : '?';
+    const prop = `  ${field.name}${optional}: ${tsType}`;
+    return [...decorators.map(d => `  ${d}`), prop];
+}
+function generateDto(endpoint, resource) {
+    if (!endpoint.request?.fields?.length)
+        return null;
+    const action = endpoint.operation.split('.')[1];
+    const className = dtoClassName(action, resource);
+    const usedDecorators = new Set();
+    const allLines = [];
+    for (const field of endpoint.request.fields) {
+        const lines = fieldLines(field);
+        for (const line of lines) {
+            if (line.trim().startsWith('@')) {
+                const name = line.trim().replace(/[(@)].*/g, '').replace('@', '');
+                usedDecorators.add(name.split('(')[0].replace('@', ''));
+            }
+        }
+        allLines.push(...lines, '');
+    }
+    // Collect decorator names from the fields
+    const needed = new Set();
+    for (const field of endpoint.request.fields) {
+        if (!field.required)
+            needed.add('IsOptional');
+        if (field.type === 'enum') {
+            needed.add('IsIn');
+        }
+        else {
+            const decoratorNames = (VALIDATOR_DECORATOR[field.type] ?? ['@IsString()']).map(d => d.replace('@', '').replace('()', ''));
+            decoratorNames.forEach(n => needed.add(n));
+        }
+    }
+    needed.add('IsOptional');
+    const importLine = `import { ${[...needed].sort().join(', ')} } from 'class-validator'`;
+    const body = allLines.join('\n').replace(/\n$/, '');
+    return `import { ApiProperty } from '@nestjs/swagger'
+${importLine}
+
+export class ${className} {
+${body}
+}
+`;
+}
+//# sourceMappingURL=dto.js.map

@@ -1,0 +1,40 @@
+{
+  "name": "@dna-codes/cells",
+  "version": "0.1.0",
+  "description": "Unified CLI for the cell-based architecture lifecycle: discover, design, develop, deliver. Ships the `cba` binary.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "cba": "./bin/cba"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "cba": "ts-node src/index.ts",
+    "test": "node --experimental-vm-modules ../../node_modules/.bin/jest --testPathIgnorePatterns=/node_modules/ --testPathIgnorePatterns=/dist/ --testPathIgnorePatterns=/test/consumer-mode/",
+    "test:consumer-mode": "node --experimental-vm-modules ../../node_modules/.bin/jest --runTestsByPath test/consumer-mode/run.test.ts"
+  },
+  "dependencies": {
+    "@dna-codes/dna-core": "*"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.4.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": ["/node_modules/", "/dist/"]
+  }
+}

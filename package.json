@@ -7,7 +7,13 @@
     "packages/react",
     "packages/ingest",
     "packages/adapters",
-    "packages/api"
+    "packages/api",
+    "engine/cba",
+    "engine/cba-viz",
+    "engine/cells-api",
+    "engine/cells-db",
+    "engine/cells-ui",
+    "apps/graph-studio"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",

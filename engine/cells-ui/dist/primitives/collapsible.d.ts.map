@@ -1,0 +1,1 @@
+{"version":3,"file":"collapsible.d.ts","sourceRoot":"","sources":["../../src/primitives/collapsible.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAA;AAC9B,OAAO,KAAK,oBAAoB,MAAM,6BAA6B,CAAA;AAGnE,QAAA,MAAM,WAAW,8GAA4B,CAAA;AAE7C,QAAA,MAAM,kBAAkB,wHAA+B,CAAA;AAEvD,QAAA,MAAM,kBAAkB,wKAYtB,CAAA;AAGF,OAAO,EAAE,WAAW,EAAE,kBAAkB,EAAE,kBAAkB,EAAE,CAAA"}

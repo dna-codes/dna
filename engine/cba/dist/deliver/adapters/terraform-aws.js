@@ -1,0 +1,2091 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.generateTerraformAws = generateTerraformAws;
+exports.launchTerraform = launchTerraform;
+exports.teardownTerraform = teardownTerraform;
+exports.statusTerraform = statusTerraform;
+const path = __importStar(require("path"));
+const child_process_1 = require("child_process");
+/**
+ * Generate Terraform HCL files that provision AWS infrastructure from
+ * Technical DNA. Maps Constructs to AWS resources, Cells to ECS tasks
+ * or S3+CloudFront, and Variables to Secrets Manager / locals.
+ */
+function generateTerraformAws(plan) {
+    const resources = [];
+    const skipped = [];
+    // Nested domains (torts/marshall) produce slashes which are invalid in AWS
+    // resource names. Replace them with hyphens so the prefix is safe everywhere.
+    const prefix = `${plan.domain.replace(/\//g, '-')}-${plan.environment}`;
+    // Find the AWS provider from DNA
+    const awsProvider = plan.providers.find((p) => p.name === 'aws' || p.type === 'cloud');
+    const region = awsProvider?.region ?? 'us-east-1';
+    // ── main.tf ──
+    const mainTf = buildMainTf(region, plan);
+    // ── variables.tf ──
+    const { content: variablesTf, varNames } = buildVariablesTf(plan, prefix);
+    // ── vpc.tf ──
+    const vpcTf = buildVpcTf(prefix, plan);
+    resources.push('vpc', 'public-subnets', 'private-subnets', 'nat-gateway');
+    // ── storage.tf ──
+    const { content: storageTf, resourceNames: storageResources, skipped: storageSkipped } = buildStorageTf(plan, prefix);
+    resources.push(...storageResources);
+    skipped.push(...storageSkipped);
+    // ── compute.tf (ECS cluster, task definitions, services) ──
+    const { content: computeTf, resourceNames: computeResources, skipped: computeSkipped } = buildComputeTf(plan, prefix, region);
+    resources.push(...computeResources);
+    skipped.push(...computeSkipped);
+    // ── network.tf (API Gateway, ALB, CloudFront) ──
+    const { content: networkTf, resourceNames: networkResources, skipped: networkSkipped } = buildNetworkTf(plan, prefix);
+    resources.push(...networkResources);
+    skipped.push(...networkSkipped);
+    // ── locals.tf (derived secrets — DATABASE_URL from RDS, EVENT_BUS_URL from SNS) ──
+    const localsTf = buildLocalsTf(plan, prefix);
+    // ── secrets.tf (external secrets only — derivable ones live in locals.tf) ──
+    const secretsTf = buildSecretsTf(plan, prefix);
+    // ── iam.tf ──
+    const iamTf = buildIamTf(prefix, plan);
+    // ── ecr.tf ──
+    const { content: ecrTf, resourceNames: ecrResources } = buildEcrTf(plan, prefix);
+    resources.push(...ecrResources);
+    // ── outputs.tf ──
+    const outputsTf = buildOutputsTf(plan, prefix);
+    // ── terraform.tfvars.example ──
+    const tfvarsExample = buildTfvarsExample(varNames, plan);
+    const dir = plan.deployDir;
+    const files = [
+        { path: path.join(dir, 'main.tf'), content: mainTf },
+        { path: path.join(dir, 'variables.tf'), content: variablesTf },
+        { path: path.join(dir, 'vpc.tf'), content: vpcTf },
+        { path: path.join(dir, 'storage.tf'), content: storageTf },
+        { path: path.join(dir, 'compute.tf'), content: computeTf },
+        { path: path.join(dir, 'network.tf'), content: networkTf },
+        ...(localsTf ? [{ path: path.join(dir, 'locals.tf'), content: localsTf }] : []),
+        { path: path.join(dir, 'secrets.tf'), content: secretsTf },
+        { path: path.join(dir, 'iam.tf'), content: iamTf },
+        { path: path.join(dir, 'ecr.tf'), content: ecrTf },
+        { path: path.join(dir, 'outputs.tf'), content: outputsTf },
+        { path: path.join(dir, 'terraform.tfvars.example'), content: tfvarsExample },
+        { path: path.join(dir, 'README.md'), content: buildReadme(plan, resources, skipped) },
+        { path: path.join(dir, 'cba-manifest.json'), content: buildManifest(plan) },
+    ];
+    return { files, resources, skipped };
+}
+// ──────────────── main.tf ────────────────
+function buildMainTf(region, plan) {
+    const secrets = collectSecrets(plan);
+    const needsRandom = secrets.includes('JWT_SECRET');
+    const providers = [
+        assignment('aws', objectLiteral({
+            source: 'hashicorp/aws',
+            version: '~> 5.0',
+        })),
+    ];
+    if (needsRandom) {
+        providers.push(assignment('random', objectLiteral({
+            source: 'hashicorp/random',
+            version: '~> 3.0',
+        })));
+    }
+    const parts = [
+        hcl(block('terraform', [], [
+            block('required_providers', [], providers),
+            assignment('required_version', '>= 1.5'),
+        ]), '', block('provider', ['"aws"'], [
+            assignment('region', region),
+        ])),
+        buildBackendStanza(plan),
+    ];
+    // CloudFront WAFv2 (scope = CLOUDFRONT) is a global resource and must be
+    // created in us-east-1 regardless of the deployment's primary region.
+    // Declare an aliased provider once when any lambda cell is present; the
+    // WAF resources reference `provider = aws.us_east_1` to use it.
+    if (planHasLambda(plan)) {
+        parts.push(hcl('', block('provider', ['"aws"'], [
+            assignment('alias', 'us_east_1'),
+            assignment('region', 'us-east-1'),
+        ])));
+    }
+    if (needsRandom) {
+        parts.push(hcl('', block('resource', ['"random_password"', '"jwt_secret"'], [
+            assignment('length', raw('32')),
+            assignment('special', raw('false')),
+        ])));
+    }
+    return parts.join('\n');
+}
+/**
+ * Remote state stanza for team/production use. Emitted commented-out so a
+ * fresh `terraform init` works with zero prior setup (local state is fine
+ * for solo development). The bucket + DynamoDB lock table have to exist
+ * before `terraform init` can migrate — the comment spells that out so
+ * anyone reading main.tf has the bootstrap recipe in front of them.
+ */
+function buildBackendStanza(plan) {
+    const stateKey = `${plan.domain}/${plan.environment}/terraform.tfstate`;
+    return `
+# ──────────────── Remote state (optional) ────────────────
+#
+# Local state is fine for solo dev but breaks for teams or CI. To use an
+# S3 + DynamoDB backend:
+#
+#   1. aws s3api create-bucket \\
+#        --bucket <your-tfstate-bucket> \\
+#        --region <region> \\
+#        --create-bucket-configuration LocationConstraint=<region>
+#   2. aws s3api put-bucket-versioning --bucket <your-tfstate-bucket> \\
+#        --versioning-configuration Status=Enabled
+#   3. aws s3api put-bucket-encryption --bucket <your-tfstate-bucket> \\
+#        --server-side-encryption-configuration \\
+#        '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+#   4. aws dynamodb create-table \\
+#        --table-name <your-tflock-table> \\
+#        --attribute-definitions AttributeName=LockID,AttributeType=S \\
+#        --key-schema AttributeName=LockID,KeyType=HASH \\
+#        --billing-mode PAY_PER_REQUEST
+#   5. Uncomment the block below, fill in bucket + dynamodb_table, and run
+#      \`terraform init -migrate-state\`.
+#
+# terraform {
+#   backend "s3" {
+#     bucket         = "<your-tfstate-bucket>"
+#     key            = "${stateKey}"
+#     region         = "us-east-1"
+#     dynamodb_table = "<your-tflock-table>"
+#     encrypt        = true
+#   }
+# }
+`;
+}
+// ──────────────── variables.tf ────────────────
+function buildVariablesTf(plan, prefix) {
+    const blocks = [];
+    const varNames = [];
+    // VPC CIDR
+    blocks.push(hcl(block('variable', ['"vpc_cidr"'], [
+        assignment('description', 'CIDR block for the VPC'),
+        assignment('type', raw('string')),
+        assignment('default', '10.0.0.0/16'),
+    ])));
+    varNames.push('vpc_cidr');
+    // Collect all secret-sourced variables — only those NOT derivable from
+    // provisioned constructs become TF input variables. Derivable secrets
+    // (DATABASE_URL from RDS, EVENT_BUS_URL from SNS) live in locals.tf.
+    const derived = derivableSecrets(plan);
+    const secrets = collectSecrets(plan);
+    for (const name of secrets) {
+        if (derived.has(name))
+            continue; // derived from provisioned construct
+        const tfName = tfVarName(name);
+        blocks.push(hcl(block('variable', [`"${tfName}"`], [
+            assignment('description', `Secret: ${name}`),
+            assignment('type', raw('string')),
+            assignment('sensitive', raw('true')),
+        ])));
+        varNames.push(tfName);
+    }
+    // Collect env-sourced variables — passthrough from deployer's environment
+    const envVars = collectEnvVars(plan);
+    for (const name of envVars) {
+        const tfName = tfVarName(name);
+        if (varNames.includes(tfName))
+            continue; // already declared
+        blocks.push(hcl(block('variable', [`"${tfName}"`], [
+            assignment('description', `Environment variable: ${name}`),
+            assignment('type', raw('string')),
+            assignment('default', ''),
+        ])));
+        varNames.push(tfName);
+    }
+    return { content: blocks.join('\n'), varNames };
+}
+function collectSecrets(plan) {
+    const seen = new Set();
+    for (const v of plan.variables) {
+        if (v.source === 'secret')
+            seen.add(v.name);
+    }
+    for (const cell of plan.cells) {
+        for (const v of cell.variables) {
+            if (v.source === 'secret')
+                seen.add(v.name);
+        }
+    }
+    return Array.from(seen).sort();
+}
+/**
+ * Variables whose values should be routed through AWS Secrets Manager and
+ * injected into ECS via the task definition's `secrets:` block rather than
+ * inlined into `environment:`. This keeps the plaintext out of
+ * `ecs:DescribeTaskDefinition` output — anyone with that permission can
+ * otherwise read the value straight off the task def JSON.
+ *
+ * Named allow-list + suffix rules: ops that carry credentials, signing keys,
+ * tokens, or user-credential JSON qualify. Non-sensitive DNA secrets like
+ * EVENT_BUS_NAME / EVENT_BUS_QUEUE_URL (resource identifiers, not secrets)
+ * stay in `environment:` — putting them in Secrets Manager costs $0.40/mo
+ * each for no security benefit.
+ */
+const SENSITIVE_SECRET_NAMES = new Set(['DATABASE_URL', 'JWT_SECRET', 'DEMO_USERS_JSON']);
+function isSensitiveSecret(name) {
+    if (SENSITIVE_SECRET_NAMES.has(name))
+        return true;
+    return /_(SECRET|PASSWORD|TOKEN|APIKEY|API_KEY)$/i.test(name);
+}
+function collectEnvVars(plan) {
+    const seen = new Set();
+    for (const v of plan.variables) {
+        if (v.source === 'env')
+            seen.add(v.name);
+    }
+    for (const cell of plan.cells) {
+        for (const v of cell.variables) {
+            if (v.source === 'env')
+                seen.add(v.name);
+        }
+    }
+    return Array.from(seen).sort();
+}
+/**
+ * Detect secrets that can be derived from provisioned constructs rather than
+ * requiring external input. Returns a map of { SECRET_NAME: tfExpression }.
+ *
+ * - DATABASE_URL → built from aws_db_instance.primary_db endpoint + managed creds
+ * - EVENT_BUS_NAME → EventBridge bus name (eventbridge engine)
+ * - EVENT_BUS_QUEUE_URL → SQS queue URL for subscriber polling (eventbridge engine)
+ * - EVENT_BUS_URL → SNS topic ARN (sns+sqs engine, legacy)
+ */
+function derivableSecrets(plan) {
+    const derived = new Map();
+    const hasDb = plan.constructs.some((c) => c.type === 'database');
+    const queueConstruct = plan.constructs.find((c) => c.type === 'queue');
+    const secrets = collectSecrets(plan);
+    if (hasDb && secrets.includes('DATABASE_URL')) {
+        // RDS uses manage_master_user_password — build URL from endpoint + secret.
+        // `?sslmode=no-verify` is non-negotiable here:
+        //   - RDS Postgres defaults to `rds.force_ssl=1`, so a plaintext client
+        //     connection fails with "no pg_hba.conf entry … no encryption".
+        //   - node-postgres reads `sslmode=require` as "verify CA", which then
+        //     rejects the RDS intermediate ("self-signed certificate in
+        //     certificate chain") unless the RDS CA bundle is baked into the
+        //     container. `no-verify` skips chain verification while still
+        //     encrypting the connection — pragmatic for managed-RDS trust
+        //     and avoids shipping the cert bundle in the cell image.
+        //
+        // When the plan has a lambda cell, route through aws_db_proxy.primary_db_proxy
+        // instead of hitting RDS directly. The proxy's connection-pool model is
+        // mandatory for Lambda + RDS — without it, lambda concurrency burns RDS
+        // connections at any throughput.
+        const endpointRef = planHasLambda(plan)
+            ? 'aws_db_proxy.primary_db_proxy.endpoint'
+            : 'aws_db_instance.primary_db.endpoint';
+        derived.set('DATABASE_URL', `format("postgres://%s:%s@%s/%s?sslmode=no-verify", aws_db_instance.primary_db.username, jsondecode(data.aws_secretsmanager_secret_version.primary_db_password.secret_string)["password"], ${endpointRef}, aws_db_instance.primary_db.db_name)`);
+    }
+    if (queueConstruct?.config?.engine === 'eventbridge') {
+        if (secrets.includes('EVENT_BUS_NAME')) {
+            derived.set('EVENT_BUS_NAME', 'aws_cloudwatch_event_bus.event_bus.name');
+        }
+        if (secrets.includes('EVENT_BUS_QUEUE_URL')) {
+            derived.set('EVENT_BUS_QUEUE_URL', 'aws_sqs_queue.event_bus.id');
+        }
+        // EVENT_BUS_URL is the dev/rabbitmq var — not needed in eventbridge deployments
+        if (secrets.includes('EVENT_BUS_URL')) {
+            derived.set('EVENT_BUS_URL', '""');
+        }
+    }
+    else if (queueConstruct && secrets.includes('EVENT_BUS_URL')) {
+        derived.set('EVENT_BUS_URL', 'aws_sns_topic.event_bus.arn');
+    }
+    // JWT_SECRET for built-in auth — use a random_password resource
+    if (secrets.includes('JWT_SECRET')) {
+        derived.set('JWT_SECRET', 'random_password.jwt_secret.result');
+    }
+    return derived;
+}
+function buildLocalsTf(plan, prefix) {
+    const derived = derivableSecrets(plan);
+    if (derived.size === 0)
+        return '';
+    const hasDb = derived.has('DATABASE_URL');
+    const blocks = [];
+    // Data source to read the RDS-managed master password from Secrets Manager
+    if (hasDb) {
+        blocks.push(hcl(block('data', ['"aws_secretsmanager_secret_version"', '"primary_db_password"'], [
+            assignment('secret_id', raw('aws_db_instance.primary_db.master_user_secret[0].secret_arn')),
+        ])));
+        blocks.push('');
+    }
+    const assignments = [];
+    for (const [name, expr] of derived) {
+        assignments.push(assignment(tfVarName(name), raw(expr)));
+    }
+    blocks.push(hcl(block('locals', [], assignments)));
+    return blocks.join('\n');
+}
+// ──────────────── vpc.tf ────────────────
+function buildVpcTf(prefix, plan) {
+    const id = tfId(prefix);
+    const hasCache = plan.constructs.some((c) => c.type === 'cache');
+    return hcl(block('resource', ['"aws_vpc"', `"${id}"`], [
+        assignment('cidr_block', raw('var.vpc_cidr')),
+        assignment('enable_dns_support', raw('true')),
+        assignment('enable_dns_hostnames', raw('true')),
+        '',
+        assignment('tags', objectLiteral({ Name: `${prefix}-vpc` })),
+    ]), '', comment('Public subnets (2 AZs for ALB requirement)'), block('resource', ['"aws_subnet"', `"${id}_public_a"`], [
+        assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+        assignment('cidr_block', raw('cidrsubnet(var.vpc_cidr, 8, 1)')),
+        assignment('availability_zone', raw('data.aws_availability_zones.available.names[0]')),
+        assignment('map_public_ip_on_launch', raw('true')),
+        assignment('tags', objectLiteral({ Name: `${prefix}-public-a` })),
+    ]), '', block('resource', ['"aws_subnet"', `"${id}_public_b"`], [
+        assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+        assignment('cidr_block', raw('cidrsubnet(var.vpc_cidr, 8, 2)')),
+        assignment('availability_zone', raw('data.aws_availability_zones.available.names[1]')),
+        assignment('map_public_ip_on_launch', raw('true')),
+        assignment('tags', objectLiteral({ Name: `${prefix}-public-b` })),
+    ]), '', comment('Private subnets (2 AZs for RDS subnet group)'), block('resource', ['"aws_subnet"', `"${id}_private_a"`], [
+        assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+        assignment('cidr_block', raw('cidrsubnet(var.vpc_cidr, 8, 10)')),
+        assignment('availability_zone', raw('data.aws_availability_zones.available.names[0]')),
+        assignment('tags', objectLiteral({ Name: `${prefix}-private-a` })),
+    ]), '', block('resource', ['"aws_subnet"', `"${id}_private_b"`], [
+        assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+        assignment('cidr_block', raw('cidrsubnet(var.vpc_cidr, 8, 11)')),
+        assignment('availability_zone', raw('data.aws_availability_zones.available.names[1]')),
+        assignment('tags', objectLiteral({ Name: `${prefix}-private-b` })),
+    ]), '', block('data', ['"aws_availability_zones"', '"available"'], [
+        assignment('state', 'available'),
+    ]), '', comment('Internet Gateway'), block('resource', ['"aws_internet_gateway"', `"${id}"`], [
+        assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+        assignment('tags', objectLiteral({ Name: `${prefix}-igw` })),
+    ]), '', comment('Elastic IP for NAT Gateway'), block('resource', ['"aws_eip"', `"${id}_nat"`], [
+        assignment('domain', 'vpc'),
+        assignment('tags', objectLiteral({ Name: `${prefix}-nat-eip` })),
+    ]), '', comment('NAT Gateway (public subnet, enables private subnet outbound)'), block('resource', ['"aws_nat_gateway"', `"${id}"`], [
+        assignment('allocation_id', raw(`aws_eip.${id}_nat.id`)),
+        assignment('subnet_id', raw(`aws_subnet.${id}_public_a.id`)),
+        assignment('tags', objectLiteral({ Name: `${prefix}-nat` })),
+    ]), '', comment('Route tables'), block('resource', ['"aws_route_table"', `"${id}_public"`], [
+        assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+        '',
+        block('route', [], [
+            assignment('cidr_block', '0.0.0.0/0'),
+            assignment('gateway_id', raw(`aws_internet_gateway.${id}.id`)),
+        ]),
+        '',
+        assignment('tags', objectLiteral({ Name: `${prefix}-public-rt` })),
+    ]), '', block('resource', ['"aws_route_table"', `"${id}_private"`], [
+        assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+        '',
+        block('route', [], [
+            assignment('cidr_block', '0.0.0.0/0'),
+            assignment('nat_gateway_id', raw(`aws_nat_gateway.${id}.id`)),
+        ]),
+        '',
+        assignment('tags', objectLiteral({ Name: `${prefix}-private-rt` })),
+    ]), '', ...['public_a', 'public_b'].map((s) => block('resource', ['"aws_route_table_association"', `"${id}_${s}"`], [
+        assignment('subnet_id', raw(`aws_subnet.${id}_${s}.id`)),
+        assignment('route_table_id', raw(`aws_route_table.${id}_public.id`)),
+    ]) + '\n'), ...['private_a', 'private_b'].map((s) => block('resource', ['"aws_route_table_association"', `"${id}_${s}"`], [
+        assignment('subnet_id', raw(`aws_subnet.${id}_${s}.id`)),
+        assignment('route_table_id', raw(`aws_route_table.${id}_private.id`)),
+    ]) + '\n'), comment('Security group — ECS tasks'), block('resource', ['"aws_security_group"', `"${id}_ecs"`], [
+        assignment('name', `${prefix}-ecs-sg`),
+        assignment('description', 'Allow inbound from ALB and outbound to all'),
+        assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+        '',
+        block('ingress', [], [
+            assignment('from_port', raw('0')),
+            assignment('to_port', raw('65535')),
+            assignment('protocol', 'tcp'),
+            assignment('security_groups', raw(`[aws_security_group.${id}_alb.id]`)),
+        ]),
+        '',
+        block('egress', [], [
+            assignment('from_port', raw('0')),
+            assignment('to_port', raw('0')),
+            assignment('protocol', '-1'),
+            assignment('cidr_blocks', raw('["0.0.0.0/0"]')),
+        ]),
+        '',
+        assignment('tags', objectLiteral({ Name: `${prefix}-ecs-sg` })),
+    ]), '', comment('Security group — ALB'), block('resource', ['"aws_security_group"', `"${id}_alb"`], [
+        assignment('name', `${prefix}-alb-sg`),
+        assignment('description', 'Allow HTTP/HTTPS inbound'),
+        assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+        '',
+        block('ingress', [], [
+            assignment('from_port', raw('80')),
+            assignment('to_port', raw('80')),
+            assignment('protocol', 'tcp'),
+            assignment('cidr_blocks', raw('["0.0.0.0/0"]')),
+        ]),
+        '',
+        block('ingress', [], [
+            assignment('from_port', raw('443')),
+            assignment('to_port', raw('443')),
+            assignment('protocol', 'tcp'),
+            assignment('cidr_blocks', raw('["0.0.0.0/0"]')),
+        ]),
+        '',
+        block('egress', [], [
+            assignment('from_port', raw('0')),
+            assignment('to_port', raw('0')),
+            assignment('protocol', '-1'),
+            assignment('cidr_blocks', raw('["0.0.0.0/0"]')),
+        ]),
+        '',
+        assignment('tags', objectLiteral({ Name: `${prefix}-alb-sg` })),
+    ]), '', comment('Security group — RDS'), block('resource', ['"aws_security_group"', `"${id}_rds"`], [
+        assignment('name', `${prefix}-rds-sg`),
+        assignment('description', 'Allow Postgres inbound from ECS tasks (and RDS Proxy when present)'),
+        assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+        '',
+        block('ingress', [], [
+            assignment('from_port', raw('5432')),
+            assignment('to_port', raw('5432')),
+            assignment('protocol', 'tcp'),
+            assignment('security_groups', raw(planHasLambda(plan)
+                ? `[\n      aws_security_group.${id}_ecs.id,\n      aws_security_group.${id}_rds_proxy.id,\n    ]`
+                : `[aws_security_group.${id}_ecs.id]`)),
+        ]),
+        '',
+        block('egress', [], [
+            assignment('from_port', raw('0')),
+            assignment('to_port', raw('0')),
+            assignment('protocol', '-1'),
+            assignment('cidr_blocks', raw('["0.0.0.0/0"]')),
+        ]),
+        '',
+        assignment('tags', objectLiteral({ Name: `${prefix}-rds-sg` })),
+    ]), '', ...(planHasLambda(plan) ? [
+        '',
+        comment('Security group — Lambda (egress only; ENI in private subnets)'),
+        hcl(block('resource', ['"aws_security_group"', `"${id}_lambda"`], [
+            assignment('name', `${prefix}-lambda-sg`),
+            assignment('description', 'Lambda function ENIs (egress to RDS Proxy + internet via NAT)'),
+            assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+            '',
+            block('egress', [], [
+                assignment('from_port', raw('0')),
+                assignment('to_port', raw('0')),
+                assignment('protocol', '-1'),
+                assignment('cidr_blocks', raw('["0.0.0.0/0"]')),
+            ]),
+            '',
+            assignment('tags', objectLiteral({ Name: `${prefix}-lambda-sg` })),
+        ])),
+        '',
+        comment('Security group — RDS Proxy (ingress from Lambda)'),
+        hcl(block('resource', ['"aws_security_group"', `"${id}_rds_proxy"`], [
+            assignment('name', `${prefix}-rds-proxy-sg`),
+            assignment('description', 'Allow Postgres inbound from Lambda'),
+            assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+            '',
+            block('ingress', [], [
+                assignment('from_port', raw('5432')),
+                assignment('to_port', raw('5432')),
+                assignment('protocol', 'tcp'),
+                assignment('security_groups', raw(`[aws_security_group.${id}_lambda.id]`)),
+            ]),
+            '',
+            block('egress', [], [
+                assignment('from_port', raw('0')),
+                assignment('to_port', raw('0')),
+                assignment('protocol', '-1'),
+                assignment('cidr_blocks', raw('["0.0.0.0/0"]')),
+            ]),
+            '',
+            assignment('tags', objectLiteral({ Name: `${prefix}-rds-proxy-sg` })),
+        ])),
+    ] : []), ...(hasCache ? [
+        '',
+        comment('Security group — ElastiCache'),
+        hcl(block('resource', ['"aws_security_group"', `"${id}_redis"`], [
+            assignment('name', `${prefix}-redis-sg`),
+            assignment('description', 'Allow Redis inbound from ECS tasks'),
+            assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+            '',
+            block('ingress', [], [
+                assignment('from_port', raw('6379')),
+                assignment('to_port', raw('6379')),
+                assignment('protocol', 'tcp'),
+                assignment('security_groups', raw(`[aws_security_group.${id}_ecs.id]`)),
+            ]),
+            '',
+            block('egress', [], [
+                assignment('from_port', raw('0')),
+                assignment('to_port', raw('0')),
+                assignment('protocol', '-1'),
+                assignment('cidr_blocks', raw('["0.0.0.0/0"]')),
+            ]),
+            '',
+            assignment('tags', objectLiteral({ Name: `${prefix}-redis-sg` })),
+        ])),
+    ] : []));
+}
+function buildStorageTf(plan, prefix) {
+    const blocks = [];
+    const resourceNames = [];
+    const skipped = [];
+    const id = tfId(prefix);
+    for (const c of plan.constructs) {
+        if (c.category !== 'storage')
+            continue;
+        if (c.provider !== 'aws') {
+            skipped.push({
+                name: c.name,
+                kind: `${c.category}/${c.type}`,
+                reason: `external provider "${c.provider}" — not provisionable via Terraform/AWS`,
+            });
+            continue;
+        }
+        const rid = tfId(c.name);
+        if (c.type === 'database' && c.config?.engine === 'postgres') {
+            // DB subnet group
+            blocks.push(hcl(block('resource', ['"aws_db_subnet_group"', `"${rid}"`], [
+                assignment('name', `${prefix}-${c.name}-subnet-group`),
+                assignment('subnet_ids', raw(`[\n    aws_subnet.${id}_private_a.id,\n    aws_subnet.${id}_private_b.id,\n  ]`)),
+                assignment('tags', objectLiteral({ Name: `${prefix}-${c.name}-subnet-group` })),
+            ])));
+            // RDS instance
+            const version = c.config.version ?? '15';
+            const instanceClass = c.config.instance_class ?? 'db.t3.micro';
+            blocks.push(hcl(block('resource', ['"aws_db_instance"', `"${rid}"`], [
+                assignment('identifier', `${prefix}-${c.name}`),
+                assignment('engine', 'postgres'),
+                assignment('engine_version', String(version)),
+                assignment('instance_class', instanceClass),
+                assignment('allocated_storage', raw('20')),
+                assignment('max_allocated_storage', raw('100')),
+                '',
+                assignment('db_name', plan.domain.replace(/\//g, '_')),
+                assignment('username', `${plan.domain.replace(/\//g, '_')}_app`),
+                assignment('manage_master_user_password', raw('true')),
+                '',
+                assignment('db_subnet_group_name', raw(`aws_db_subnet_group.${rid}.name`)),
+                assignment('vpc_security_group_ids', raw(`[aws_security_group.${id}_rds.id]`)),
+                '',
+                assignment('skip_final_snapshot', raw('true')),
+                assignment('storage_encrypted', raw('true')),
+                '',
+                assignment('tags', objectLiteral({ Name: `${prefix}-${c.name}` })),
+            ])));
+            resourceNames.push(`rds:${c.name}`);
+            // RDS Proxy — required when any lambda cell is in the plan. Lambdas
+            // burn DB connections at any concurrency without a proxy; the proxy
+            // pools and reuses them. ECS-only plans skip this entirely (the
+            // direct connection model is fine for long-lived containers).
+            if (planHasLambda(plan)) {
+                blocks.push(hcl('', comment(`RDS Proxy for ${c.name} (lambda + RDS pairing)`), block('resource', ['"aws_iam_role"', `"${rid}_proxy"`], [
+                    assignment('name', `${prefix}-${c.name}-proxy-role`),
+                    assignment('assume_role_policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = { Service = "rds.amazonaws.com" }
+      }
+    ]
+  })`)),
+                    assignment('tags', objectLiteral({ Name: `${prefix}-${c.name}-proxy-role` })),
+                ]), '', block('resource', ['"aws_iam_role_policy"', `"${rid}_proxy_secrets"`], [
+                    assignment('name', `${prefix}-${c.name}-proxy-secrets`),
+                    assignment('role', raw(`aws_iam_role.${rid}_proxy.id`)),
+                    assignment('policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue", "kms:Decrypt"]
+        Resource = aws_db_instance.${rid}.master_user_secret[0].secret_arn
+      }
+    ]
+  })`)),
+                ]), '', block('resource', ['"aws_db_proxy"', `"${rid}_proxy"`], [
+                    assignment('name', `${prefix}-${c.name}-proxy`),
+                    assignment('engine_family', 'POSTGRESQL'),
+                    assignment('role_arn', raw(`aws_iam_role.${rid}_proxy.arn`)),
+                    assignment('vpc_subnet_ids', raw(`[\n    aws_subnet.${id}_private_a.id,\n    aws_subnet.${id}_private_b.id,\n  ]`)),
+                    assignment('vpc_security_group_ids', raw(`[aws_security_group.${id}_rds_proxy.id]`)),
+                    assignment('require_tls', raw('true')),
+                    assignment('idle_client_timeout', raw('1800')),
+                    '',
+                    block('auth', [], [
+                        assignment('auth_scheme', 'SECRETS'),
+                        assignment('iam_auth', 'DISABLED'),
+                        assignment('secret_arn', raw(`aws_db_instance.${rid}.master_user_secret[0].secret_arn`)),
+                    ]),
+                    '',
+                    assignment('tags', objectLiteral({ Name: `${prefix}-${c.name}-proxy` })),
+                ]), '', block('resource', ['"aws_db_proxy_default_target_group"', `"${rid}_proxy"`], [
+                    assignment('db_proxy_name', raw(`aws_db_proxy.${rid}_proxy.name`)),
+                    '',
+                    block('connection_pool_config', [], [
+                        assignment('max_connections_percent', raw('100')),
+                        assignment('max_idle_connections_percent', raw('50')),
+                        assignment('connection_borrow_timeout', raw('120')),
+                    ]),
+                ]), '', block('resource', ['"aws_db_proxy_target"', `"${rid}_proxy"`], [
+                    assignment('db_proxy_name', raw(`aws_db_proxy.${rid}_proxy.name`)),
+                    assignment('target_group_name', raw(`aws_db_proxy_default_target_group.${rid}_proxy.name`)),
+                    assignment('db_instance_identifier', raw(`aws_db_instance.${rid}.identifier`)),
+                ])));
+                resourceNames.push(`rds-proxy:${c.name}`);
+            }
+        }
+        else if (c.type === 'cache' && c.config?.engine === 'redis') {
+            // ElastiCache subnet group
+            blocks.push(hcl(block('resource', ['"aws_elasticache_subnet_group"', `"${rid}"`], [
+                assignment('name', `${prefix}-${c.name}-subnet-group`),
+                assignment('subnet_ids', raw(`[\n    aws_subnet.${id}_private_a.id,\n    aws_subnet.${id}_private_b.id,\n  ]`)),
+            ])));
+            const version = c.config.version ?? '7';
+            blocks.push(hcl(block('resource', ['"aws_elasticache_cluster"', `"${rid}"`], [
+                assignment('cluster_id', `${prefix}-${c.name}`),
+                assignment('engine', 'redis'),
+                assignment('engine_version', `${version}.0`),
+                assignment('node_type', 'cache.t3.micro'),
+                assignment('num_cache_nodes', raw('1')),
+                assignment('port', raw('6379')),
+                '',
+                assignment('subnet_group_name', raw(`aws_elasticache_subnet_group.${rid}.name`)),
+                assignment('security_group_ids', raw(`[aws_security_group.${id}_redis.id]`)),
+                '',
+                assignment('tags', objectLiteral({ Name: `${prefix}-${c.name}` })),
+            ])));
+            resourceNames.push(`elasticache:${c.name}`);
+        }
+        else if (c.type === 'queue' && c.config?.engine === 'eventbridge') {
+            // EventBridge custom bus
+            blocks.push(hcl(block('resource', ['"aws_cloudwatch_event_bus"', `"${rid}"`], [
+                assignment('name', `${prefix}-${c.name}`),
+                assignment('tags', objectLiteral({ Name: `${prefix}-${c.name}` })),
+            ])));
+            // SQS queue — subscriber queue for EventBridge targets
+            blocks.push(hcl(block('resource', ['"aws_sqs_queue"', `"${rid}"`], [
+                assignment('name', `${prefix}-${c.name}-subscriber`),
+                assignment('visibility_timeout_seconds', raw('300')),
+                assignment('message_retention_seconds', raw('1209600')),
+                assignment('tags', objectLiteral({ Name: `${prefix}-${c.name}-subscriber` })),
+            ])));
+            // EventBridge rule — catch-all for all signals on this bus
+            blocks.push(hcl(block('resource', ['"aws_cloudwatch_event_rule"', `"${rid}"`], [
+                assignment('name', `${prefix}-${c.name}-all-signals`),
+                assignment('event_bus_name', raw(`aws_cloudwatch_event_bus.${rid}.name`)),
+                assignment('event_pattern', raw('jsonencode({ "source": [{ "prefix": "" }] })')),
+                assignment('tags', objectLiteral({ Name: `${prefix}-${c.name}-all-signals` })),
+            ])));
+            // EventBridge target — route rule to SQS
+            blocks.push(hcl(block('resource', ['"aws_cloudwatch_event_target"', `"${rid}"`], [
+                assignment('rule', raw(`aws_cloudwatch_event_rule.${rid}.name`)),
+                assignment('event_bus_name', raw(`aws_cloudwatch_event_bus.${rid}.name`)),
+                assignment('arn', raw(`aws_sqs_queue.${rid}.arn`)),
+                assignment('target_id', `${prefix}-${c.name}-sqs`),
+            ])));
+            // SQS queue policy — allow EventBridge to send
+            blocks.push(hcl(block('resource', ['"aws_sqs_queue_policy"', `"${rid}"`], [
+                assignment('queue_url', raw(`aws_sqs_queue.${rid}.id`)),
+                assignment('policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "events.amazonaws.com" }
+      Action    = "sqs:SendMessage"
+      Resource  = aws_sqs_queue.${rid}.arn
+      Condition = {
+        ArnEquals = {
+          "aws:SourceArn" = aws_cloudwatch_event_rule.${rid}.arn
+        }
+      }
+    }]
+  })`)),
+            ])));
+            resourceNames.push(`eventbridge:${c.name}`);
+            resourceNames.push(`sqs:${c.name}`);
+        }
+        else {
+            skipped.push({
+                name: c.name,
+                kind: `${c.category}/${c.type}`,
+                reason: `no Terraform mapping for storage/${c.type} (engine: ${c.config?.engine ?? 'unknown'})`,
+            });
+        }
+    }
+    return { content: blocks.join('\n') || comment('No storage constructs to provision'), resourceNames, skipped };
+}
+// ──────────────── compute.tf ────────────────
+function buildComputeTf(plan, prefix, region) {
+    const blocks = [];
+    const resourceNames = [];
+    const skipped = [];
+    const id = tfId(prefix);
+    // ECS cluster
+    blocks.push(hcl(block('resource', ['"aws_ecs_cluster"', `"${id}"`], [
+        assignment('name', `${prefix}-cluster`),
+        assignment('tags', objectLiteral({ Name: `${prefix}-cluster` })),
+    ])));
+    resourceNames.push('ecs-cluster');
+    // CloudWatch log group for ECS tasks
+    blocks.push(hcl(block('resource', ['"aws_cloudwatch_log_group"', `"${id}"`], [
+        assignment('name', `/ecs/${prefix}`),
+        assignment('retention_in_days', raw('30')),
+        assignment('tags', objectLiteral({ Name: `${prefix}-logs` })),
+    ])));
+    // Build task definitions + services for deployable cells
+    for (const cell of plan.cells) {
+        const cellId = tfId(cell.name);
+        const isStatic = isStaticCell(cell);
+        const isDb = cell.adapterType === 'postgres';
+        const isLambda = isLambdaCell(cell);
+        if (isDb) {
+            skipped.push({
+                name: cell.name,
+                kind: `cell/${cell.adapterType}`,
+                reason: 'database provisioning handled by RDS — no container needed',
+            });
+            continue;
+        }
+        if (isLambda) {
+            // Lambda compute: emit aws_lambda_function + aws_lambda_function_url.
+            // The function code is built by the cell's `npm run build && npm run
+            // package`, which produces lambda.zip in the cell's outputDir. Terraform
+            // resolves that path relative to the deploy dir.
+            const zipPath = path.relative(plan.deployDir, path.join(cell.outputDir, 'lambda.zip'));
+            const handlerEntry = 'handler.handler';
+            const memorySize = cell.adapterConfig?.memorySize ?? 1024;
+            const timeout = cell.adapterConfig?.timeout ?? 30;
+            // VPC config is mandatory when the lambda needs to talk to RDS Proxy.
+            // Without it, the function runs in AWS-managed networking and can't
+            // reach private subnet resources.
+            const planHasDb = plan.constructs.some((c) => c.category === 'storage' && c.type === 'database' && c.config?.engine === 'postgres');
+            const vpcConfig = planHasDb
+                ? `\n\n  ${block('vpc_config', [], [
+                    assignment('subnet_ids', raw(`[\n      aws_subnet.${id}_private_a.id,\n      aws_subnet.${id}_private_b.id,\n    ]`)),
+                    assignment('security_group_ids', raw(`[aws_security_group.${id}_lambda.id]`)),
+                ])}`
+                : '';
+            const { env: envVars } = buildContainerEnv(cell, plan);
+            const envBlock = envVars.length
+                ? `\n\n  ${block('environment', [], [
+                    assignment('variables', raw(`{\n${envVars.map((e) => `      ${e.name} = ${e.value}`).join('\n')}\n    }`)),
+                ])}`
+                : '';
+            blocks.push(hcl(comment(`Lambda function for ${cell.name} (compute: lambda)`), block('resource', ['"aws_lambda_function"', `"${cellId}"`], [
+                assignment('function_name', `${prefix}-${cellId}`),
+                assignment('role', raw(`aws_iam_role.${cellId}_lambda.arn`)),
+                assignment('handler', handlerEntry),
+                assignment('runtime', 'nodejs20.x'),
+                assignment('filename', zipPath),
+                assignment('source_code_hash', raw(`filebase64sha256("${zipPath}")`)),
+                assignment('memory_size', raw(String(memorySize))),
+                assignment('timeout', raw(String(timeout))),
+                ...(vpcConfig ? [vpcConfig] : []),
+                ...(envBlock ? [envBlock] : []),
+                assignment('tags', objectLiteral({ Name: `${prefix}-${cellId}` })),
+            ]), '', comment('Function URL with response streaming (SSE-compatible)'), block('resource', ['"aws_lambda_function_url"', `"${cellId}"`], [
+                assignment('function_name', raw(`aws_lambda_function.${cellId}.function_name`)),
+                assignment('authorization_type', 'NONE'),
+                assignment('invoke_mode', 'RESPONSE_STREAM'),
+                '',
+                block('cors', [], [
+                    assignment('allow_origins', raw('["*"]')),
+                    assignment('allow_methods', raw('["*"]')),
+                    assignment('allow_headers', raw('["*"]')),
+                ]),
+            ]), '', comment('Allow CloudFront to invoke the Function URL'), block('resource', ['"aws_lambda_permission"', `"${cellId}_cloudfront"`], [
+                assignment('statement_id', `AllowCloudFrontInvoke-${cellId}`),
+                assignment('action', 'lambda:InvokeFunctionUrl'),
+                assignment('function_name', raw(`aws_lambda_function.${cellId}.function_name`)),
+                assignment('principal', 'cloudfront.amazonaws.com'),
+                assignment('function_url_auth_type', 'NONE'),
+                assignment('source_arn', raw(`aws_cloudfront_distribution.${cellId}_lambda.arn`)),
+            ])));
+            resourceNames.push(`lambda:${cell.name}`);
+            continue;
+        }
+        if (isStatic) {
+            // Static UI cells → S3 + CloudFront (handled in network.tf via buildStaticSite)
+            // We still need an S3 bucket here
+            blocks.push(hcl(block('resource', ['"aws_s3_bucket"', `"${cellId}"`], [
+                assignment('bucket', `${prefix}-${cellId.replace(/_/g, '-')}-assets`),
+                assignment('force_destroy', raw('true')),
+                assignment('tags', objectLiteral({ Name: `${prefix}-${cellId}` })),
+            ]), '', block('resource', ['"aws_s3_bucket_public_access_block"', `"${cellId}"`], [
+                assignment('bucket', raw(`aws_s3_bucket.${cellId}.id`)),
+                assignment('block_public_acls', raw('true')),
+                assignment('block_public_policy', raw('true')),
+                assignment('ignore_public_acls', raw('true')),
+                assignment('restrict_public_buckets', raw('true')),
+            ])));
+            resourceNames.push(`s3:${cell.name}`);
+            continue;
+        }
+        // Container-based cell → ECS task definition + service
+        const isWorker = cell.adapterType === 'node/event-bus';
+        const construct = plan.constructs.find((c) => c.category === 'compute' && c.type === 'container' && cell.constructs.includes(c.name));
+        const cpu = construct?.config?.cpu ?? 256;
+        const memory = construct?.config?.memory ?? 512;
+        const port = cell.adapterConfig?.port ?? construct?.config?.port ?? 3000;
+        // Environment variables + ECS secret refs for the container
+        const { env: envVars, secrets: secretRefs } = buildContainerEnv(cell, plan);
+        const secretsBlock = secretRefs.length
+            ? `\n\n      secrets = [\n${secretRefs
+                .map((s) => `        { name = "${s.name}", valueFrom = ${s.valueFrom} }`)
+                .join(',\n')}\n      ]`
+            : '';
+        blocks.push(hcl(block('resource', ['"aws_ecs_task_definition"', `"${cellId}"`], [
+            assignment('family', `${prefix}-${cellId}`),
+            assignment('network_mode', 'awsvpc'),
+            assignment('requires_compatibilities', raw('["FARGATE"]')),
+            assignment('cpu', raw(String(cpu))),
+            assignment('memory', raw(String(memory))),
+            assignment('execution_role_arn', raw(`aws_iam_role.${id}_ecs_execution.arn`)),
+            assignment('task_role_arn', raw(`aws_iam_role.${id}_ecs_task.arn`)),
+            '',
+            assignment('container_definitions', raw(`jsonencode([
+    {
+      name      = "${cellId}"
+      image     = "\${aws_ecr_repository.${cellId}.repository_url}:latest"
+      cpu       = ${cpu}
+      memory    = ${memory}
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = ${port}
+          hostPort      = ${port}
+          protocol      = "tcp"
+        }
+      ]
+
+      environment = [
+${envVars.map((e) => `        { name = "${e.name}", value = ${e.value} }`).join(',\n')}
+      ]${secretsBlock}
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.${id}.name
+          "awslogs-region"        = "${region}"
+          "awslogs-stream-prefix" = "${cellId}"
+        }
+      }
+    }
+  ])`)),
+            '',
+            assignment('tags', objectLiteral({ Name: `${prefix}-${cellId}` })),
+        ]), '', block('resource', ['"aws_ecs_service"', `"${cellId}"`], [
+            assignment('name', `${prefix}-${cellId}`),
+            assignment('cluster', raw(`aws_ecs_cluster.${id}.id`)),
+            assignment('task_definition', raw(`aws_ecs_task_definition.${cellId}.arn`)),
+            assignment('desired_count', raw('1')),
+            assignment('launch_type', 'FARGATE'),
+            '',
+            block('network_configuration', [], [
+                assignment('subnets', raw(`[\n      aws_subnet.${id}_private_a.id,\n      aws_subnet.${id}_private_b.id,\n    ]`)),
+                assignment('security_groups', raw(`[aws_security_group.${id}_ecs.id]`)),
+                assignment('assign_public_ip', raw('false')),
+            ]),
+            '',
+            ...(isWorker ? [] : [
+                block('load_balancer', [], [
+                    assignment('target_group_arn', raw(`aws_lb_target_group.${cellId}.arn`)),
+                    assignment('container_name', cellId),
+                    assignment('container_port', raw(String(port))),
+                ]),
+                ''
+            ]),
+            assignment('tags', objectLiteral({ Name: `${prefix}-${cellId}` })),
+        ])));
+        resourceNames.push(`ecs:${cell.name}`);
+    }
+    return { content: blocks.join('\n'), resourceNames, skipped };
+}
+/**
+ * Split a cell's variables into the two arrays ECS task definitions accept:
+ *
+ *   - `env`     → goes in the container's `environment: [...]` block as plain
+ *                  name/value pairs. Visible in `ecs:DescribeTaskDefinition`.
+ *   - `secrets` → goes in `secrets: [...]` and is pulled from Secrets Manager
+ *                  at task start by the execution role. Never appears in the
+ *                  task def JSON.
+ *
+ * Sensitive secrets (passwords, keys, user-credential JSON) route to secrets;
+ * everything else — including non-sensitive `source: secret` vars like
+ * EVENT_BUS_NAME — stays in env.
+ */
+function buildContainerEnv(cell, plan) {
+    const derived = derivableSecrets(plan);
+    const env = [];
+    const secrets = [];
+    for (const v of cell.variables) {
+        if (v.source === 'literal') {
+            env.push({ name: v.name, value: `"${v.value ?? ''}"` });
+        }
+        else if (v.source === 'secret') {
+            if (isSensitiveSecret(v.name)) {
+                // Pulled from Secrets Manager via the secret provisioned in secrets.tf
+                const rid = tfId(v.name.toLowerCase());
+                secrets.push({ name: v.name, valueFrom: `aws_secretsmanager_secret.${rid}.arn` });
+            }
+            else {
+                // Derivable secrets reference locals; external secrets reference vars
+                const ref = derived.has(v.name) ? `local.${tfVarName(v.name)}` : `var.${tfVarName(v.name)}`;
+                env.push({ name: v.name, value: ref });
+            }
+        }
+        else if (v.source === 'output') {
+            // Output refs resolved at deploy time — use placeholder
+            const ref = v.value ?? '';
+            env.push({ name: v.name, value: `"$\{${ref}}"` });
+        }
+        else if (v.source === 'env') {
+            env.push({ name: v.name, value: `var.${tfVarName(v.name)}` });
+        }
+    }
+    return { env, secrets };
+}
+// ──────────────── network.tf ────────────────
+function buildNetworkTf(plan, prefix) {
+    const blocks = [];
+    const resourceNames = [];
+    const skipped = [];
+    const id = tfId(prefix);
+    // ALB (always generated — ECS services need a load balancer)
+    blocks.push(hcl(block('resource', ['"aws_lb"', `"${id}"`], [
+        assignment('name', awsName(`${prefix}-alb`, 32)),
+        assignment('internal', raw('false')),
+        assignment('load_balancer_type', 'application'),
+        assignment('security_groups', raw(`[aws_security_group.${id}_alb.id]`)),
+        assignment('subnets', raw(`[\n    aws_subnet.${id}_public_a.id,\n    aws_subnet.${id}_public_b.id,\n  ]`)),
+        '',
+        assignment('tags', objectLiteral({ Name: `${prefix}-alb` })),
+    ]), '', block('resource', ['"aws_lb_listener"', `"${id}"`], [
+        assignment('load_balancer_arn', raw(`aws_lb.${id}.arn`)),
+        assignment('port', raw('80')),
+        assignment('protocol', 'HTTP'),
+        '',
+        block('default_action', [], [
+            assignment('type', 'fixed-response'),
+            '',
+            block('fixed_response', [], [
+                assignment('content_type', 'text/plain'),
+                assignment('message_body', 'Not Found'),
+                assignment('status_code', '404'),
+            ]),
+        ]),
+    ])));
+    resourceNames.push('alb');
+    // Target groups + listener rules for HTTP-serving cells only
+    // Worker cells (event-bus-cell, etc.) run as ECS services but don't receive ALB traffic
+    // Lambda cells skip the ALB entirely — they front directly via CloudFront → Function URL
+    let priority = 100;
+    for (const cell of plan.cells) {
+        if (!isContainerCell(cell))
+            continue;
+        const isWorker = cell.adapterType === 'node/event-bus';
+        if (isWorker)
+            continue;
+        const cellId = tfId(cell.name);
+        const construct = plan.constructs.find((c) => c.category === 'compute' && c.type === 'container' && cell.constructs.includes(c.name));
+        const port = cell.adapterConfig?.port ?? construct?.config?.port ?? 3000;
+        const isApi = cell.name.includes('api');
+        blocks.push(hcl('', block('resource', ['"aws_lb_target_group"', `"${cellId}"`], [
+            assignment('name', awsName(`${prefix}-${cellId}-tg`, 32)),
+            assignment('port', raw(String(port))),
+            assignment('protocol', 'HTTP'),
+            assignment('target_type', 'ip'),
+            assignment('vpc_id', raw(`aws_vpc.${id}.id`)),
+            '',
+            block('health_check', [], [
+                assignment('path', isApi ? '/health' : '/'),
+                assignment('healthy_threshold', raw('2')),
+                assignment('unhealthy_threshold', raw('3')),
+                assignment('timeout', raw('5')),
+                assignment('interval', raw('30')),
+            ]),
+            '',
+            assignment('tags', objectLiteral({ Name: `${prefix}-${cellId}-tg` })),
+        ]), '', block('resource', ['"aws_lb_listener_rule"', `"${cellId}"`], [
+            assignment('listener_arn', raw(`aws_lb_listener.${id}.arn`)),
+            assignment('priority', raw(String(priority))),
+            '',
+            block('condition', [], [
+                block('path_pattern', [], [
+                    assignment('values', raw(isApi ? '["/*"]' : '["/*"]')),
+                ]),
+            ]),
+            '',
+            block('action', [], [
+                assignment('type', 'forward'),
+                assignment('target_group_arn', raw(`aws_lb_target_group.${cellId}.arn`)),
+            ]),
+        ])));
+        resourceNames.push(`tg:${cell.name}`);
+        priority += 10;
+    }
+    // API Gateway — map from network/gateway constructs
+    for (const c of plan.constructs) {
+        if (c.category !== 'network')
+            continue;
+        if (c.provider !== 'aws') {
+            skipped.push({
+                name: c.name,
+                kind: `${c.category}/${c.type}`,
+                reason: `external provider "${c.provider}" — not provisionable via Terraform/AWS`,
+            });
+            continue;
+        }
+        const rid = tfId(c.name);
+        if (c.type === 'gateway') {
+            blocks.push(hcl('', block('resource', ['"aws_apigatewayv2_api"', `"${rid}"`], [
+                assignment('name', `${prefix}-${c.name}`),
+                assignment('protocol_type', c.config?.type ?? 'HTTP'),
+                assignment('tags', objectLiteral({ Name: `${prefix}-${c.name}` })),
+            ]), '', block('resource', ['"aws_apigatewayv2_stage"', `"${rid}"`], [
+                assignment('api_id', raw(`aws_apigatewayv2_api.${rid}.id`)),
+                assignment('name', '$default'),
+                assignment('auto_deploy', raw('true')),
+            ]), '', block('resource', ['"aws_apigatewayv2_integration"', `"${rid}"`], [
+                assignment('api_id', raw(`aws_apigatewayv2_api.${rid}.id`)),
+                assignment('integration_type', 'HTTP_PROXY'),
+                assignment('integration_method', 'ANY'),
+                assignment('integration_uri', raw(`aws_lb_listener.${id}.arn`)),
+                assignment('connection_type', 'VPC_LINK'),
+            ])));
+            resourceNames.push(`apigateway:${c.name}`);
+        }
+        else if (c.type === 'cdn') {
+            skipped.push({
+                name: c.name,
+                kind: `${c.category}/${c.type}`,
+                reason: 'CloudFront distribution generated per static UI cell',
+            });
+        }
+        else {
+            skipped.push({
+                name: c.name,
+                kind: `${c.category}/${c.type}`,
+                reason: `no Terraform mapping for network/${c.type}`,
+            });
+        }
+    }
+    // CloudFront for static UI cells (vite/*)
+    const hasAlb = plan.cells.some(isContainerCell) && plan.cells.some((c) => isContainerCell(c) && c.adapterType !== 'node/event-bus');
+    for (const cell of plan.cells) {
+        if (!cell.adapterType.startsWith('vite/'))
+            continue;
+        const cellId = tfId(cell.name);
+        blocks.push(hcl('', comment(`CloudFront distribution for ${cell.name} (static assets)`), block('resource', ['"aws_cloudfront_origin_access_identity"', `"${cellId}"`], [
+            assignment('comment', `OAI for ${prefix}-${cellId}`),
+        ]), '', block('resource', ['"aws_s3_bucket_policy"', `"${cellId}"`], [
+            assignment('bucket', raw(`aws_s3_bucket.${cellId}.id`)),
+            assignment('policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowCloudFrontOAI"
+        Effect    = "Allow"
+        Principal = { AWS = aws_cloudfront_origin_access_identity.${cellId}.iam_arn }
+        Action    = "s3:GetObject"
+        Resource  = "\${aws_s3_bucket.${cellId}.arn}/*"
+      }
+    ]
+  })`)),
+        ]), '', block('resource', ['"aws_cloudfront_distribution"', `"${cellId}"`], [
+            assignment('enabled', raw('true')),
+            assignment('default_root_object', 'index.html'),
+            '',
+            block('origin', [], [
+                assignment('domain_name', raw(`aws_s3_bucket.${cellId}.bucket_regional_domain_name`)),
+                assignment('origin_id', `s3-${cellId}`),
+                '',
+                block('s3_origin_config', [], [
+                    assignment('origin_access_identity', raw(`aws_cloudfront_origin_access_identity.${cellId}.cloudfront_access_identity_path`)),
+                ]),
+            ]),
+            ...(hasAlb ? [
+                '',
+                comment('ALB origin — proxies API calls through CloudFront (avoids mixed-content)'),
+                block('origin', [], [
+                    assignment('domain_name', raw(`aws_lb.${id}.dns_name`)),
+                    assignment('origin_id', `alb-${id}`),
+                    '',
+                    block('custom_origin_config', [], [
+                        assignment('http_port', raw('80')),
+                        assignment('https_port', raw('443')),
+                        assignment('origin_protocol_policy', 'http-only'),
+                        assignment('origin_ssl_protocols', raw('["TLSv1.2"]')),
+                    ]),
+                ]),
+                '',
+                comment('Forward API + auth traffic to ALB — no caching, pass all headers'),
+                block('ordered_cache_behavior', [], [
+                    assignment('path_pattern', `/${plan.domain.split('/').pop()}/*`),
+                    assignment('allowed_methods', raw('["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]')),
+                    assignment('cached_methods', raw('["GET", "HEAD"]')),
+                    assignment('target_origin_id', `alb-${id}`),
+                    assignment('viewer_protocol_policy', 'redirect-to-https'),
+                    '',
+                    block('forwarded_values', [], [
+                        assignment('query_string', raw('true')),
+                        assignment('headers', raw('["*"]')),
+                        block('cookies', [], [
+                            assignment('forward', 'all'),
+                        ]),
+                    ]),
+                ]),
+                '',
+                block('ordered_cache_behavior', [], [
+                    assignment('path_pattern', '/auth*'),
+                    assignment('allowed_methods', raw('["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]')),
+                    assignment('cached_methods', raw('["GET", "HEAD"]')),
+                    assignment('target_origin_id', `alb-${id}`),
+                    assignment('viewer_protocol_policy', 'redirect-to-https'),
+                    '',
+                    block('forwarded_values', [], [
+                        assignment('query_string', raw('true')),
+                        assignment('headers', raw('["*"]')),
+                        block('cookies', [], [
+                            assignment('forward', 'all'),
+                        ]),
+                    ]),
+                ]),
+            ] : []),
+            '',
+            block('default_cache_behavior', [], [
+                assignment('allowed_methods', raw('["GET", "HEAD", "OPTIONS"]')),
+                assignment('cached_methods', raw('["GET", "HEAD"]')),
+                assignment('target_origin_id', `s3-${cellId}`),
+                assignment('viewer_protocol_policy', 'redirect-to-https'),
+                '',
+                block('forwarded_values', [], [
+                    assignment('query_string', raw('false')),
+                    block('cookies', [], [
+                        assignment('forward', 'none'),
+                    ]),
+                ]),
+            ]),
+            '',
+            comment('SPA: serve index.html for client-side routes'),
+            block('custom_error_response', [], [
+                assignment('error_code', raw('403')),
+                assignment('response_code', raw('200')),
+                assignment('response_page_path', '/index.html'),
+            ]),
+            block('custom_error_response', [], [
+                assignment('error_code', raw('404')),
+                assignment('response_code', raw('200')),
+                assignment('response_page_path', '/index.html'),
+            ]),
+            '',
+            block('restrictions', [], [
+                block('geo_restriction', [], [
+                    assignment('restriction_type', 'none'),
+                ]),
+            ]),
+            '',
+            block('viewer_certificate', [], [
+                assignment('cloudfront_default_certificate', raw('true')),
+            ]),
+            '',
+            assignment('tags', objectLiteral({ Name: `${prefix}-${cellId}-cdn` })),
+        ])));
+        resourceNames.push(`cloudfront:${cell.name}`);
+    }
+    // CloudFront + WAF per lambda cell. Each lambda is fronted by its own
+    // distribution (clean separation from the static-UI distributions; matches
+    // dna-platform's "api.X / docs.X / X" subdomain split). The WAF rate-based
+    // rule attaches via `aws_wafv2_web_acl_association` -> distribution arn.
+    for (const cell of plan.cells) {
+        if (!isLambdaCell(cell))
+            continue;
+        const cellId = tfId(cell.name);
+        const rate = wafRateLimit(cell);
+        blocks.push(hcl('', comment(`CloudFront distribution for ${cell.name} (lambda Function URL)`), block('resource', ['"aws_cloudfront_distribution"', `"${cellId}_lambda"`], [
+            assignment('enabled', raw('true')),
+            '',
+            block('origin', [], [
+                assignment('domain_name', raw(`replace(replace(aws_lambda_function_url.${cellId}.function_url, "https://", ""), "/", "")`)),
+                assignment('origin_id', `lambda-${cellId}`),
+                '',
+                block('custom_origin_config', [], [
+                    assignment('http_port', raw('80')),
+                    assignment('https_port', raw('443')),
+                    assignment('origin_protocol_policy', 'https-only'),
+                    assignment('origin_ssl_protocols', raw('["TLSv1.2"]')),
+                ]),
+            ]),
+            '',
+            comment('All API traffic — no caching (Managed-CachingDisabled), all methods'),
+            block('default_cache_behavior', [], [
+                assignment('allowed_methods', raw('["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]')),
+                assignment('cached_methods', raw('["GET", "HEAD"]')),
+                assignment('target_origin_id', `lambda-${cellId}`),
+                assignment('viewer_protocol_policy', 'redirect-to-https'),
+                assignment('cache_policy_id', '4135ea2d-6df8-44a3-9df3-4b5a84be39ad'), // Managed-CachingDisabled
+                assignment('origin_request_policy_id', 'b689b0a8-53d0-40ab-baf2-68738e2966ac'), // Managed-AllViewerExceptHostHeader
+            ]),
+            '',
+            block('restrictions', [], [
+                block('geo_restriction', [], [
+                    assignment('restriction_type', 'none'),
+                ]),
+            ]),
+            '',
+            block('viewer_certificate', [], [
+                assignment('cloudfront_default_certificate', raw('true')),
+            ]),
+            '',
+            assignment('web_acl_id', raw(`aws_wafv2_web_acl.${cellId}.arn`)),
+            '',
+            assignment('tags', objectLiteral({ Name: `${prefix}-${cellId}-lambda-cdn` })),
+        ]), '', comment(`WAF rate-based rule for ${cell.name} (${rate} req / 5min per IP)`), block('resource', ['"aws_wafv2_web_acl"', `"${cellId}"`], [
+            assignment('name', `${prefix}-${cellId}-waf`),
+            assignment('scope', 'CLOUDFRONT'),
+            assignment('provider', raw('aws.us_east_1')),
+            '',
+            block('default_action', [], [
+                block('allow', [], []),
+            ]),
+            '',
+            block('rule', [], [
+                assignment('name', 'rate-limit'),
+                assignment('priority', raw('1')),
+                '',
+                block('action', [], [
+                    block('block', [], []),
+                ]),
+                '',
+                block('statement', [], [
+                    block('rate_based_statement', [], [
+                        assignment('limit', raw(String(rate))),
+                        assignment('aggregate_key_type', 'IP'),
+                    ]),
+                ]),
+                '',
+                block('visibility_config', [], [
+                    assignment('cloudwatch_metrics_enabled', raw('true')),
+                    assignment('metric_name', `${prefix}-${cellId}-rate-limit`),
+                    assignment('sampled_requests_enabled', raw('true')),
+                ]),
+            ]),
+            '',
+            block('visibility_config', [], [
+                assignment('cloudwatch_metrics_enabled', raw('true')),
+                assignment('metric_name', `${prefix}-${cellId}-waf`),
+                assignment('sampled_requests_enabled', raw('true')),
+            ]),
+            '',
+            assignment('tags', objectLiteral({ Name: `${prefix}-${cellId}-waf` })),
+        ])));
+        resourceNames.push(`cloudfront:${cell.name}`, `waf:${cell.name}`);
+    }
+    return { content: blocks.join('\n'), resourceNames, skipped };
+}
+// ──────────────── secrets.tf ────────────────
+//
+// Provisions an aws_secretsmanager_secret + _version for every sensitive
+// variable (see isSensitiveSecret). The value source depends on derivability:
+//
+//   - Derivable (e.g. DATABASE_URL built from RDS outputs) → secret_string
+//     references `local.<name>` which is computed in locals.tf from other
+//     resources.
+//   - External (e.g. DEMO_USERS_JSON) → secret_string references `var.<name>`,
+//     passed in via terraform.tfvars.
+//
+// Non-sensitive "secrets" from the DNA (resource identifiers like
+// EVENT_BUS_NAME) are skipped here and stay in the ECS `environment:` block —
+// they're not actual secrets and shouldn't burn a $0.40/mo Secrets Manager
+// entry per environment.
+function buildSecretsTf(plan, prefix) {
+    const derived = derivableSecrets(plan);
+    const allSecrets = collectSecrets(plan);
+    const sensitive = allSecrets.filter(isSensitiveSecret);
+    if (sensitive.length === 0) {
+        return comment('No sensitive secrets to provision via Secrets Manager');
+    }
+    const blocks = [
+        comment('Secrets Manager entries for sensitive Variables'),
+        comment('Derivable values come from locals.tf; external values from terraform.tfvars.'),
+        '',
+    ];
+    for (const name of sensitive) {
+        const rid = tfId(name.toLowerCase());
+        const source = derived.has(name)
+            ? `local.${tfVarName(name)}`
+            : `var.${tfVarName(name)}`;
+        blocks.push(hcl(block('resource', ['"aws_secretsmanager_secret"', `"${rid}"`], [
+            assignment('name', `${prefix}/${name}`),
+            assignment('tags', objectLiteral({ Name: `${prefix}-${name}` })),
+        ]), '', block('resource', ['"aws_secretsmanager_secret_version"', `"${rid}"`], [
+            assignment('secret_id', raw(`aws_secretsmanager_secret.${rid}.id`)),
+            assignment('secret_string', raw(source)),
+        ])));
+    }
+    return blocks.join('\n');
+}
+// ──────────────── iam.tf ────────────────
+function buildIamTf(prefix, plan) {
+    const id = tfId(prefix);
+    const parts = [];
+    parts.push(hcl(comment('ECS execution role — allows ECS to pull images and write logs'), block('resource', ['"aws_iam_role"', `"${id}_ecs_execution"`], [
+        assignment('name', `${prefix}-ecs-execution`),
+        assignment('assume_role_policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = { Service = "ecs-tasks.amazonaws.com" }
+      }
+    ]
+  })`)),
+        assignment('tags', objectLiteral({ Name: `${prefix}-ecs-execution` })),
+    ]), '', block('resource', ['"aws_iam_role_policy_attachment"', `"${id}_ecs_execution"`], [
+        assignment('role', raw(`aws_iam_role.${id}_ecs_execution.name`)),
+        assignment('policy_arn', 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'),
+    ]), '', comment('Allow ECS execution role to pull Secrets Manager values for the task def `secrets:` block'), block('resource', ['"aws_iam_role_policy"', `"${id}_ecs_execution_secrets"`], [
+        assignment('name', `${prefix}-ecs-execution-secrets`),
+        assignment('role', raw(`aws_iam_role.${id}_ecs_execution.id`)),
+        assignment('policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = "arn:aws:secretsmanager:*:*:secret:${prefix}/*"
+      }
+    ]
+  })`)),
+    ]), '', comment('ECS task role — permissions for running containers'), block('resource', ['"aws_iam_role"', `"${id}_ecs_task"`], [
+        assignment('name', `${prefix}-ecs-task`),
+        assignment('assume_role_policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = { Service = "ecs-tasks.amazonaws.com" }
+      }
+    ]
+  })`)),
+        assignment('tags', objectLiteral({ Name: `${prefix}-ecs-task` })),
+    ]), '', comment('Allow task role to read secrets'), block('resource', ['"aws_iam_role_policy"', `"${id}_ecs_task_secrets"`], [
+        assignment('name', `${prefix}-ecs-task-secrets`),
+        assignment('role', raw(`aws_iam_role.${id}_ecs_task.id`)),
+        assignment('policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = "arn:aws:secretsmanager:*:*:secret:${prefix}/*"
+      }
+    ]
+  })`)),
+    ])));
+    // EventBridge + SQS permissions when eventbridge construct exists
+    const hasEventBridge = plan.constructs.some((c) => c.type === 'queue' && c.config?.engine === 'eventbridge');
+    if (hasEventBridge) {
+        const ebRid = tfId('event-bus');
+        parts.push(hcl('', comment('Allow task role to publish to EventBridge and poll SQS'), block('resource', ['"aws_iam_role_policy"', `"${id}_ecs_task_eventbridge"`], [
+            assignment('name', `${prefix}-ecs-task-eventbridge`),
+            assignment('role', raw(`aws_iam_role.${id}_ecs_task.id`)),
+            assignment('policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["events:PutEvents"]
+        Resource = aws_cloudwatch_event_bus.${ebRid}.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
+        Resource = aws_sqs_queue.${ebRid}.arn
+      }
+    ]
+  })`)),
+        ])));
+    }
+    // Per-lambda execution role — Lambda needs basic execution + Secrets Manager
+    // read for any sensitive variables consumed by the function. Each lambda
+    // cell gets its own role so policy diffs stay scoped per-cell.
+    const planHasDb = plan.constructs.some((c) => c.category === 'storage' && c.type === 'database' && c.config?.engine === 'postgres');
+    for (const cell of plan.cells) {
+        if (!isLambdaCell(cell))
+            continue;
+        const cellId = tfId(cell.name);
+        parts.push(hcl('', comment(`Lambda execution role for ${cell.name}`), block('resource', ['"aws_iam_role"', `"${cellId}_lambda"`], [
+            assignment('name', `${prefix}-${cellId}-lambda`),
+            assignment('assume_role_policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = { Service = "lambda.amazonaws.com" }
+      }
+    ]
+  })`)),
+            assignment('tags', objectLiteral({ Name: `${prefix}-${cellId}-lambda` })),
+        ]), '', block('resource', ['"aws_iam_role_policy_attachment"', `"${cellId}_lambda_basic"`], [
+            assignment('role', raw(`aws_iam_role.${cellId}_lambda.name`)),
+            assignment('policy_arn', 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'),
+        ]), ...(planHasDb ? [
+            '',
+            comment(`Lambda VPC access (ENI lifecycle) — needed for ${cell.name} to reach RDS Proxy`),
+            block('resource', ['"aws_iam_role_policy_attachment"', `"${cellId}_lambda_vpc"`], [
+                assignment('role', raw(`aws_iam_role.${cellId}_lambda.name`)),
+                assignment('policy_arn', 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'),
+            ]),
+        ] : []), '', comment(`Allow ${cell.name} lambda role to read scoped Secrets Manager values`), block('resource', ['"aws_iam_role_policy"', `"${cellId}_lambda_secrets"`], [
+            assignment('name', `${prefix}-${cellId}-lambda-secrets`),
+            assignment('role', raw(`aws_iam_role.${cellId}_lambda.id`)),
+            assignment('policy', raw(`jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = "arn:aws:secretsmanager:*:*:secret:${prefix}/*"
+      }
+    ]
+  })`)),
+        ])));
+    }
+    return parts.join('\n');
+}
+// ──────────────── ecr.tf ────────────────
+function buildEcrTf(plan, prefix) {
+    const blocks = [];
+    const resourceNames = [];
+    for (const cell of plan.cells) {
+        // Only container-deployable cells need ECR repos
+        if (!isContainerCell(cell))
+            continue;
+        const cellId = tfId(cell.name);
+        blocks.push(hcl(block('resource', ['"aws_ecr_repository"', `"${cellId}"`], [
+            assignment('name', `${prefix}-${cellId}`),
+            assignment('image_tag_mutability', 'MUTABLE'),
+            assignment('force_delete', raw('true')),
+            '',
+            block('image_scanning_configuration', [], [
+                assignment('scan_on_push', raw('true')),
+            ]),
+            '',
+            assignment('tags', objectLiteral({ Name: `${prefix}-${cellId}` })),
+        ])));
+        resourceNames.push(`ecr:${cell.name}`);
+    }
+    return {
+        content: blocks.join('\n') || comment('No ECR repositories needed'),
+        resourceNames,
+    };
+}
+// ──────────────── outputs.tf ────────────────
+function buildOutputsTf(plan, prefix) {
+    const id = tfId(prefix);
+    const blocks = [];
+    blocks.push(hcl(block('output', ['"alb_dns_name"'], [
+        assignment('description', 'DNS name of the Application Load Balancer'),
+        assignment('value', raw(`aws_lb.${id}.dns_name`)),
+    ])));
+    // ECR repository URLs
+    for (const cell of plan.cells) {
+        if (cell.adapterType === 'postgres' || cell.adapterType.startsWith('vite/'))
+            continue;
+        const cellId = tfId(cell.name);
+        blocks.push(hcl(block('output', [`"ecr_url_${cellId}"`], [
+            assignment('description', `ECR repository URL for ${cell.name}`),
+            assignment('value', raw(`aws_ecr_repository.${cellId}.repository_url`)),
+        ])));
+    }
+    // RDS endpoints
+    for (const c of plan.constructs) {
+        if (c.category === 'storage' && c.type === 'database' && c.config?.engine === 'postgres' && c.provider === 'aws') {
+            const rid = tfId(c.name);
+            blocks.push(hcl(block('output', [`"rds_endpoint_${rid}"`], [
+                assignment('description', `RDS endpoint for ${c.name}`),
+                assignment('value', raw(`aws_db_instance.${rid}.endpoint`)),
+            ])));
+        }
+    }
+    // Event bus outputs (EventBridge or SNS+SQS)
+    for (const c of plan.constructs) {
+        if (c.category === 'storage' && c.type === 'queue' && c.provider === 'aws') {
+            const rid = tfId(c.name);
+            if (c.config?.engine === 'eventbridge') {
+                blocks.push(hcl(block('output', [`"eventbridge_bus_arn_${rid}"`], [
+                    assignment('description', `EventBridge bus ARN for ${c.name}`),
+                    assignment('value', raw(`aws_cloudwatch_event_bus.${rid}.arn`)),
+                ])));
+                blocks.push(hcl(block('output', [`"eventbridge_bus_name_${rid}"`], [
+                    assignment('description', `EventBridge bus name for ${c.name}`),
+                    assignment('value', raw(`aws_cloudwatch_event_bus.${rid}.name`)),
+                ])));
+                blocks.push(hcl(block('output', [`"sqs_queue_url_${rid}"`], [
+                    assignment('description', `SQS subscriber queue URL for ${c.name}`),
+                    assignment('value', raw(`aws_sqs_queue.${rid}.id`)),
+                ])));
+            }
+            else if (c.config?.engine === 'sns+sqs') {
+                blocks.push(hcl(block('output', [`"sns_topic_arn_${rid}"`], [
+                    assignment('description', `SNS topic ARN for ${c.name}`),
+                    assignment('value', raw(`aws_sns_topic.${rid}.arn`)),
+                ])));
+                blocks.push(hcl(block('output', [`"sqs_queue_url_${rid}"`], [
+                    assignment('description', `SQS queue URL for ${c.name}`),
+                    assignment('value', raw(`aws_sqs_queue.${rid}.id`)),
+                ])));
+            }
+        }
+    }
+    // CloudFront domains for static cells
+    for (const cell of plan.cells) {
+        if (!cell.adapterType.startsWith('vite/'))
+            continue;
+        const cellId = tfId(cell.name);
+        blocks.push(hcl(block('output', [`"cloudfront_domain_${cellId}"`], [
+            assignment('description', `CloudFront domain for ${cell.name}`),
+            assignment('value', raw(`aws_cloudfront_distribution.${cellId}.domain_name`)),
+        ])));
+    }
+    // API Gateway URL
+    for (const c of plan.constructs) {
+        if (c.category === 'network' && c.type === 'gateway' && c.provider === 'aws') {
+            const rid = tfId(c.name);
+            blocks.push(hcl(block('output', [`"api_gateway_url_${rid}"`], [
+                assignment('description', `API Gateway URL for ${c.name}`),
+                assignment('value', raw(`aws_apigatewayv2_api.${rid}.api_endpoint`)),
+            ])));
+        }
+    }
+    return blocks.join('\n');
+}
+// ──────────────── terraform.tfvars.example ────────────────
+function buildTfvarsExample(varNames, plan) {
+    const lines = [
+        `# ${plan.domain}/${plan.environment} — Terraform variable values`,
+        `# Copy to terraform.tfvars and fill in real values.`,
+        `# DO NOT commit terraform.tfvars to version control.`,
+        ``,
+    ];
+    for (const v of varNames) {
+        lines.push(`${v} = ""`);
+    }
+    return lines.join('\n') + '\n';
+}
+// ──────────────── README ────────────────
+/**
+ * Write a manifest for the post-apply phase. The launch step reads this to
+ * know which cells to build/push and where their output directories are.
+ */
+function buildManifest(plan) {
+    const cells = plan.cells.map((c) => {
+        const isStatic = c.adapterType.startsWith('vite/') || c.adapterType.startsWith('next/');
+        const isDb = c.adapterType === 'postgres';
+        const cellId = tfId(c.name);
+        return {
+            name: c.name,
+            adapterType: c.adapterType,
+            outputDir: c.outputDir,
+            kind: isDb ? 'database' : isStatic ? 'static' : 'container',
+            // Terraform output keys for post-apply wiring
+            ecrOutput: !isStatic && !isDb ? `ecr_url_${cellId}` : null,
+            s3Bucket: isStatic ? `${plan.domain.replace(/\//g, '-')}-${plan.environment}-${cellId.replace(/_/g, '-')}-assets` : null,
+            cloudfrontOutput: isStatic ? `cloudfront_domain_${cellId}` : null,
+        };
+    });
+    return JSON.stringify({ domain: plan.domain, environment: plan.environment, cells }, null, 2);
+}
+function buildReadme(plan, resources, skipped) {
+    const lines = [
+        `# ${plan.domain} — ${plan.environment} deployment (terraform/aws)`,
+        ``,
+        `Generated by \`cba deploy ${plan.domain} --env ${plan.environment} --adapter terraform/aws\`.`,
+        ``,
+        `## Resources`,
+        ``,
+        ...resources.map((r) => `- \`${r}\``),
+        ``,
+        `## Deploy`,
+        ``,
+        '```bash',
+        `cd output/${plan.domain}/${plan.environment}/deploy`,
+        ``,
+        `# 1. Configure variables`,
+        `cp terraform.tfvars.example terraform.tfvars`,
+        `# Edit terraform.tfvars with real secret values`,
+        ``,
+        `# 2. Initialize and apply`,
+        `terraform init`,
+        `terraform plan`,
+        `terraform apply`,
+        ``,
+        `# 3. Build and push container images`,
+        `# (for each ECR repository in outputs)`,
+        `aws ecr get-login-password --region ${plan.providers.find((p) => p.name === 'aws')?.region ?? 'us-east-1'} | docker login --username AWS --password-stdin <account>.dkr.ecr.<region>.amazonaws.com`,
+        `docker build -t <ecr-url>:latest ../path-to-cell-output/`,
+        `docker push <ecr-url>:latest`,
+        '```',
+        ``,
+    ];
+    if (skipped.length) {
+        lines.push(`## Skipped`, ``);
+        for (const s of skipped) {
+            lines.push(`- \`${s.name}\` (${s.kind}) — ${s.reason}`);
+        }
+        lines.push(``);
+    }
+    lines.push(`## Regenerating`, ``, `These files are regenerated from Technical DNA on every \`cba deploy\`.`, `Do not edit by hand — edit the DNA instead.`, ``);
+    return lines.join('\n');
+}
+function raw(v) {
+    return { __raw: true, value: v };
+}
+function isRaw(v) {
+    return v && typeof v === 'object' && v.__raw === true;
+}
+function comment(text) {
+    return `# ${text}`;
+}
+function assignment(key, value) {
+    if (isRaw(value))
+        return `${key} = ${value.value}`;
+    if (typeof value === 'object')
+        return `${key} = ${renderObjectLiteral(value)}`;
+    return `${key} = "${escapeHcl(value)}"`;
+}
+function objectLiteral(obj) {
+    return raw(renderObjectLiteral(obj));
+}
+function renderObjectLiteral(obj) {
+    const entries = Object.entries(obj);
+    if (entries.length === 0)
+        return '{}';
+    if (entries.length === 1) {
+        const [k, v] = entries[0];
+        return `{ ${k} = "${escapeHcl(v)}" }`;
+    }
+    const lines = entries.map(([k, v]) => `    ${k} = "${escapeHcl(v)}"`);
+    return `{\n${lines.join('\n')}\n  }`;
+}
+function block(type, labels, body) {
+    const labelStr = labels.length ? ' ' + labels.join(' ') : '';
+    const lines = [`${type}${labelStr} {`];
+    for (const line of body) {
+        if (line === '') {
+            lines.push('');
+        }
+        else {
+            // Indent each line of multi-line content
+            for (const subline of line.split('\n')) {
+                lines.push(subline === '' ? '' : `  ${subline}`);
+            }
+        }
+    }
+    lines.push('}');
+    return lines.join('\n');
+}
+function hcl(...parts) {
+    return parts.filter((p) => p !== undefined).join('\n') + '\n';
+}
+function escapeHcl(s) {
+    return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+// ──────────────── utilities ────────────────
+/** Convert a name to a valid Terraform identifier (lowercase, underscores) */
+function tfId(name) {
+    return name.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toLowerCase();
+}
+/**
+ * Convert a name to a valid AWS resource name (lowercase, hyphens only).
+ * Many AWS resources (ALB, TG, ECS cluster, IAM role) reject underscores and
+ * slashes. Target groups also have a 32-char limit — pass `maxLen` to truncate.
+ */
+function awsName(name, maxLen) {
+    const safe = name.replace(/[^a-zA-Z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase();
+    return maxLen ? safe.slice(0, maxLen) : safe;
+}
+/** Convert a variable name to a Terraform-safe variable name */
+function tfVarName(name) {
+    return name.toLowerCase();
+}
+// ── Compute target detection ──────────────────────────────────────────────────
+/**
+ * Cells with `adapter.config.compute === 'lambda'` deploy as AWS Lambda
+ * Function URLs instead of ECS tasks. The api-cell fastify adapter is the
+ * first/only producer; other adapters fall through to the default ECS path.
+ */
+function isLambdaCell(cell) {
+    return cell.adapterConfig?.compute === 'lambda';
+}
+function isStaticCell(cell) {
+    return cell.adapterType.startsWith('vite/') || cell.adapterType.startsWith('astro/');
+}
+function isContainerCell(cell) {
+    return (!isStaticCell(cell) &&
+        cell.adapterType !== 'postgres' &&
+        !isLambdaCell(cell));
+}
+function planHasLambda(plan) {
+    return plan.cells.some(isLambdaCell);
+}
+/**
+ * WAF rate limit defaults — overridable per cell via
+ * `adapter.config.wafRateLimit` (requests per 5 min per IP). 100 was chosen
+ * as a sane default for a single-call /v1/text-style API; raise for higher
+ * traffic surfaces, lower for sensitive auth endpoints.
+ */
+function wafRateLimit(cell) {
+    const v = cell.adapterConfig?.wafRateLimit;
+    return typeof v === 'number' ? v : 100;
+}
+// ── Launch / teardown (for `cba up` / `cba down`) ─────────────────────────────
+/**
+ * `terraform init` (idempotent) → `terraform plan -out=tfplan` → apply.
+ *
+ * Without --auto-approve the adapter stops after the plan so the operator can
+ * review the diff before anything touches AWS. This matches how `cba deploy`
+ * refuses to auto-develop — loud, explicit, no surprises.
+ */
+async function launchTerraform(ctx) {
+    const initCode = await runTerraform(['init', '-input=false'], ctx);
+    if (initCode !== 0)
+        return initCode;
+    const planCode = await runTerraform(['plan', '-input=false', '-out=tfplan'], ctx);
+    if (planCode !== 0)
+        return planCode;
+    if (!ctx.flags.autoApprove) {
+        console.log('');
+        console.log('→ terraform plan written to tfplan');
+        console.log('  Review the plan above, then re-run with --auto-approve to apply:');
+        console.log(`    cba up <domain> --env <env> --adapter terraform/aws --auto-approve`);
+        return 0;
+    }
+    const applyCode = await runTerraform(['apply', '-input=false', '-auto-approve', 'tfplan'], ctx);
+    if (applyCode !== 0)
+        return applyCode;
+    // ── Post-apply: build + push artifacts ───────────────────────────────────
+    return postApply(ctx);
+}
+/**
+ * Post-apply phase: reads the cba-manifest.json, builds Docker images and
+ * static assets, pushes to ECR / S3, and forces ECS redeployment.
+ */
+async function postApply(ctx) {
+    const fs = require('fs');
+    const manifestPath = path.join(ctx.deployDir, 'cba-manifest.json');
+    if (!fs.existsSync(manifestPath)) {
+        console.log('⚠ No cba-manifest.json found — skipping post-apply build/push');
+        return 0;
+    }
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+    const cells = manifest.cells;
+    // Read terraform outputs
+    const outputsRaw = (0, child_process_1.execSync)('terraform output -json', {
+        cwd: ctx.deployDir,
+        encoding: 'utf-8',
+        env: { ...process.env, ...ctx.env },
+    });
+    const outputs = JSON.parse(outputsRaw);
+    // Resolve AWS region from terraform provider
+    const region = (0, child_process_1.execSync)('aws configure get region', { encoding: 'utf-8' }).trim() || 'us-east-1';
+    // Resolve AWS account ID for ECR login
+    const accountId = JSON.parse((0, child_process_1.execSync)('aws sts get-caller-identity --output json', { encoding: 'utf-8' })).Account;
+    // ── ECR login (once for all container cells) ────────────────────────────
+    const containerCells = cells.filter((c) => c.kind === 'container');
+    if (containerCells.length > 0) {
+        console.log('');
+        console.log('→ ECR login');
+        const loginCode = runSync(`aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${region}.amazonaws.com`, ctx);
+        if (loginCode !== 0)
+            return loginCode;
+    }
+    // ── Build + push container cells ────────────────────────────────────────
+    for (const cell of containerCells) {
+        const ecrUrl = outputs[cell.ecrOutput]?.value;
+        if (!ecrUrl) {
+            console.log(`⚠ No ECR output "${cell.ecrOutput}" — skipping ${cell.name}`);
+            continue;
+        }
+        console.log(`→ build ${cell.name} (docker)`);
+        const buildCode = runSync(`docker build --platform linux/amd64 -t ${ecrUrl}:latest ${cell.outputDir}`, ctx);
+        if (buildCode !== 0)
+            return buildCode;
+        console.log(`→ push ${cell.name} → ECR`);
+        const pushCode = runSync(`docker push ${ecrUrl}:latest`, ctx);
+        if (pushCode !== 0)
+            return pushCode;
+    }
+    // ── Build + upload static cells ─────────────────────────────────────────
+    const albUrl = outputs.alb_dns_name?.value ? `http://${outputs.alb_dns_name.value}` : '';
+    const staticCells = cells.filter((c) => c.kind === 'static');
+    for (const cell of staticCells) {
+        if (!cell.s3Bucket)
+            continue;
+        // Patch config.json — use empty apiBase so API calls go through CloudFront
+        // (CloudFront proxies /<domain>/* to the ALB, avoiding mixed-content issues)
+        const configPath = path.join(cell.outputDir, 'public', 'config.json');
+        if (fs.existsSync(configPath)) {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+            if (config.apiBase !== undefined && config.apiBase) {
+                config.apiBase = '';
+                fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+                console.log(`→ patched ${cell.name} config.json apiBase → "" (proxied via CloudFront)`);
+            }
+        }
+        console.log(`→ build ${cell.name} (npm install + build)`);
+        const installCode = runSync(`npm install --no-audit --no-fund`, ctx, cell.outputDir);
+        if (installCode !== 0)
+            return installCode;
+        const buildCode = runSync(`npm run build`, ctx, cell.outputDir);
+        if (buildCode !== 0)
+            return buildCode;
+        console.log(`→ upload ${cell.name} → s3://${cell.s3Bucket}`);
+        const syncCode = runSync(`aws s3 sync ${path.join(cell.outputDir, 'dist')} s3://${cell.s3Bucket} --delete`, ctx);
+        if (syncCode !== 0)
+            return syncCode;
+    }
+    // ── Force ECS redeployment ──────────────────────────────────────────────
+    if (containerCells.length > 0) {
+        const prefix = `${manifest.domain.replace(/\//g, '-')}-${manifest.environment}`;
+        const clusterName = `${prefix}-cluster`;
+        for (const cell of containerCells) {
+            const serviceName = `${prefix}-${tfId(cell.name)}`;
+            console.log(`→ force redeploy ${cell.name} (ECS)`);
+            const code = runSync(`aws ecs update-service --cluster ${clusterName} --service ${serviceName} --force-new-deployment --no-cli-pager`, ctx);
+            if (code !== 0) {
+                console.log(`⚠ ECS redeploy failed for ${cell.name} — service may not exist yet (first deploy)`);
+            }
+        }
+    }
+    console.log('');
+    console.log('✓ Post-apply complete — artifacts built and pushed');
+    // Print access URLs
+    console.log('');
+    console.log('── Access URLs ──');
+    if (outputs.alb_dns_name?.value) {
+        console.log(`  API:      http://${outputs.alb_dns_name.value}`);
+    }
+    for (const cell of staticCells) {
+        const cfKey = cell.name.replace(/-cell$/, '').replace(/-/g, '_') + '_cell';
+        const cfOutput = `cloudfront_domain_${cfKey}`;
+        if (outputs[cfOutput]?.value) {
+            console.log(`  ${cell.name.padEnd(10)} https://${outputs[cfOutput].value}`);
+        }
+    }
+    return 0;
+}
+/** Synchronous shell command — returns exit code. */
+function runSync(cmd, ctx, cwd) {
+    try {
+        (0, child_process_1.execSync)(cmd, {
+            cwd: cwd ?? ctx.deployDir,
+            stdio: 'inherit',
+            env: { ...process.env, ...ctx.env },
+        });
+        return 0;
+    }
+    catch (err) {
+        return err.status ?? 1;
+    }
+}
+/**
+ * `terraform destroy`. Always requires --auto-approve in non-interactive runs;
+ * terraform would otherwise block on stdin for the confirmation prompt.
+ */
+async function teardownTerraform(ctx) {
+    if (!ctx.flags.autoApprove) {
+        throw new Error('terraform/aws teardown requires --auto-approve. This will destroy real AWS resources.');
+    }
+    const initCode = await runTerraform(['init', '-input=false'], ctx);
+    if (initCode !== 0)
+        return initCode;
+    // Read manifest to discover task definition families before destroy
+    const fs = require('fs');
+    const manifestPath = path.join(ctx.deployDir, 'cba-manifest.json');
+    let taskFamilies = [];
+    if (fs.existsSync(manifestPath)) {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+        const prefix = `${manifest.domain.replace(/\//g, '-')}-${manifest.environment}`;
+        taskFamilies = manifest.cells
+            .filter((c) => c.kind === 'container')
+            .map((c) => `${prefix}-${tfId(c.name)}`);
+    }
+    const destroyCode = await runTerraform(['destroy', '-input=false', '-auto-approve'], ctx);
+    if (destroyCode !== 0)
+        return destroyCode;
+    // Terraform only deregisters ECS task definitions — permanently delete them
+    for (const family of taskFamilies) {
+        try {
+            const listRaw = (0, child_process_1.execSync)(`aws ecs list-task-definitions --family-prefix ${family} --output json`, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+            const arns = JSON.parse(listRaw).taskDefinitionArns ?? [];
+            if (arns.length === 0)
+                continue;
+            // Deregister any still-active revisions
+            for (const arn of arns) {
+                (0, child_process_1.execSync)(`aws ecs deregister-task-definition --task-definition ${arn}`, {
+                    stdio: ['pipe', 'pipe', 'pipe'],
+                });
+            }
+            // Permanently delete all revisions
+            const revisions = arns.map((a) => a.split('/').pop()).join(' ');
+            (0, child_process_1.execSync)(`aws ecs delete-task-definitions --task-definitions ${revisions}`, {
+                stdio: ['pipe', 'pipe', 'pipe'],
+            });
+            console.log(`✓ Deleted ${arns.length} task definition revision(s) for ${family}`);
+        }
+        catch {
+            console.log(`⚠ Could not clean up task definitions for ${family}`);
+        }
+    }
+    return 0;
+}
+/**
+ * `terraform show` + AWS resource summary. Shows what terraform has deployed
+ * and queries AWS APIs for a quick resource count.
+ */
+async function statusTerraform(ctx) {
+    console.log('── AWS Resource Summary ──');
+    const awsJson = (cmd) => {
+        try {
+            const raw = (0, child_process_1.execSync)(cmd, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+            return JSON.parse(raw || '{}');
+        }
+        catch {
+            return null;
+        }
+    };
+    // ── Networking ──
+    console.log('  Networking');
+    const netChecks = [
+        { label: 'VPCs', cmd: 'aws ec2 describe-vpcs --output json', countFn: (j) => (j.Vpcs || []).length },
+        { label: 'Subnets', cmd: 'aws ec2 describe-subnets --output json', countFn: (j) => (j.Subnets || []).length },
+        { label: 'NAT gateways', cmd: 'aws ec2 describe-nat-gateways --output json', countFn: (j) => (j.NatGateways || []).filter((n) => n.State !== 'deleted').length },
+        { label: 'Internet gateways', cmd: 'aws ec2 describe-internet-gateways --output json', countFn: (j) => (j.InternetGateways || []).length },
+        { label: 'Security groups', cmd: 'aws ec2 describe-security-groups --output json', countFn: (j) => (j.SecurityGroups || []).filter((sg) => sg.GroupName !== 'default').length },
+        { label: 'Load balancers', cmd: 'aws elbv2 describe-load-balancers --output json', countFn: (j) => (j.LoadBalancers || []).length },
+        { label: 'Target groups', cmd: 'aws elbv2 describe-target-groups --output json', countFn: (j) => (j.TargetGroups || []).length },
+    ];
+    for (const check of netChecks) {
+        const json = awsJson(check.cmd);
+        const count = json !== null ? check.countFn(json) : '(error)';
+        console.log(`    ${check.label.padEnd(28)} ${count}`);
+    }
+    // ── Compute ──
+    console.log('  Compute');
+    const computeChecks = [
+        { label: 'ECS clusters', cmd: 'aws ecs list-clusters --output json', countFn: (j) => (j.clusterArns || []).length },
+        { label: 'ECR repositories', cmd: 'aws ecr describe-repositories --output json', countFn: (j) => (j.repositories || []).length },
+        { label: 'EC2 instances', cmd: 'aws ec2 describe-instances --output json', countFn: (j) => (j.Reservations || []).flatMap((r) => r.Instances || []).filter((i) => i.State?.Name !== 'terminated').length },
+    ];
+    for (const check of computeChecks) {
+        const json = awsJson(check.cmd);
+        const count = json !== null ? check.countFn(json) : '(error)';
+        console.log(`    ${check.label.padEnd(28)} ${count}`);
+    }
+    // ECS services — requires listing per cluster
+    try {
+        const clustersJson = awsJson('aws ecs list-clusters --output json');
+        const clusters = clustersJson?.clusterArns || [];
+        let services = 0;
+        for (const arn of clusters) {
+            const svcJson = awsJson(`aws ecs list-services --cluster "${arn}" --output json`);
+            services += (svcJson?.serviceArns || []).length;
+        }
+        console.log(`    ${'ECS services'.padEnd(28)} ${services}`);
+    }
+    catch {
+        console.log(`    ${'ECS services'.padEnd(28)} (error)`);
+    }
+    // ECS task definitions — global, not per-cluster
+    const taskJson = awsJson('aws ecs list-task-definitions --status ACTIVE --output json');
+    const taskDefs = taskJson !== null ? (taskJson.taskDefinitionArns || []).length : '(error)';
+    console.log(`    ${'ECS task definitions'.padEnd(28)} ${taskDefs}`);
+    // ── Storage ──
+    console.log('  Storage');
+    const storageChecks = [
+        { label: 'RDS databases', cmd: 'aws rds describe-db-instances --output json', countFn: (j) => (j.DBInstances || []).length },
+        { label: 'S3 buckets', cmd: 'aws s3api list-buckets --output json', countFn: (j) => (j.Buckets || []).length },
+        { label: 'SNS topics', cmd: 'aws sns list-topics --output json', countFn: (j) => (j.Topics || []).length },
+        { label: 'SQS queues', cmd: 'aws sqs list-queues --output json', countFn: (j) => (j.QueueUrls || []).length },
+    ];
+    for (const check of storageChecks) {
+        const json = awsJson(check.cmd);
+        const count = json !== null ? check.countFn(json) : '(error)';
+        console.log(`    ${check.label.padEnd(28)} ${count}`);
+    }
+    // ── CDN ──
+    console.log('  CDN');
+    const cdnJson = awsJson('aws cloudfront list-distributions --output json');
+    const cfCount = cdnJson !== null ? (cdnJson.DistributionList?.Items || []).length : '(error)';
+    console.log(`    ${'CloudFront distributions'.padEnd(28)} ${cfCount}`);
+    // ── IAM ──
+    console.log('  IAM');
+    const iamJson = awsJson('aws iam list-roles --output json');
+    // Only count non-AWS/service-linked roles
+    const customRoles = iamJson !== null
+        ? (iamJson.Roles || []).filter((r) => !r.Path.startsWith('/aws-service-role/') && !r.RoleName.startsWith('AWS')).length
+        : '(error)';
+    console.log(`    ${'Custom IAM roles'.padEnd(28)} ${customRoles}`);
+    console.log('');
+    return 0;
+}
+function runTerraform(args, ctx) {
+    return new Promise((resolve, reject) => {
+        const child = (0, child_process_1.spawn)('terraform', args, {
+            cwd: ctx.deployDir,
+            stdio: 'inherit',
+            env: { ...process.env, ...ctx.env },
+        });
+        child.on('error', (err) => {
+            if (err.code === 'ENOENT') {
+                reject(new Error('`terraform` not found on PATH. Install Terraform CLI.'));
+            }
+            else {
+                reject(err);
+            }
+        });
+        child.on('exit', (code) => resolve(code ?? 0));
+    });
+}
+//# sourceMappingURL=terraform-aws.js.map
