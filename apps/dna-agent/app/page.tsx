@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { ConversationPanel } from '@/components/ConversationPanel'
 import { LensPanelShell } from '@/components/LensPanelShell'
 import { SessionSetupModal } from '@/components/SessionSetupModal'
+import { loadSavedLenses, persistSavedLenses, clearSavedLenses, type SavedLens } from '@/lib/saved-lenses'
+import type { WidgetPayload } from '@dna-codes/dna-mcp'
 
 const MIN_PCT = 20
 const MAX_PCT = 80
@@ -18,12 +20,27 @@ export default function HomePage() {
   const [setupDone, setSetupDone] = useState(false)
   const [sessionConfig, setSessionConfig] = useState<{ pack: PackName; locked: boolean }>({ pack: 'operational', locked: false })
   const [needsSetup, setNeedsSetup] = useState(true)
+  const [savedLenses, setSavedLenses] = useState<SavedLens[]>(() => loadSavedLenses())
+
+  useEffect(() => {
+    persistSavedLenses(savedLenses)
+  }, [savedLenses])
 
   const handleGraphPatched = useCallback(() => {
     setRefreshSignal(n => n + 1)
   }, [])
 
+  const handleSaveLens = useCallback((name: string, widget: WidgetPayload) => {
+    setSavedLenses(prev => [...prev, { id: crypto.randomUUID(), name, widget, savedAt: Date.now() }])
+  }, [])
+
+  const handleRemoveLens = useCallback((id: string) => {
+    setSavedLenses(prev => prev.filter(l => l.id !== id))
+  }, [])
+
   const handleReset = useCallback(() => {
+    setSavedLenses([])
+    clearSavedLenses()
     setNeedsSetup(true)
     setSetupDone(false)
     setRefreshSignal(n => n + 1)
@@ -129,7 +146,7 @@ export default function HomePage() {
           )}
         </div>
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          <ConversationPanel pack={sessionConfig.pack} onGraphPatched={handleGraphPatched} onReset={handleReset} />
+          <ConversationPanel pack={sessionConfig.pack} onGraphPatched={handleGraphPatched} onReset={handleReset} onSaveLens={handleSaveLens} />
         </div>
       </div>
 
@@ -149,7 +166,7 @@ export default function HomePage() {
           background: 'var(--bg)',
         }}
       >
-        <LensPanelShell pack={sessionConfig.pack} refreshSignal={refreshSignal} />
+        <LensPanelShell pack={sessionConfig.pack} refreshSignal={refreshSignal} savedLenses={savedLenses} onRemoveLens={handleRemoveLens} />
       </div>
     </div>
     </>

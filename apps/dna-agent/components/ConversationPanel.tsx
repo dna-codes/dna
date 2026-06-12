@@ -46,9 +46,10 @@ interface ConversationPanelProps {
   pack: string
   onGraphPatched: () => void
   onReset: () => void
+  onSaveLens?: (name: string, widget: WidgetPayload) => void
 }
 
-export function ConversationPanel({ pack, onGraphPatched, onReset }: ConversationPanelProps) {
+export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens }: ConversationPanelProps) {
   const [messages, setMessages] = useState<Message[]>(() => [welcomeForPack(pack)])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
@@ -213,7 +214,11 @@ export function ConversationPanel({ pack, onGraphPatched, onReset }: Conversatio
               {msg.role === 'assistant' && (msg.widgets ?? []).length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--ui-space-2)' }}>
                   {(msg.widgets ?? []).map((w, i) => (
-                    <InlineWidget key={i} widget={w} />
+                    <InlineWidget
+                      key={i}
+                      widget={w}
+                      onSave={onSaveLens ? (name) => onSaveLens(name, w) : undefined}
+                    />
                   ))}
                 </div>
               )}

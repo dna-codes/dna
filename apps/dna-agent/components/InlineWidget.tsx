@@ -1,6 +1,81 @@
 'use client'
 
+import { useState, useRef, useEffect } from 'react'
 import type { WidgetPayload, StatRow, RecordTable, RecordCard, BadgeList } from '@dna-codes/dna-mcp'
+
+interface WidgetShellProps {
+  children: React.ReactNode
+  onSave?: (name: string) => void
+}
+
+function WidgetShell({ children, onSave }: WidgetShellProps) {
+  const [saving, setSaving] = useState(false)
+  const [nameInput, setNameInput] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (saving) inputRef.current?.focus()
+  }, [saving])
+
+  function handleConfirm() {
+    const trimmed = nameInput.trim()
+    if (trimmed) {
+      onSave?.(trimmed)
+    }
+    setSaving(false)
+    setNameInput('')
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') handleConfirm()
+    if (e.key === 'Escape') { setSaving(false); setNameInput('') }
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {children}
+      {onSave && (
+        <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          {saving ? (
+            <>
+              <input
+                ref={inputRef}
+                value={nameInput}
+                onChange={e => setNameInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={() => { if (!nameInput.trim()) { setSaving(false); setNameInput('') } }}
+                placeholder="Lens name…"
+                data-ui-input=""
+                style={{ fontSize: '0.65rem', padding: '0.2rem 0.4rem', width: '7rem', height: '1.5rem' }}
+              />
+              <button
+                data-ui-button=""
+                data-variant="primary"
+                data-size="sm"
+                onClick={handleConfirm}
+                style={{ fontSize: '0.65rem', padding: '0.2rem 0.4rem', height: '1.5rem', lineHeight: 1 }}
+                title="Save as lens"
+              >
+                ✓
+              </button>
+            </>
+          ) : (
+            <button
+              data-ui-button=""
+              data-variant="ghost"
+              data-size="sm"
+              onClick={() => setSaving(true)}
+              style={{ fontSize: '0.65rem', padding: '0.15rem 0.3rem', height: '1.4rem', lineHeight: 1, opacity: 0.5 }}
+              title="Save as lens"
+            >
+              ⊞
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function StatRowWidget({ widget }: { widget: StatRow }) {
   return (
@@ -107,17 +182,29 @@ function BadgeListWidget({ widget }: { widget: BadgeList }) {
   )
 }
 
-export function InlineWidget({ widget }: { widget: WidgetPayload }) {
+interface InlineWidgetProps {
+  widget: WidgetPayload
+  onSave?: (name: string) => void
+}
+
+export function InlineWidget({ widget, onSave }: InlineWidgetProps) {
+  let inner: React.ReactNode
   switch (widget.kind) {
     case 'stat-row':
-      return <StatRowWidget widget={widget} />
+      inner = <StatRowWidget widget={widget} />
+      break
     case 'record-table':
-      return <RecordTableWidget widget={widget} />
+      inner = <RecordTableWidget widget={widget} />
+      break
     case 'record-card':
-      return <RecordCardWidget widget={widget} />
+      inner = <RecordCardWidget widget={widget} />
+      break
     case 'badge-list':
-      return <BadgeListWidget widget={widget} />
+      inner = <BadgeListWidget widget={widget} />
+      break
     default:
       return null
   }
+
+  return <WidgetShell onSave={onSave}>{inner}</WidgetShell>
 }
