@@ -30,29 +30,26 @@ async function buildOrgChart(store) {
     // reports_to / belongs_to → parentId
     const parentMap = new Map();
     const fillsMap = new Map();
-    for (const link of allLinks) {
-        const relType = link.from.typeName + '->' + link.to.typeName;
-        void relType;
-        if (['reports_to', 'belongs_to', 'part_of'].includes(link.from.typeName)) {
-            // link.from.typeName is actually the RelationshipType name here? No — it's the resource type name.
-            // We need to check the relationship type name differently.
-        }
-    }
-    // Re-approach: load relationship types to find which rel names mean containment/fills
+    // Infer relationship types from (from.typeName, to.typeName) pairs — LinkRecord carries no rel name
     const relTypes = await store.relationshipType.list();
-    const containmentRels = new Set(relTypes.filter(r => ['reports_to', 'belongs_to', 'part_of'].includes(r.name.toLowerCase())).map(r => r.name));
+    const belongsToRels = new Set(relTypes.filter(r => ['belongs_to', 'part_of'].includes(r.name.toLowerCase())).map(r => r.name));
+    const reportsToRels = new Set(relTypes.filter(r => r.name.toLowerCase() === 'reports_to').map(r => r.name));
     const fillsRels = new Set(relTypes.filter(r => r.name.toLowerCase() === 'fills').map(r => r.name));
-    // Now match links to relationship types
-    // LinkRecord doesn't directly carry relationship type name — we match by from/to typeName pair
-    // Actually DnaDataStore links don't carry rel type name in the record.
-    // We need to infer from the from/to type combo and the registered relationship types.
-    // Simplest approach: list links and group by matching RelationshipType via from/to TypeName pair.
+    // Separate maps: structural containment (belongs_to) vs reporting chain (reports_to)
+    const reportsToChildrenMap = new Map(); // manager.id → [subordinate ids]
+    const reportsToParentMap = new Map(); // subordinate.id → manager.id
     for (const link of allLinks) {
         const matchingRelType = relTypes.find(rt => rt.from === link.from.typeName && rt.to === link.to.typeName);
         if (!matchingRelType)
             continue;
-        if (containmentRels.has(matchingRelType.name)) {
+        if (belongsToRels.has(matchingRelType.name)) {
             parentMap.set(link.from.id, link.to.id);
+        }
+        if (reportsToRels.has(matchingRelType.name)) {
+            reportsToParentMap.set(link.from.id, link.to.id);
+            const subs = reportsToChildrenMap.get(link.to.id) ?? [];
+            subs.push(link.from.id);
+            reportsToChildrenMap.set(link.to.id, subs);
         }
         if (fillsRels.has(matchingRelType.name)) {
             const person = allInstances.get(link.from.id);
@@ -65,8 +62,21 @@ async function buildOrgChart(store) {
     }
     // Build tree nodes for org types only
     const orgInstances = [...allInstances.values()].filter(i => orgTypeNames.has(i.type));
+    const groupTypeNames = new Set(['company', 'department', 'domain', 'group']);
+    const isGroupInst = (inst) => groupTypeNames.has(inst.type.toLowerCase());
     function buildNode(inst) {
-        const children = orgInstances.filter(i => parentMap.get(i.id) === inst.id);
+        let children;
+        if (isGroupInst(inst)) {
+            // Group nodes: direct belongs_to children; for position children, only include top-level ones
+            // (positions with a reports_to manager appear nested under their manager card instead)
+            children = orgInstances.filter(i => parentMap.get(i.id) === inst.id &&
+                (isGroupInst(i) || !reportsToParentMap.has(i.id)));
+        }
+        else {
+            // Position nodes: subordinates via reports_to
+            const subIds = reportsToChildrenMap.get(inst.id) ?? [];
+            children = orgInstances.filter(i => subIds.includes(i.id));
+        }
         return {
             id: inst.id,
             name: inst.name,
@@ -77,7 +87,8 @@ async function buildOrgChart(store) {
             parentId: parentMap.get(inst.id),
         };
     }
-    const roots = orgInstances.filter(i => !parentMap.has(i.id)).map(buildNode);
+    // Roots: group nodes with no belongs_to parent; positions with neither belongs_to nor reports_to parent
+    const roots = orgInstances.filter(i => !parentMap.has(i.id) && (isGroupInst(i) || !reportsToParentMap.has(i.id))).map(buildNode);
     const groupInst = orgInstances.find(i => ['company', 'department', 'domain'].includes(i.type.toLowerCase()));
     const groupName = groupInst?.name ?? 'Organization';
     return { lens: 'org-chart', groupName, roots };
