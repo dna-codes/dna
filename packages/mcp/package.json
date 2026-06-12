@@ -1,0 +1,62 @@
+{
+  "name": "@dna-codes/dna-mcp",
+  "version": "0.1.0",
+  "repository": "github:dna-codes/dna",
+  "description": "DNA MCP Server — exposes the DNA type registry and instance graph via the Model Context Protocol. Wraps DnaDataStore; designed for agent-first DNA creation and operation.",
+  "keywords": [
+    "dna",
+    "mcp",
+    "model-context-protocol",
+    "agent",
+    "neo4j"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "dna-mcp": "./dist/bin.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/bin.ts",
+    "build": "tsc",
+    "test": "node --experimental-vm-modules ../../node_modules/.bin/jest"
+  },
+  "dependencies": {
+    "@dna-codes/dna-adapters": "*",
+    "@dna-codes/dna-core": "*",
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^(\\.\\.?/.*)\\.js$": "$1"
+    },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ]
+  }
+}

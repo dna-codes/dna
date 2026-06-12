@@ -1,0 +1,2 @@
+- [DNA framing — grammar & groupings](feedback_dna_framing.md) — DNA *is* the grammar; primitive taxonomies are "groupings", not "families".
+- [Lenses vs Compositions — priority and role](project_lenses_compositions.md) — Compositions for building/spec; Lenses for runtime query. Compositions are the current priority.

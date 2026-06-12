@@ -13,7 +13,7 @@ This repo is the single source of truth for the DNA language and all published t
 
 | Tier | Directory | Published as | What it is |
 |---|---|---|---|
-| **Packages** | `packages/` | `@dna-codes/dna-*` | The DNA language SDK — schemas, TypeScript bindings, React hooks, adapters. Language-agnostic, zero behavioral opinion. |
+| **Packages** | `packages/` | `@dna-codes/dna-*` | The DNA language SDK — schemas, TypeScript bindings, React hooks, adapters, GraphQL server, MCP server. Language-agnostic, zero behavioral opinion. |
 | **Engine** | `engine/` | `@dna-codes/cells*` | The framework and tools that read DNA and produce things — the `cba` CLI, cell engines (api, db, ui), and architecture viewer. |
 | **Platform** | separate repos | not published | Deployed applications that consume the above (`dna-platform/`, `dna-codes-site/`, etc.). |
 
@@ -31,6 +31,7 @@ dna/                         ← this repo
     ingest/                  @dna-codes/dna-ingest       multi-source orchestrator
     adapters/                @dna-codes/dna-adapters     input/output/integration
     api/                     @dna-codes/dna-api          GraphQL server
+    mcp/                     @dna-codes/dna-mcp          MCP server (agent-first graph interface)
   engine/
     cba/                     @dna-codes/cells            CLI (cba binary)
     cba-viz/                 @dna-codes/cells-viz        architecture viewer
@@ -39,7 +40,8 @@ dna/                         ← this repo
     cells-ui/                @dna-codes/cells-ui         DNA → UI components cell
     fixtures/                test fixture DNA documents
   apps/
-    graph-studio/            dna-graph-studio            visual graph explorer
+    graph-studio/            dna-graph-studio            visual graph explorer (developer tool)
+    dna-agent/               dna-agent                   agent-first UI for business leaders
   examples/                  reference DNA documents
 ```
 

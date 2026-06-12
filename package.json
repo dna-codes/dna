@@ -8,12 +8,15 @@
     "packages/ingest",
     "packages/adapters",
     "packages/api",
+    "packages/mcp",
     "engine/cba",
     "engine/cba-viz",
     "engine/cells-api",
     "engine/cells-db",
     "engine/cells-ui",
-    "apps/graph-studio"
+    "engine/ui-library",
+    "apps/graph-studio",
+    "apps/dna-agent"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",

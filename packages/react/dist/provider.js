@@ -76,7 +76,7 @@ function DnaProvider({ dna, userId, children, roles: rolesProp, resolveRoles, st
     async function perform(opName, payload) {
         const roles = resolvedRoles ?? [];
         const isPermitted = checkPermitted(dna, opName, roles);
-        const dotIdx = opName.indexOf('.');
+        const dotIdx = opName.lastIndexOf('.');
         const resource = dotIdx >= 0 ? opName.slice(0, dotIdx) : opName;
         const action = dotIdx >= 0 ? opName.slice(dotIdx + 1) : '';
         const event = {
