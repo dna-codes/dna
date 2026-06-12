@@ -21,6 +21,8 @@ export default function HomePage() {
   const [sessionConfig, setSessionConfig] = useState<{ pack: PackName; locked: boolean }>({ pack: 'operational', locked: false })
   const [needsSetup, setNeedsSetup] = useState(true)
   const [savedLenses, setSavedLenses] = useState<SavedLens[]>(() => loadSavedLenses())
+  const [agentLens, setAgentLens] = useState<{ lensId: string; seq: number } | null>(null)
+  const agentLensSeq = useRef(0)
 
   useEffect(() => {
     persistSavedLenses(savedLenses)
@@ -36,6 +38,10 @@ export default function HomePage() {
 
   const handleRemoveLens = useCallback((id: string) => {
     setSavedLenses(prev => prev.filter(l => l.id !== id))
+  }, [])
+
+  const handleActivateLens = useCallback((lensId: string) => {
+    setAgentLens({ lensId, seq: ++agentLensSeq.current })
   }, [])
 
   const handleReset = useCallback(() => {
@@ -146,7 +152,7 @@ export default function HomePage() {
           )}
         </div>
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          <ConversationPanel pack={sessionConfig.pack} onGraphPatched={handleGraphPatched} onReset={handleReset} onSaveLens={handleSaveLens} />
+          <ConversationPanel pack={sessionConfig.pack} onGraphPatched={handleGraphPatched} onReset={handleReset} onSaveLens={handleSaveLens} onActivateLens={handleActivateLens} />
         </div>
       </div>
 
@@ -166,7 +172,7 @@ export default function HomePage() {
           background: 'var(--bg)',
         }}
       >
-        <LensPanelShell pack={sessionConfig.pack} refreshSignal={refreshSignal} savedLenses={savedLenses} onRemoveLens={handleRemoveLens} />
+        <LensPanelShell pack={sessionConfig.pack} refreshSignal={refreshSignal} savedLenses={savedLenses} onRemoveLens={handleRemoveLens} agentLens={agentLens} />
       </div>
     </div>
     </>

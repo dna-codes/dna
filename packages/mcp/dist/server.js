@@ -236,6 +236,11 @@ function registerHandlers(mcp, dataStore, locked) {
         const result = await applyPatchOps(patchOps, dataStore);
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
     });
+    mcp.tool('activate_lens', 'Switch the right-panel lens tab to the given tab ID. Use when the user asks to see a specific view or after building/querying data that maps to a lens.', {
+        lensId: zod_1.z.string().describe('The tab ID to activate (e.g. "org-chart", "pipeline", "job-descriptions")'),
+    }, async () => {
+        return { content: [{ type: 'text', text: JSON.stringify({ ok: true }) }] };
+    });
     mcp.tool('render_widget', 'Render an inline UI widget in the chat. Use to surface visual summaries after building or querying the graph.', {
         kind: zod_1.z.enum(['stat-row', 'record-table', 'record-card', 'badge-list']).describe('Widget type'),
         stats: zod_1.z.array(zod_1.z.object({

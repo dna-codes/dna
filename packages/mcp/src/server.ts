@@ -283,6 +283,17 @@ function registerHandlers(mcp: McpServer, dataStore: DnaDataStore, locked: boole
   )
 
   mcp.tool(
+    'activate_lens',
+    'Switch the right-panel lens tab to the given tab ID. Use when the user asks to see a specific view or after building/querying data that maps to a lens.',
+    {
+      lensId: z.string().describe('The tab ID to activate (e.g. "org-chart", "pipeline", "job-descriptions")'),
+    },
+    async () => {
+      return { content: [{ type: 'text' as const, text: JSON.stringify({ ok: true }) }] }
+    },
+  )
+
+  mcp.tool(
     'render_widget',
     'Render an inline UI widget in the chat. Use to surface visual summaries after building or querying the graph.',
     {

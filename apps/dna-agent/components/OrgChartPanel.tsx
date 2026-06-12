@@ -10,9 +10,11 @@ interface OrgChartPanelProps {
 function OrgNode({ node, depth = 0 }: { node: OrgChartNode; depth?: number }) {
   return (
     <div style={{ marginLeft: depth > 0 ? '1.5rem' : 0 }}>
-      <div data-ui-card="" style={{ padding: 'var(--ui-space-2) var(--ui-space-3)', marginBottom: 'var(--ui-space-2)', gap: 'var(--ui-space-1)' }}>
-        <span data-ui-tag="" data-variant="primary">{node.type}</span>
-        <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{node.name}</span>
+      <div data-ui-card="" style={{ padding: 'var(--ui-space-2) var(--ui-space-3)', marginBottom: 'var(--ui-space-2)', display: 'flex', flexDirection: 'column', gap: 'var(--ui-space-1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--ui-space-2)' }}>
+          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{node.name}</span>
+          <span data-ui-badge="" style={{ flexShrink: 0 }}>{node.type}</span>
+        </div>
         {node.holders.map(h => (
           <span key={h.id} style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             {h.name}

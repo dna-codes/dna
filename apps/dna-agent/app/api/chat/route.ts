@@ -119,6 +119,12 @@ export async function POST(req: Request) {
           const toolResults: Anthropic.ToolResultBlockParam[] = []
           for (const block of contentBlocks) {
             if (block.type !== 'tool_use') continue
+            // activate_lens — stream tab switch signal, return ok
+            if (block.name === 'activate_lens') {
+              send({ type: 'activate_lens', lensId: (block.input as Record<string, string>).lensId })
+              toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: JSON.stringify({ ok: true }) })
+              continue
+            }
             // render_widget is handled client-side — stream the payload and return ok
             if (block.name === 'render_widget') {
               send({ type: 'widget', widget: block.input as WidgetPayload })

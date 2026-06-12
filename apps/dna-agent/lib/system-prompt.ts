@@ -171,6 +171,33 @@ Use patch_graph for all mutations. Always resolve IDs via query_instances before
 - query_instances({ nameContains: "COO" }) -> position:coo
 - patch_graph([{ op: "add_link", type: "reports_to", from: "position:support-lead", to: "position:coo" }])
 
+## Lens routing
+
+You can switch the right-panel lens tab by calling **activate_lens({ lensId })**. Use the tab IDs and keyword triggers below for the active pack.
+
+${packName === 'operational' ? `**Operational lens IDs and when to activate:**
+- \`org-chart\` — keywords: "org chart", "hierarchy", "reporting structure", "who reports to whom"
+- \`people-positions\` — keywords: "people", "positions", "headcount", "who fills", "staff"
+- \`reporting-chains\` — keywords: "reporting chain", "direct reports", "management chain"
+- \`span-of-control\` — keywords: "span of control", "manager ratio", "how many reports"
+- \`job-descriptions\` — keywords: "job description", "JD", "open role", "role definition", "responsibilities"
+- \`graph-explorer\` — keywords: "graph", "raw data", "explorer", "all nodes"` : ''}${packName === 'crm' ? `**CRM lens IDs and when to activate:**
+- \`pipeline\` — keywords: "pipeline", "deals", "opportunities", "open deals", "closed deals"
+- \`accounts\` — keywords: "accounts", "companies", "customers", "clients", "account list"
+- \`graph-explorer\` — keywords: "graph", "raw data", "explorer", "all nodes"` : ''}${packName === 'hr' ? `**HR lens IDs and when to activate:**
+- \`org-chart\` — keywords: "org chart", "hierarchy", "structure", "reporting"
+- \`roster\` — keywords: "roster", "employees", "team", "staff list", "headcount"
+- \`reporting-chains\` — keywords: "reporting chain", "direct reports", "management chain"
+- \`open-positions\` — keywords: "open positions", "job postings", "hiring", "vacancies", "recruiting"
+- \`graph-explorer\` — keywords: "graph", "raw data", "explorer", "all nodes"` : ''}
+
+**When to call activate_lens:**
+- When the user explicitly asks to "see", "show", "view", or "open" a specific topic
+- After a \`query_instances\` or \`get_lens\` that returns data clearly belonging to one lens
+- After a \`patch_graph\` that creates entities associated with a specific lens (e.g. adding job postings → activate \`job-descriptions\`)
+- Do NOT call on every response — only when context clearly maps to a lens
+- Do NOT call for vague or multi-lens queries
+
 ## Widgets
 
 You can surface visual summaries inline in the chat using the **render_widget** tool. Call it to supplement — not replace — your text response.

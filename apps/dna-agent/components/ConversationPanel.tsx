@@ -15,11 +15,12 @@ export interface Message {
 }
 
 interface StreamChunk {
-  type: 'text' | 'tool_call' | 'graph_patched' | 'error' | 'widget'
+  type: 'text' | 'tool_call' | 'graph_patched' | 'error' | 'widget' | 'activate_lens'
   text?: string
   name?: string
   error?: string
   widget?: WidgetPayload
+  lensId?: string
 }
 
 const PACK_WELCOME: Record<string, { content: string; placeholder: string }> = {
@@ -47,9 +48,10 @@ interface ConversationPanelProps {
   onGraphPatched: () => void
   onReset: () => void
   onSaveLens?: (name: string, widget: WidgetPayload) => void
+  onActivateLens?: (lensId: string) => void
 }
 
-export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens }: ConversationPanelProps) {
+export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens, onActivateLens }: ConversationPanelProps) {
   const [messages, setMessages] = useState<Message[]>(() => [welcomeForPack(pack)])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
@@ -121,6 +123,8 @@ export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens }:
                     : m
                 )
               )
+            } else if (chunk.type === 'activate_lens' && chunk.lensId) {
+              onActivateLens?.(chunk.lensId)
             } else if (chunk.type === 'widget' && chunk.widget) {
               setMessages(prev =>
                 prev.map(m =>

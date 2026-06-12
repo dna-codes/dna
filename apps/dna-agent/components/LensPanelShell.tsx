@@ -46,9 +46,10 @@ interface LensPanelShellProps {
   refreshSignal: number
   savedLenses: SavedLens[]
   onRemoveLens: (id: string) => void
+  agentLens?: { lensId: string; seq: number } | null
 }
 
-export function LensPanelShell({ pack, refreshSignal, savedLenses, onRemoveLens }: LensPanelShellProps) {
+export function LensPanelShell({ pack, refreshSignal, savedLenses, onRemoveLens, agentLens }: LensPanelShellProps) {
   const packTabs = PACK_TABS[pack] ?? PACK_TABS.operational
   const [activeTab, setActiveTab] = useState(packTabs[0].id)
 
@@ -66,6 +67,16 @@ export function LensPanelShell({ pack, refreshSignal, savedLenses, onRemoveLens 
       setActiveTab(packTabs[0].id)
     }
   }, [savedLenses, activeTab, packTabs])
+
+  // Agent-driven tab switch — only honor if the lensId is valid for current pack or saved lenses
+  useEffect(() => {
+    if (!agentLens) return
+    const isPackTab = packTabs.some(t => t.id === agentLens.lensId)
+    const isSavedTab = savedLenses.some(l => l.id === agentLens.lensId)
+    if (isPackTab || isSavedTab) {
+      setActiveTab(agentLens.lensId)
+    }
+  }, [agentLens, packTabs, savedLenses])
 
   const activePackTab = packTabs.find(t => t.id === activeTab)
   const activeSavedLens = savedLenses.find(l => l.id === activeTab)
