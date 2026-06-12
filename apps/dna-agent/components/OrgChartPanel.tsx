@@ -7,26 +7,47 @@ interface OrgChartPanelProps {
   refreshSignal: number
 }
 
-function OrgNode({ node, depth = 0 }: { node: OrgChartNode; depth?: number }) {
+const GROUP_TYPES = new Set(['company', 'department', 'domain', 'group'])
+const isGroup = (node: OrgChartNode) => GROUP_TYPES.has(node.type.toLowerCase())
+
+function PositionCard({ node, depth = 0 }: { node: OrgChartNode; depth?: number }) {
   return (
-    <div style={{ marginLeft: depth > 0 ? '1.5rem' : 0 }}>
-      <div data-ui-card="" style={{ padding: 'var(--ui-space-2) var(--ui-space-3)', marginBottom: 'var(--ui-space-2)', display: 'flex', flexDirection: 'column', gap: 'var(--ui-space-1)' }}>
+    <div style={{ marginLeft: depth > 0 ? '1.25rem' : 0 }}>
+      <div data-ui-card="" style={{ padding: 'var(--ui-space-2) var(--ui-space-3)', marginBottom: 'var(--ui-space-2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--ui-space-2)' }}>
           <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{node.name}</span>
           <span data-ui-badge="" style={{ flexShrink: 0 }}>{node.type}</span>
         </div>
         {node.holders.map(h => (
-          <span key={h.id} style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            {h.name}
-          </span>
+          <div key={h.id} style={{ fontSize: '0.75rem', color: 'var(--ui-color-primary)', marginTop: 'var(--ui-space-1)' }}>{h.name}</div>
         ))}
       </div>
-      {node.reports.length > 0 && (
-        <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '0.5rem', marginBottom: '0.25rem' }}>
-          {node.reports.map(r => (
-            <OrgNode key={r.id} node={r} depth={depth + 1} />
-          ))}
-        </div>
+      {node.reports.map(r => (
+        <PositionCard key={r.id} node={r} depth={depth + 1} />
+      ))}
+    </div>
+  )
+}
+
+function DeptSection({ node, depth = 0 }: { node: OrgChartNode; depth?: number }) {
+  return (
+    <div style={{ marginBottom: '1.5rem', marginLeft: depth > 0 ? '1rem' : 0 }}>
+      <div style={{
+        fontSize: '0.65rem',
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '0.07em',
+        color: depth === 0 ? 'var(--ui-color-primary)' : 'var(--ui-color-text-muted)',
+        borderBottom: '1px solid var(--border)',
+        paddingBottom: '0.25rem',
+        marginBottom: '0.625rem',
+      }}>
+        {node.name}
+      </div>
+      {node.reports.map(child =>
+        isGroup(child)
+          ? <DeptSection key={child.id} node={child} depth={depth + 1} />
+          : <PositionCard key={child.id} node={child} />
       )}
     </div>
   )
@@ -91,21 +112,17 @@ export function OrgChartPanel({ refreshSignal }: OrgChartPanelProps) {
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
-      <p style={{
-        fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0 0 0.75rem',
-        display: 'flex', alignItems: 'center', gap: '0.5rem',
-      }}>
-        {viewModel.groupName}
-        {refreshing && (
-          <span style={{ fontSize: '0.625rem', color: 'var(--primary)', animation: 'pulse 1s ease-in-out infinite' }}>
-            ◈ updating
-            <style>{`@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }`}</style>
-          </span>
-        )}
-      </p>
-      {viewModel.roots.map(root => (
-        <OrgNode key={root.id} node={root} />
-      ))}
+      {refreshing && (
+        <span style={{ fontSize: '0.625rem', color: 'var(--primary)', animation: 'pulse 1s ease-in-out infinite', display: 'block', marginBottom: '0.5rem' }}>
+          ◈ updating
+          <style>{`@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }`}</style>
+        </span>
+      )}
+      {viewModel.roots.map(root =>
+        isGroup(root)
+          ? <DeptSection key={root.id} node={root} />
+          : <PositionCard key={root.id} node={root} />
+      )}
     </div>
   )
 }
