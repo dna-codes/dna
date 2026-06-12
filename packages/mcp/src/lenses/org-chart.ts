@@ -73,22 +73,34 @@ export async function buildOrgChart(store: DnaDataStore): Promise<OrgChartViewMo
   const reportsToChildrenMap = new Map<string, string[]>() // manager.id → [subordinate ids]
   const reportsToParentMap = new Map<string, string>()    // subordinate.id → manager.id
 
-  for (const link of allLinks) {
-    const matchingRelType = relTypes.find(
-      rt => rt.from === link.from.typeName && rt.to === link.to.typeName
-    )
-    if (!matchingRelType) continue
+  // Specificity score for type-pair matching: prefer concrete from+to over wildcards
+  const specificity = (rt: { from: string; to: string }) =>
+    (rt.from === '*' ? 0 : 1) + (rt.to === '*' ? 0 : 1)
 
-    if (belongsToRels.has(matchingRelType.name)) {
-      parentMap.set(link.from.id, link.to.id)
+  for (const link of allLinks) {
+    // Determine the relationship type name: explicit role field (set when link has a role)
+    // or infer by matching registered relTypes against the link's from/to resource type names.
+    // Wildcard fields ('*') match any type; prefer specific matches over wildcard ones.
+    let relName: string | undefined = link.role
+    if (!relName) {
+      const match = relTypes
+        .filter(rt =>
+          (rt.from === '*' || rt.from === link.from.typeName) &&
+          (rt.to === '*' || rt.to === link.to.typeName)
+        )
+        .sort((a, b) => specificity(b) - specificity(a))[0]
+      relName = match?.name
     }
-    if (reportsToRels.has(matchingRelType.name)) {
+    if (!relName) continue
+
+    if (belongsToRels.has(relName)) {
+      parentMap.set(link.from.id, link.to.id)
+    } else if (reportsToRels.has(relName)) {
       reportsToParentMap.set(link.from.id, link.to.id)
       const subs = reportsToChildrenMap.get(link.to.id) ?? []
       subs.push(link.from.id)
       reportsToChildrenMap.set(link.to.id, subs)
-    }
-    if (fillsRels.has(matchingRelType.name)) {
+    } else if (fillsRels.has(relName)) {
       const person = allInstances.get(link.from.id)
       if (person) {
         const existing = fillsMap.get(link.to.id) ?? []
