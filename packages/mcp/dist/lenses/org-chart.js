@@ -30,40 +30,27 @@ async function buildOrgChart(store) {
     // reports_to / belongs_to → parentId
     const parentMap = new Map();
     const fillsMap = new Map();
-    // Infer relationship types from (from.typeName, to.typeName) pairs — LinkRecord carries no rel name
-    const relTypes = await store.relationshipType.list();
-    const belongsToRels = new Set(relTypes.filter(r => ['belongs_to', 'part_of'].includes(r.name.toLowerCase())).map(r => r.name));
-    const reportsToRels = new Set(relTypes.filter(r => r.name.toLowerCase() === 'reports_to').map(r => r.name));
-    const fillsRels = new Set(relTypes.filter(r => r.name.toLowerCase() === 'fills').map(r => r.name));
+    // All links carry link.role = the relationship type name (set by patch_graph add_link)
+    const BELONGS_TO = new Set(['belongs_to', 'part_of']);
+    const REPORTS_TO = new Set(['reports_to']);
+    const FILLS = new Set(['fills']);
     // Separate maps: structural containment (belongs_to) vs reporting chain (reports_to)
     const reportsToChildrenMap = new Map(); // manager.id → [subordinate ids]
     const reportsToParentMap = new Map(); // subordinate.id → manager.id
-    // Specificity score for type-pair matching: prefer concrete from+to over wildcards
-    const specificity = (rt) => (rt.from === '*' ? 0 : 1) + (rt.to === '*' ? 0 : 1);
     for (const link of allLinks) {
-        // Determine the relationship type name: explicit role field (set when link has a role)
-        // or infer by matching registered relTypes against the link's from/to resource type names.
-        // Wildcard fields ('*') match any type; prefer specific matches over wildcard ones.
-        let relName = link.role;
-        if (!relName) {
-            const match = relTypes
-                .filter(rt => (rt.from === '*' || rt.from === link.from.typeName) &&
-                (rt.to === '*' || rt.to === link.to.typeName))
-                .sort((a, b) => specificity(b) - specificity(a))[0];
-            relName = match?.name;
-        }
-        if (!relName)
+        const role = link.role;
+        if (!role)
             continue;
-        if (belongsToRels.has(relName)) {
+        if (BELONGS_TO.has(role)) {
             parentMap.set(link.from.id, link.to.id);
         }
-        else if (reportsToRels.has(relName)) {
+        else if (REPORTS_TO.has(role)) {
             reportsToParentMap.set(link.from.id, link.to.id);
             const subs = reportsToChildrenMap.get(link.to.id) ?? [];
             subs.push(link.from.id);
             reportsToChildrenMap.set(link.to.id, subs);
         }
-        else if (fillsRels.has(relName)) {
+        else if (FILLS.has(role)) {
             const person = allInstances.get(link.from.id);
             if (person) {
                 const existing = fillsMap.get(link.to.id) ?? [];

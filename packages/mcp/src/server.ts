@@ -112,6 +112,7 @@ async function applyPatchOps(
       const { id } = await store.link.create(
         { typeName: fromTypeName, id: op.from },
         { typeName: toTypeName, id: op.to },
+        { role: op.type },
       )
       ids[i] = id
     } else if (op.op === 'remove_link') {
