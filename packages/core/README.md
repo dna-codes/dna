@@ -483,6 +483,38 @@ all.map(l => l.$id)
 // → ['https://dna.codes/lenses/operational', ..., 'https://dna.codes/lenses/execution']
 ```
 
+### `evaluateLens()` — run a lens against a data store
+
+`evaluateLens(definition, store)` turns a declarative lens definition into a matched
+result against any `DnaDataStore` (Neo4j or in-memory). A **data lens** returns an
+instance subgraph `{ nodes, links }` (each node stamped with `_typeName`); a **schema
+lens** returns `{ resourceTypes, relationshipTypes }`. Presentation (sentence
+interpolation, view-model shaping) is a separate step that consumes the result.
+
+A lens slot is **free** (bound to a `type` → matches any instance) or **pinned**
+(`ref: { id }` or `ref: { select: { name | pathPrefix | attribute } }`). A **grouping**
+is a data lens with a pinned anchor plus a `scope` describing how membership expands:
+
+```ts
+import { evaluateLens, validateLensDefinition } from '@dna-codes/dna-core'
+
+const grouping = {
+  $id: 'lens:bizops', name: 'BizOps', target: 'data',
+  nodes: [{ slot: 'anchor', type: 'Domain', ref: { select: { pathPrefix: 'acme.bizops' } } }],
+  scope: [{ from: 'anchor', via: ['belongs_to'], direction: 'in', depth: 'transitive' }],
+}
+validateLensDefinition(grouping)        // { valid: true, errors: [] }
+const { nodes, links } = await evaluateLens(grouping, store)
+```
+
+Definitions are validated against the `meta/lens` JSON Schema (plus two semantic
+rules: pinning is data-only, and every `scope.from` must name a pinned slot).
+Definitions that omit `target` default to `data`, so the bundled all-free lens
+files validate and evaluate unchanged. The bespoke `buildOrgChart` view is backed
+by this evaluator; the remaining mcp lenses (`reporting-chains`, `span-of-control`,
+`pipeline`, `people-positions`, `accounts`, `job-descriptions`) migrate to it
+incrementally.
+
 ### `allSchemas()` — flat array
 
 Convenient for bulk-registering with a JSON Schema validator:

@@ -33,8 +33,8 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRule = exports.getTriggersForOperation = exports.getTriggers = exports.getTasksForOperation = exports.getTasks = exports.getTask = exports.getTriggersForProcess = exports.getProcesses = exports.getProcess = exports.getOperationsForResource = exports.getOperations = exports.getOperation = exports.getMemberships = exports.getMembership = exports.getGroups = exports.getGroup = exports.getRoles = exports.getRole = exports.getPersons = exports.getPerson = exports.getResources = exports.getResource = exports.bookshopInput = exports.OPERATIONAL_PRIMITIVE_VERSIONS = exports.defaultStabilityForType = exports.isFoundationalTypeName = exports.FOUNDATIONAL_RESOURCE_TYPE_NAMES = exports.STABILITIES = exports.TypeInUseError = exports.DEFAULT_STYLES = exports.merge = exports.addRelationship = exports.addProcess = exports.addTask = exports.addRule = exports.addTrigger = exports.addOperation = exports.addMembership = exports.addGroup = exports.addRole = exports.addPerson = exports.addResource = exports.createOperationalDna = exports.DnaValidator = exports.layerDirs = exports.lenses = exports.documents = exports.schemas = exports.LENS_ROOT = exports.SCHEMA_ROOT = void 0;
-exports.getMembershipsForPerson = exports.getMembershipsForRole = exports.getActorsForOperation = exports.getRulesForOperation = exports.getRules = void 0;
+exports.getTasksForOperation = exports.getTasks = exports.getTask = exports.getTriggersForProcess = exports.getProcesses = exports.getProcess = exports.getOperationsForResource = exports.getOperations = exports.getOperation = exports.getMemberships = exports.getMembership = exports.getGroups = exports.getGroup = exports.getRoles = exports.getRole = exports.getPersons = exports.getPerson = exports.getResources = exports.getResource = exports.bookshopInput = exports.OPERATIONAL_PRIMITIVE_VERSIONS = exports.defaultStabilityForType = exports.isFoundationalTypeName = exports.FOUNDATIONAL_RESOURCE_TYPE_NAMES = exports.STABILITIES = exports.TypeInUseError = exports.DEFAULT_STYLES = exports.merge = exports.addRelationship = exports.addProcess = exports.addTask = exports.addRule = exports.addTrigger = exports.addOperation = exports.addMembership = exports.addGroup = exports.addRole = exports.addPerson = exports.addResource = exports.createOperationalDna = exports.validateLensDefinition = exports.isSchemaResult = exports.evaluateLens = exports.DnaValidator = exports.layerDirs = exports.lenses = exports.documents = exports.schemas = exports.LENS_ROOT = exports.SCHEMA_ROOT = void 0;
+exports.getMembershipsForPerson = exports.getMembershipsForRole = exports.getActorsForOperation = exports.getRulesForOperation = exports.getRules = exports.getRule = exports.getTriggersForOperation = exports.getTriggers = void 0;
 exports.allLenses = allLenses;
 exports.resolveSchemaFile = resolveSchemaFile;
 exports.allSchemas = allSchemas;
@@ -53,6 +53,7 @@ function loadLens(rel) {
 exports.schemas = {
     meta: {
         stability: load('meta/stability.json'),
+        lens: load('meta/lens.json'),
     },
     operational: {
         action: load('operational/action.json'),
@@ -165,6 +166,13 @@ function allSchemas() {
 }
 var validator_1 = require("./validator");
 Object.defineProperty(exports, "DnaValidator", { enumerable: true, get: function () { return validator_1.DnaValidator; } });
+// Runtime lens evaluation
+var evaluate_1 = require("./lens/evaluate");
+Object.defineProperty(exports, "evaluateLens", { enumerable: true, get: function () { return evaluate_1.evaluateLens; } });
+var types_1 = require("./lens/types");
+Object.defineProperty(exports, "isSchemaResult", { enumerable: true, get: function () { return types_1.isSchemaResult; } });
+var validate_def_1 = require("./lens/validate-def");
+Object.defineProperty(exports, "validateLensDefinition", { enumerable: true, get: function () { return validate_def_1.validateLensDefinition; } });
 var builders_1 = require("./builders");
 Object.defineProperty(exports, "createOperationalDna", { enumerable: true, get: function () { return builders_1.createOperationalDna; } });
 Object.defineProperty(exports, "addResource", { enumerable: true, get: function () { return builders_1.addResource; } });

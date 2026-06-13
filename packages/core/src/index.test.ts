@@ -83,9 +83,9 @@ describe('@dna-codes/dna-core', () => {
       const ids = all.map((s) => s.$id)
       expect(new Set(ids).size).toBe(ids.length)
 
-      // 1 meta + 15 op + 6 product-core + 4 product-api + 4 product-web + 7 product-ui + 10 technical = 47 primitives
-      // (product-ui gained App + Module) + 5 aggregates = 52 schemas total
-      expect(all.length).toBe(52)
+      // 2 meta (stability + lens) + 15 op + 6 product-core + 4 product-api + 4 product-web + 7 product-ui + 10 technical = 48 primitives
+      // (product-ui gained App + Module; meta gained the lens meta-schema) + 5 aggregates = 53 schemas total
+      expect(all.length).toBe(53)
     })
   })
 

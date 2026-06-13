@@ -1,31 +1,36 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildOrgChart = buildOrgChart;
+const dna_core_1 = require("@dna-codes/dna-core");
 const ORG_TYPES = new Set(['company', 'department', 'position', 'domain', 'group']);
+const ORG_RELATIONSHIPS = ['belongs_to', 'part_of', 'reports_to', 'fills'];
 async function buildOrgChart(store) {
-    // Load all resource types to find org-relevant type names
+    // Resolve the org-relevant resource types (org structure + the person type).
     const allTypes = await store.resourceType.list();
     const orgTypeNames = new Set(allTypes.filter(t => ORG_TYPES.has(t.name.toLowerCase())).map(t => t.name));
-    // Load all instances of org types
-    const instancesByType = new Map();
-    for (const typeName of orgTypeNames) {
-        const records = await store.instance.list(typeName);
-        instancesByType.set(typeName, records);
-    }
-    // Load person instances to find holders
     const personTypeName = allTypes.find(t => t.category === 'person')?.name ?? 'Person';
-    const persons = await store.instance.list(personTypeName);
-    // Load all links
-    const allLinks = await store.link.list();
-    // Build lookup maps
+    // Fetch the org subgraph via the generic lens evaluator: every instance of the
+    // org/person types, plus the structural links between them. Presentation
+    // (tree-shaping below) stays here; data acquisition is the evaluator's job.
+    const slotTypes = [...orgTypeNames, personTypeName];
+    const orgLens = {
+        $id: 'lens:org-chart',
+        name: 'Org Chart',
+        target: 'data',
+        nodes: slotTypes.map(type => ({ slot: type, type })),
+        edges: ORG_RELATIONSHIPS.map(via => ({ from: personTypeName, to: personTypeName, via })),
+    };
+    const { nodes, links: allLinks } = (await (0, dna_core_1.evaluateLens)(orgLens, store));
+    // Build lookup maps from the evaluated subgraph (nodes carry `_typeName`).
     const allInstances = new Map();
-    for (const [typeName, records] of instancesByType) {
-        for (const r of records) {
-            allInstances.set(r.id, { ...r, type: typeName });
-        }
-    }
-    for (const p of persons) {
-        allInstances.set(p.id, { ...p, type: personTypeName });
+    for (const n of nodes) {
+        const rec = n;
+        allInstances.set(rec.id, {
+            id: rec.id,
+            name: String(rec.name ?? rec.id),
+            type: rec._typeName ?? '',
+            description: rec.description,
+        });
     }
     // reports_to / belongs_to → parentId
     const parentMap = new Map();

@@ -1,4 +1,5 @@
-import type { DnaDataStore } from '@dna-codes/dna-core'
+import type { DnaDataStore, LensDefinition, LensDataResult } from '@dna-codes/dna-core'
+import { evaluateLens } from '@dna-codes/dna-core'
 
 export interface OrgChartPerson {
   name: string
@@ -22,35 +23,37 @@ export interface OrgChartViewModel {
 }
 
 const ORG_TYPES = new Set(['company', 'department', 'position', 'domain', 'group'])
+const ORG_RELATIONSHIPS = ['belongs_to', 'part_of', 'reports_to', 'fills']
 
 export async function buildOrgChart(store: DnaDataStore): Promise<OrgChartViewModel> {
-  // Load all resource types to find org-relevant type names
+  // Resolve the org-relevant resource types (org structure + the person type).
   const allTypes = await store.resourceType.list()
   const orgTypeNames = new Set(allTypes.filter(t => ORG_TYPES.has(t.name.toLowerCase())).map(t => t.name))
-
-  // Load all instances of org types
-  const instancesByType = new Map<string, Array<{ id: string; name: string; description?: string }>>()
-  for (const typeName of orgTypeNames) {
-    const records = await store.instance.list(typeName)
-    instancesByType.set(typeName, records as Array<{ id: string; name: string; description?: string }>)
-  }
-
-  // Load person instances to find holders
   const personTypeName = allTypes.find(t => t.category === 'person')?.name ?? 'Person'
-  const persons = await store.instance.list(personTypeName) as Array<{ id: string; name: string }>
 
-  // Load all links
-  const allLinks = await store.link.list()
-
-  // Build lookup maps
-  const allInstances = new Map<string, { id: string; name: string; type: string; description?: string }>()
-  for (const [typeName, records] of instancesByType) {
-    for (const r of records) {
-      allInstances.set(r.id, { ...r, type: typeName })
-    }
+  // Fetch the org subgraph via the generic lens evaluator: every instance of the
+  // org/person types, plus the structural links between them. Presentation
+  // (tree-shaping below) stays here; data acquisition is the evaluator's job.
+  const slotTypes = [...orgTypeNames, personTypeName]
+  const orgLens: LensDefinition = {
+    $id: 'lens:org-chart',
+    name: 'Org Chart',
+    target: 'data',
+    nodes: slotTypes.map(type => ({ slot: type, type })),
+    edges: ORG_RELATIONSHIPS.map(via => ({ from: personTypeName, to: personTypeName, via })),
   }
-  for (const p of persons) {
-    allInstances.set(p.id, { ...p, type: personTypeName })
+  const { nodes, links: allLinks } = (await evaluateLens(orgLens, store)) as LensDataResult
+
+  // Build lookup maps from the evaluated subgraph (nodes carry `_typeName`).
+  const allInstances = new Map<string, { id: string; name: string; type: string; description?: string }>()
+  for (const n of nodes) {
+    const rec = n as { id: string; name?: unknown; description?: unknown; _typeName?: string }
+    allInstances.set(rec.id, {
+      id: rec.id,
+      name: String(rec.name ?? rec.id),
+      type: rec._typeName ?? '',
+      description: rec.description as string | undefined,
+    })
   }
 
   // reports_to / belongs_to → parentId

@@ -8,27 +8,13 @@ export type JsonSchema = {
     type?: string | string[];
     [key: string]: unknown;
 };
-export type LensNodeSlot = {
-    slot?: string;
-    type: string;
-};
-export type LensEdge = {
-    from: string;
-    to: string;
-    via: string;
-};
-export type LensDefinition = {
-    $id: string;
-    name: string;
-    nodes: LensNodeSlot[];
-    edges?: LensEdge[];
-    sentence?: string;
-    [key: string]: unknown;
-};
+export type { LensNodeSlot, LensEdge, LensDefinition, LensTarget, LensRef, LensScope, LensResult, LensDataResult, LensSchemaResult, } from './lens/types';
+import type { LensDefinition } from './lens/types';
 export type Layer = 'operational' | 'product.core' | 'product.api' | 'product.ui' | 'technical';
 export declare const schemas: {
     readonly meta: {
         readonly stability: JsonSchema;
+        readonly lens: JsonSchema;
     };
     readonly operational: {
         readonly action: JsonSchema;
@@ -113,6 +99,10 @@ export declare function resolveSchemaFile(family: 'operational' | 'product' | 't
 export declare function allSchemas(): JsonSchema[];
 export { DnaValidator } from './validator';
 export type { ValidationResult, CrossLayerResult, CrossLayerError } from './validator';
+export { evaluateLens } from './lens/evaluate';
+export { isSchemaResult } from './lens/types';
+export { validateLensDefinition } from './lens/validate-def';
+export type { LensDefValidation } from './lens/validate-def';
 export { createOperationalDna, addResource, addPerson, addRole, addGroup, addMembership, addOperation, addTrigger, addRule, addTask, addProcess, addRelationship, } from './builders';
 export type { BuilderOptions, BuilderResult, CreateOperationalDnaOptions, } from './builders';
 export { merge } from './merge';

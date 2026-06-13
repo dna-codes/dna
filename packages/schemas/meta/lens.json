@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/meta/lens",
+  "title": "LensDefinition",
+  "description": "The grammar for a lens definition: a declarative pattern the runtime evaluator turns into a matched subgraph (data lens) or type-graph slice (schema lens). A lens names slots (node bindings) and edges (relationship bindings); a slot is free (bound to a `type`) or pinned (bound to a specific instance via `ref`). Groupings are data lenses with a pinned anchor plus a `scope`. Backward-compatible with the original `{ name, nodes, edges, sentence }` shape — every field beyond `name`/`nodes` is optional and `target` defaults to `data`.",
+  "type": "object",
+  "required": ["name", "nodes"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "$id": { "type": "string" },
+    "allOf": { "type": "array" },
+    "name": { "type": "string", "description": "Human-readable lens name." },
+    "sentence": { "type": "string", "description": "Optional templated description for presentation." },
+    "target": {
+      "type": "string",
+      "enum": ["schema", "data"],
+      "description": "Whether the lens reads/returns the type graph (schema) or the instance graph (data). Defaults to data."
+    },
+    "nodes": {
+      "type": "array",
+      "description": "Slot bindings. Each binds a name to a node type; an optional `ref` pins it to a specific instance (data lenses only).",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "slot": { "type": "string", "description": "The slot name referenced by edges and scopes." },
+          "type": { "type": "string", "description": "The node type bound to this slot." },
+          "ref": {
+            "description": "Pins the slot to a specific instance (concrete id) or a predicate (select).",
+            "oneOf": [
+              {
+                "type": "object",
+                "required": ["id"],
+                "properties": { "id": { "type": "string" } },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": ["select"],
+                "properties": {
+                  "select": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "pathPrefix": { "type": "string" },
+                      "attribute": {
+                        "type": "object",
+                        "required": ["name", "value"],
+                        "properties": { "name": { "type": "string" }, "value": {} }
+                      }
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "Free edge bindings: links of relationship type `via` between the `from` and `to` slots.",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "via"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "via": { "type": "string" }
+        }
+      }
+    },
+    "scope": {
+      "type": "array",
+      "description": "How a grouping expands from a pinned anchor slot.",
+      "items": {
+        "type": "object",
+        "required": ["from", "via", "direction", "depth"],
+        "properties": {
+          "from": { "type": "string", "description": "The name of a pinned slot this scope expands from." },
+          "via": { "type": "array", "items": { "type": "string" }, "description": "Relationship type names to traverse." },
+          "direction": { "type": "string", "enum": ["out", "in", "both"] },
+          "depth": {
+            "description": "A fixed hop count, or 'transitive' for unbounded (cycle-safe) expansion.",
+            "oneOf": [
+              { "type": "integer", "minimum": 0 },
+              { "type": "string", "const": "transitive" }
+            ]
+          },
+          "nodeTypes": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

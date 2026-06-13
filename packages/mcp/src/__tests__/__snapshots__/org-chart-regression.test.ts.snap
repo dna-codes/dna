@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`org-chart regression produces a stable org-chart view-model 1`] = `
+{
+  "groupName": "Acme Corp",
+  "lens": "org-chart",
+  "roots": [
+    {
+      "description": undefined,
+      "holders": [],
+      "name": "Acme Corp",
+      "reports": [
+        {
+          "description": undefined,
+          "holders": [],
+          "name": "Engineering",
+          "reports": [],
+          "type": "department",
+        },
+        {
+          "description": undefined,
+          "holders": [],
+          "name": "Product",
+          "reports": [],
+          "type": "department",
+        },
+        {
+          "description": undefined,
+          "holders": [
+            "Sarah",
+          ],
+          "name": "CEO",
+          "reports": [
+            {
+              "description": undefined,
+              "holders": [
+                "Marcus",
+              ],
+              "name": "CTO",
+              "reports": [
+                {
+                  "description": undefined,
+                  "holders": [],
+                  "name": "Engineer",
+                  "reports": [],
+                  "type": "position",
+                },
+              ],
+              "type": "position",
+            },
+            {
+              "description": undefined,
+              "holders": [],
+              "name": "VP Product",
+              "reports": [],
+              "type": "position",
+            },
+          ],
+          "type": "position",
+        },
+      ],
+      "type": "company",
+    },
+  ],
+}
+`;
