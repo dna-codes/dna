@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/product/ui/app",
+  "title": "App",
+  "description": "An App is the top-level product surface for a business function — the product face of a grouping anchor (a Domain or Group). It is the container above Module in the UI hierarchy and surfaces the business function it realizes.",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The PascalCase name of the app.",
+      "examples": ["Lending", "Servicing", "Identity"]
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable explanation of what this app surfaces."
+    },
+    "realizes": {
+      "type": "string",
+      "description": "The business grouping anchor (Domain or Group) this app surfaces, by name.",
+      "examples": ["Lending", "Finance"]
+    },
+    "modules": {
+      "type": "array",
+      "description": "The Modules that make up this app. Each entry is the PascalCase name of a Module defined in this UI.",
+      "items": {
+        "type": "string",
+        "description": "A reference to a Module by its PascalCase name.",
+        "examples": ["Origination", "Servicing"]
+      }
+    }
+  },
+  "examples": [
+    {
+      "name": "Lending",
+      "realizes": "Lending",
+      "description": "The product surface for the Lending function.",
+      "modules": ["Origination", "Servicing"]
+    }
+  ]
+}

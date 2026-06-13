@@ -429,6 +429,8 @@ import { schemas } from '@dna-codes/dna-core'
 schemas.operational.resource       // Resource schema (Draft 2020-12)
 schemas.product.core.role          // Product Core Role schema
 schemas.product.api.endpoint       // Product API Endpoint schema
+schemas.product.ui.app             // Product UI App schema (top of the UI hierarchy)
+schemas.product.ui.module          // Product UI Module schema
 schemas.product.web.page           // Product UI Page schema
 schemas.technical.cell             // Technical Cell schema
 

@@ -11,6 +11,7 @@ const MIN_PCT = 20
 const MAX_PCT = 80
 
 type PackName = 'operational' | 'crm' | 'hr'
+type SessionMode = 'build' | 'operate'
 
 export default function HomePage() {
   const [refreshSignal, setRefreshSignal] = useState(0)
@@ -18,7 +19,9 @@ export default function HomePage() {
   const [isDragging, setIsDragging] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [setupDone, setSetupDone] = useState(false)
-  const [sessionConfig, setSessionConfig] = useState<{ pack: PackName; locked: boolean }>({ pack: 'operational', locked: false })
+  const [sessionConfig, setSessionConfig] = useState<{ pack: PackName; mode: SessionMode }>({ pack: 'operational', mode: 'build' })
+  // Mode is owned by the server; unknown until the initial session-config fetch resolves.
+  const [modeLoading, setModeLoading] = useState(true)
   const [needsSetup, setNeedsSetup] = useState(true)
   const [savedLenses, setSavedLenses] = useState<SavedLens[]>(() => loadSavedLenses())
   const [agentLens, setAgentLens] = useState<{ lensId: string; seq: number } | null>(null)
@@ -27,6 +30,24 @@ export default function HomePage() {
   useEffect(() => {
     persistSavedLenses(savedLenses)
   }, [savedLenses])
+
+  // The server session-config is the single source of truth for mode. Read it on
+  // mount; the mode control shows a loading state until this resolves.
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/session-config')
+      .then(res => (res.ok ? res.json() : null))
+      .then(cfg => {
+        if (cancelled || !cfg) return
+        setSessionConfig(c => ({
+          pack: (cfg.pack as PackName) ?? c.pack,
+          mode: cfg.mode === 'operate' ? 'operate' : 'build',
+        }))
+      })
+      .catch(() => { /* keep defaults */ })
+      .finally(() => { if (!cancelled) setModeLoading(false) })
+    return () => { cancelled = true }
+  }, [])
 
   const handleGraphPatched = useCallback(() => {
     setRefreshSignal(n => n + 1)
@@ -52,28 +73,30 @@ export default function HomePage() {
     setRefreshSignal(n => n + 1)
   }, [])
 
-  const handleSetupComplete = useCallback(async (pack: PackName, locked: boolean) => {
+  const handleSetupComplete = useCallback(async (pack: PackName, mode: SessionMode) => {
     const res = await fetch('/api/reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pack, locked }),
+      body: JSON.stringify({ pack, mode }),
     })
     if (!res.ok) throw new Error('Failed to start session')
-    setSessionConfig({ pack, locked })
+    setSessionConfig({ pack, mode })
+    setModeLoading(false)
     setSetupDone(true)
     setNeedsSetup(false)
     setRefreshSignal(n => n + 1)
   }, [])
 
-  const handleLockToggle = useCallback(async () => {
-    const newLocked = !sessionConfig.locked
+  const handleModeChange = useCallback(async (mode: SessionMode) => {
+    if (mode === sessionConfig.mode) return
     const res = await fetch('/api/session-config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ locked: newLocked }),
+      body: JSON.stringify({ mode }),
     })
-    if (res.ok) setSessionConfig(c => ({ ...c, locked: newLocked }))
-  }, [sessionConfig.locked])
+    // Switching mode does not reset the graph — only prompt, allowed ops, and lenses change.
+    if (res.ok) setSessionConfig(c => ({ ...c, mode }))
+  }, [sessionConfig.mode])
 
   const onDividerMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -138,21 +161,40 @@ export default function HomePage() {
           {setupDone && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--ui-space-2)' }}>
               <span data-ui-badge="">{sessionConfig.pack}</span>
-              <button
-                data-ui-button=""
-                data-variant={sessionConfig.locked ? 'outline' : 'ghost'}
-                data-size="sm"
-                onClick={handleLockToggle}
-                title={sessionConfig.locked ? 'Locked — click to open' : 'Open — click to lock'}
-                style={{ borderColor: sessionConfig.locked ? 'var(--ui-color-primary)' : undefined, color: sessionConfig.locked ? 'var(--ui-color-primary)' : undefined }}
-              >
-                {sessionConfig.locked ? '🔒 locked' : '🔓 open'}
-              </button>
+              {modeLoading ? (
+                <span
+                  style={{ fontSize: '0.7rem', color: 'var(--ui-color-text-muted)', fontFamily: 'monospace', animation: 'pulse 1s ease-in-out infinite' }}
+                  title="Loading mode…"
+                >
+                  ◈ mode…
+                  <style>{`@keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }`}</style>
+                </span>
+              ) : (
+                <div data-ui-button-group="" style={{ display: 'inline-flex' }} role="group" aria-label="Session mode">
+                  {(['build', 'operate'] as const).map(m => {
+                    const active = sessionConfig.mode === m
+                    return (
+                      <button
+                        key={m}
+                        data-ui-button=""
+                        data-variant={active ? 'primary' : 'ghost'}
+                        data-size="sm"
+                        aria-pressed={active}
+                        onClick={() => handleModeChange(m)}
+                        title={m === 'build' ? 'Build — model and mature types' : 'Operate — run operations on instances'}
+                        style={{ textTransform: 'capitalize' }}
+                      >
+                        {m === 'build' ? '🧬 Build' : '⚙️ Operate'}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          <ConversationPanel pack={sessionConfig.pack} onGraphPatched={handleGraphPatched} onReset={handleReset} onSaveLens={handleSaveLens} onActivateLens={handleActivateLens} />
+          <ConversationPanel pack={sessionConfig.pack} mode={sessionConfig.mode} onGraphPatched={handleGraphPatched} onReset={handleReset} onSaveLens={handleSaveLens} onActivateLens={handleActivateLens} />
         </div>
       </div>
 
@@ -172,7 +214,7 @@ export default function HomePage() {
           background: 'var(--bg)',
         }}
       >
-        <LensPanelShell pack={sessionConfig.pack} refreshSignal={refreshSignal} savedLenses={savedLenses} onRemoveLens={handleRemoveLens} agentLens={agentLens} />
+        <LensPanelShell pack={sessionConfig.pack} mode={sessionConfig.mode} refreshSignal={refreshSignal} savedLenses={savedLenses} onRemoveLens={handleRemoveLens} agentLens={agentLens} />
       </div>
     </div>
     </>

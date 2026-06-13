@@ -26,6 +26,18 @@ DNA MCP Server — exposes the DNA type registry and instance graph via the [Mod
 | Path | Description |
 |---|---|
 | `GET /lens/org-chart` | Org-chart view-model as JSON |
+| `GET /session-config` | Returns `{ pack, mode }` |
+| `POST /session-config` | Accepts `{ mode }` to switch mode at runtime (no graph reset) |
+| `POST /reset` | Accepts `{ pack, mode }` to reseed the store and start a fresh session |
+
+## Session mode
+
+A session runs in one of two modes (`McpServerOptions.initialMode`, default `build`):
+
+- **`build`** — type-focused. The registry is **open**: `add_resource_type` / `add_relationship_type` ops are allowed, and types are matured through the stability lifecycle (`experimental → beta → stable → deprecated`).
+- **`operate`** — instance-focused. The registry is **locked**: type-schema ops are rejected with `"Type registry is locked in Operate mode — switch to Build mode to add or change types."`. Instance ops (`add_instance` / `add_link`) are allowed in both modes.
+
+Locking is derived from mode — there is no separate lock flag.
 
 ## PatchOp variants
 
@@ -40,6 +52,20 @@ DNA MCP Server — exposes the DNA type registry and instance graph via the [Mod
 ```
 
 New types default to `stability: "experimental"` when `stability` is omitted.
+
+## Agent contract exports
+
+The package exports a single source of truth for the two things that shape an LLM agent's reliability — the system-prompt vocabulary and the `patch_graph` data contract — so the agent never re-derives or drifts from what the server seeds and validates:
+
+| Export | Description |
+|---|---|
+| `PACKS`, `DEFAULT_PACK`, `PackName`, `PackDefinition` | The starter-pack registry — the real `resourceTypes`/`relationshipTypes` seeded into the store |
+| `renderPackForPrompt(packName)` | Renders a pack's live definitions as a structured prompt block (resources as `name · category — desc`; relationships as `name · from→to · cardinality — desc`). The dna-agent system prompt consumes this instead of a hand-maintained vocabulary table |
+| `patchGraphInputShape` | The Zod raw shape registered as the `patch_graph` tool input; the MCP SDK converts it to the JSON Schema advertised to clients |
+| `PATCH_OPS_SCHEMA`, `PATCH_GRAPH_INPUT_SCHEMA` | The same contract as plain JSON Schema (derived from `patchGraphInputShape` via Zod v4's `z.toJSONSchema`), for downstream consumers |
+| `patchOpSchema`, `PATCH_OP_NAMES` | The discriminated-union op schema and the list of op discriminators |
+
+`add_instance` and `add_link` op shapes mirror the reference example documents (`resource → { type, name, … }`, `relationship → { type, from, to }`), so the agent emits familiar, well-structured ops.
 
 ## Auth middleware
 

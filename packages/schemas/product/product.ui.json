@@ -22,6 +22,16 @@
       "minItems": 1,
       "items": { "$ref": "https://dna.codes/schemas/product/web/route" }
     },
+    "apps": {
+      "type": "array",
+      "description": "Top-level product surfaces, each the product face of a business function (grouping anchor). The container above Module.",
+      "items": { "$ref": "https://dna.codes/schemas/product/ui/app" }
+    },
+    "modules": {
+      "type": "array",
+      "description": "Feature-area groupings beneath an App and above Workflow/Page — typically the product surface of a sub-Domain or Process.",
+      "items": { "$ref": "https://dna.codes/schemas/product/ui/module" }
+    },
     "workflows": {
       "type": "array",
       "description": "Navigable groupings of Pages above the Page level — the user journeys this UI supports.",

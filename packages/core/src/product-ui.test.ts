@@ -1,4 +1,5 @@
 import { DnaValidator } from './validator'
+import { lenses } from './index'
 
 const validator = new DnaValidator()
 
@@ -186,5 +187,67 @@ describe('product/ui composite', () => {
   it('validates an existing composite without workflows or operations (additive, non-breaking)', () => {
     const result = validator.validate({ layout, pages, routes }, 'product/ui')
     expect(result.valid).toBe(true)
+  })
+})
+
+describe('product/ui/app', () => {
+  it('validates a minimal app', () => {
+    const result = validator.validate({ name: 'Lending' }, 'product/ui/app')
+    expect(result.valid).toBe(true)
+  })
+
+  it('validates an app realizing a Domain with modules', () => {
+    const result = validator.validate(
+      { name: 'Lending', realizes: 'Lending', modules: ['Origination'] },
+      'product/ui/app',
+    )
+    expect(result.valid).toBe(true)
+  })
+
+  it('rejects an app missing name', () => {
+    const result = validator.validate({ realizes: 'Lending' }, 'product/ui/app')
+    expect(result.valid).toBe(false)
+  })
+})
+
+describe('product/ui/module', () => {
+  it('validates a minimal module', () => {
+    const result = validator.validate({ name: 'Origination' }, 'product/ui/module')
+    expect(result.valid).toBe(true)
+  })
+
+  it('validates a module realizing a Process with pages', () => {
+    const result = validator.validate(
+      { name: 'Origination', realizes: 'LoanOrigination', pages: ['ApplicationPage'] },
+      'product/ui/module',
+    )
+    expect(result.valid).toBe(true)
+  })
+})
+
+describe('product/ui composite with apps and modules', () => {
+  it('validates a composite with top-level apps and modules', () => {
+    const result = validator.validate(
+      {
+        layout: { name: 'LendingDashboard', type: 'sidebar' },
+        pages: [{ name: 'LoanList', resource: 'Loan', blocks: [{ name: 'LoanTable', type: 'table', operation: 'Loan.List' }] }],
+        routes: [{ path: '/loans', page: 'LoanList' }],
+        apps: [{ name: 'Lending', realizes: 'Lending', modules: ['Origination'] }],
+        modules: [{ name: 'Origination', realizes: 'LoanOrigination' }],
+      },
+      'product/ui',
+    )
+    expect(result.valid).toBe(true)
+  })
+})
+
+describe('product-ui lens coverage', () => {
+  it('covers app/module/endpoint/namespace nodes and realized_as/exposes edges', () => {
+    const lens = lenses.productUi as unknown as { nodes: { slot: string }[]; edges: { via: string }[] }
+    const slots = new Set(lens.nodes.map(n => n.slot))
+    for (const s of ['app', 'module', 'endpoint', 'namespace']) expect(slots.has(s)).toBe(true)
+    const vias = new Set(lens.edges.map(e => e.via))
+    expect(vias.has('realized_as')).toBe(true)
+    expect(vias.has('exposes')).toBe(true)
   })
 })

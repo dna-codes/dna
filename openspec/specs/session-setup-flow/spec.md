@@ -1,4 +1,10 @@
-## ADDED Requirements
+# session-setup-flow Specification
+
+## Purpose
+
+On first load and after a reset, the dna-agent presents a setup modal that seeds the session: the user picks a starter pack and a starting mode (Build or Operate), and confirming seeds the store and begins the conversation.
+
+## Requirements
 
 ### Requirement: Session setup modal shown on first load and after reset
 The `dna-agent` UI SHALL display a `SessionSetupModal` overlay on initial page load (before any conversation is possible) and after the user triggers a reset. The modal SHALL be dismissed only by completing setup (selecting a pack and confirming), not by clicking outside.
@@ -30,24 +36,24 @@ The modal SHALL present the available starter packs with their name, a one-line 
 - **THEN** that pack becomes the active selection
 - **THEN** its type list is highlighted
 
-### Requirement: User sets initial governance mode in the modal
-The modal SHALL include a toggle for locked / open mode with a brief explanation of each. The default SHALL be open mode.
+### Requirement: User sets initial mode in the modal
+The modal SHALL include a Build/Operate selection with a brief explanation of each: Build for modeling and maturing types, Operate for running operations on instances. The default SHALL be Build mode.
 
-#### Scenario: Open mode is default
+#### Scenario: Build mode is default
 - **WHEN** the session setup modal opens
-- **THEN** open mode is pre-selected
+- **THEN** Build mode is pre-selected
 
-#### Scenario: User can select locked mode
-- **WHEN** the user clicks the locked option
-- **THEN** the toggle reflects locked state
-- **THEN** confirming setup starts the session in locked mode
+#### Scenario: User can select Operate mode
+- **WHEN** the user clicks the Operate option
+- **THEN** the selection reflects Operate
+- **THEN** confirming setup starts the session in Operate mode
 
 ### Requirement: Confirming setup seeds the store and starts the session
-When the user confirms the modal, the UI SHALL call `POST /api/reset` with `{ pack, locked }`, wait for success, then dismiss the modal and allow the conversation to begin.
+When the user confirms the modal, the UI SHALL call `POST /api/reset` with `{ pack, mode }`, wait for success, then dismiss the modal and allow the conversation to begin.
 
 #### Scenario: Confirming setup seeds the selected pack
-- **WHEN** the user confirms the modal with CRM pack selected
-- **THEN** POST /api/reset is called with `{ pack: "crm", locked: false }`
+- **WHEN** the user confirms the modal with CRM pack and Operate mode selected
+- **THEN** POST /api/reset is called with `{ pack: "crm", mode: "operate" }`
 - **THEN** the store is reset and seeded with CRM types
 - **THEN** the modal is dismissed and the chat is ready
 

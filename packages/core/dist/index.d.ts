@@ -69,6 +69,8 @@ export declare const schemas: {
             readonly route: JsonSchema;
         };
         readonly ui: {
+            readonly app: JsonSchema;
+            readonly module: JsonSchema;
             readonly workflow: JsonSchema;
             readonly section: JsonSchema;
             readonly component: JsonSchema;

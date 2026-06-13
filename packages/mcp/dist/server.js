@@ -3,12 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.validatePatchOps = validatePatchOps;
 exports.createMcpServer = createMcpServer;
 const http_1 = __importDefault(require("http"));
 const crypto_1 = require("crypto");
 const mcp_js_1 = require("@modelcontextprotocol/sdk/server/mcp.js");
 const streamableHttp_js_1 = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
 const zod_1 = require("zod");
+const patch_schema_js_1 = require("./patch-schema.js");
 const widgets_js_1 = require("./widgets.js");
 const org_chart_js_1 = require("./lenses/org-chart.js");
 const people_positions_js_1 = require("./lenses/people-positions.js");
@@ -18,9 +20,12 @@ const graph_data_js_1 = require("./lenses/graph-data.js");
 const job_descriptions_js_1 = require("./lenses/job-descriptions.js");
 const pipeline_js_1 = require("./lenses/pipeline.js");
 const accounts_js_1 = require("./lenses/accounts.js");
+const type_registry_js_1 = require("./lenses/type-registry.js");
 const passthroughAuth = (_req, _res, next) => next();
 // ── Validation helpers ────────────────────────────────────────────────────────
-async function validatePatchOps(ops, store, locked = false) {
+async function validatePatchOps(ops, store, mode = 'build') {
+    // Locking is derived from mode: Operate is locked, Build is open.
+    const locked = mode === 'operate';
     const violations = [];
     const [rtList, relTypeList] = await Promise.all([
         store.resourceType.list(),
@@ -31,7 +36,7 @@ async function validatePatchOps(ops, store, locked = false) {
     for (let i = 0; i < ops.length; i++) {
         const op = ops[i];
         if (locked && (op.op === 'add_resource_type' || op.op === 'add_relationship_type')) {
-            violations.push(`op[${i}]: Type registry is locked — switch to open mode to add new types.`);
+            violations.push(`op[${i}]: Type registry is locked in Operate mode — switch to Build mode to add or change types.`);
             continue;
         }
         if (op.op === 'add_instance') {
@@ -141,12 +146,12 @@ async function applyPatchOps(ops, store) {
 // ── Per-request MCP instance ──────────────────────────────────────────────────
 // McpServer allows only one active transport at a time, so we create a fresh
 // instance for every HTTP request (stateless mode).
-function buildMcpInstance(dataStore, locked) {
+function buildMcpInstance(dataStore, mode) {
     const mcp = new mcp_js_1.McpServer({ name: 'dna-mcp', version: '0.1.0' });
-    registerHandlers(mcp, dataStore, locked);
+    registerHandlers(mcp, dataStore, mode);
     return mcp;
 }
-function registerHandlers(mcp, dataStore, locked) {
+function registerHandlers(mcp, dataStore, mode) {
     // ── Resources ──────────────────────────────────────────────────────────────
     mcp.resource('resource-types', new mcp_js_1.ResourceTemplate('dna://schema/resource-types', { list: undefined }), async () => {
         const types = await dataStore.resourceType.list();
@@ -224,11 +229,9 @@ function registerHandlers(mcp, dataStore, locked) {
             isError: true,
         };
     });
-    mcp.tool('patch_graph', 'Validate and apply a list of graph mutation operations atomically.', {
-        ops: zod_1.z.array(zod_1.z.any()).describe('Array of PatchOp objects'),
-    }, async ({ ops }) => {
+    mcp.tool('patch_graph', 'Validate and apply a list of graph mutation operations atomically.', patch_schema_js_1.patchGraphInputShape, async ({ ops }) => {
         const patchOps = ops;
-        const violations = await validatePatchOps(patchOps, dataStore, locked);
+        const violations = await validatePatchOps(patchOps, dataStore, mode);
         if (violations.length > 0) {
             const err = { error: 'Patch validation failed', violations };
             return { content: [{ type: 'text', text: JSON.stringify(err) }], isError: true };
@@ -279,7 +282,7 @@ function createMcpServer(options) {
     const store = { current: options.dataStore };
     const config = {
         pack: options.initialPack ?? 'operational',
-        locked: options.lockedTypes ?? false,
+        mode: options.initialMode ?? 'build',
     };
     // Session store: one McpServer + Transport per connected client
     const sessions = new Map();
@@ -298,17 +301,17 @@ function createMcpServer(options) {
                         body += chunk;
                     const parsed = body ? JSON.parse(body) : {};
                     const newPack = parsed.pack ?? config.pack;
-                    const newLocked = parsed.locked ?? false;
+                    const newMode = parsed.mode === 'operate' ? 'operate' : 'build';
                     store.current = await options.createFreshStore(newPack);
                     config.pack = newPack;
-                    config.locked = newLocked;
+                    config.mode = newMode;
                     for (const transport of sessions.values()) {
                         await transport.close().catch(() => { });
                     }
                     sessions.clear();
                     res.setHeader('Content-Type', 'application/json');
                     res.writeHead(200);
-                    res.end(JSON.stringify({ ok: true, pack: config.pack, locked: config.locked }));
+                    res.end(JSON.stringify({ ok: true, pack: config.pack, mode: config.mode }));
                 }
                 catch (err) {
                     res.writeHead(500);
@@ -316,12 +319,12 @@ function createMcpServer(options) {
                 }
                 return;
             }
-            // Session config — read and update pack/lock state
+            // Session config — read and update pack/mode state
             if (req.method === 'GET' && req.url === '/session-config') {
                 res.setHeader('Content-Type', 'application/json');
                 res.setHeader('Access-Control-Allow-Origin', '*');
                 res.writeHead(200);
-                res.end(JSON.stringify({ pack: config.pack, locked: config.locked }));
+                res.end(JSON.stringify({ pack: config.pack, mode: config.mode }));
                 return;
             }
             if (req.method === 'POST' && req.url === '/session-config') {
@@ -330,12 +333,12 @@ function createMcpServer(options) {
                     for await (const chunk of req)
                         body += chunk;
                     const parsed = JSON.parse(body);
-                    if (typeof parsed.locked === 'boolean')
-                        config.locked = parsed.locked;
+                    if (parsed.mode === 'build' || parsed.mode === 'operate')
+                        config.mode = parsed.mode;
                     res.setHeader('Content-Type', 'application/json');
                     res.setHeader('Access-Control-Allow-Origin', '*');
                     res.writeHead(200);
-                    res.end(JSON.stringify({ pack: config.pack, locked: config.locked }));
+                    res.end(JSON.stringify({ pack: config.pack, mode: config.mode }));
                 }
                 catch (err) {
                     res.writeHead(400);
@@ -363,7 +366,7 @@ function createMcpServer(options) {
                 return;
             }
             // New session: create McpServer + Transport, connect, then handle
-            const mcp = buildMcpInstance(store.current, config.locked);
+            const mcp = buildMcpInstance(store.current, config.mode);
             const newSessionId = (0, crypto_1.randomUUID)();
             const transport = new streamableHttp_js_1.StreamableHTTPServerTransport({
                 sessionIdGenerator: () => newSessionId,
@@ -411,6 +414,10 @@ async function handleLensRequest(lensName, dataStore, res) {
         else if (lensName === 'accounts') {
             res.writeHead(200);
             res.end(JSON.stringify(await (0, accounts_js_1.buildAccounts)(dataStore)));
+        }
+        else if (lensName === 'type-registry') {
+            res.writeHead(200);
+            res.end(JSON.stringify(await (0, type_registry_js_1.buildTypeRegistryGraph)(dataStore)));
         }
         else {
             res.writeHead(404);

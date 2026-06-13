@@ -93,6 +93,8 @@ exports.schemas = {
             route: load('product/web/route.json'),
         },
         ui: {
+            app: load('product/ui/app.json'),
+            module: load('product/ui/module.json'),
             workflow: load('product/ui/workflow.json'),
             section: load('product/ui/section.json'),
             component: load('product/ui/component.json'),

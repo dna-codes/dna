@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_PACK = exports.PACKS = void 0;
+exports.renderPackForPrompt = renderPackForPrompt;
 const operational = __importStar(require("./operational.js"));
 const crm = __importStar(require("./crm.js"));
 const hr = __importStar(require("./hr.js"));
@@ -61,4 +62,30 @@ exports.PACKS = {
     },
 };
 exports.DEFAULT_PACK = 'operational';
+/**
+ * Render a pack's real type definitions as a structured prompt block. This is
+ * the single source of truth for the agent's pack vocabulary — it reads the
+ * same `PackDefinition` used to seed the store, so the prompt can never drift
+ * from what is registered. Resource types render as `name · category — desc`;
+ * relationship types as `name · from→to · cardinality — desc`, mirroring the
+ * shape of the reference example documents.
+ */
+function renderPackForPrompt(packName) {
+    const pack = exports.PACKS[packName] ?? exports.PACKS[exports.DEFAULT_PACK];
+    const resourceLines = pack.resourceTypes
+        .map(rt => `- **${rt.name}** · _${rt.category}_ — ${rt.description ?? ''}`.trimEnd())
+        .join('\n');
+    const relationshipLines = pack.relationshipTypes
+        .map(rel => `- **${rel.name}** · ${rel.from}→${rel.to} · ${rel.cardinality} — ${rel.description ?? ''}`.trimEnd())
+        .join('\n');
+    return [
+        `### ${pack.label} pack — ${pack.description}`,
+        '',
+        '**Resource types** (use these exact names as the `type` on add_instance):',
+        resourceLines,
+        '',
+        '**Relationship types** (use these exact names as the `type` on add_link; respect the from→to endpoints):',
+        relationshipLines,
+    ].join('\n');
+}
 //# sourceMappingURL=index.js.map

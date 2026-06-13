@@ -38,21 +38,29 @@ const PACK_WELCOME: Record<string, { content: string; placeholder: string }> = {
   },
 }
 
-function welcomeForPack(pack: string): Message {
+type SessionMode = 'build' | 'operate'
+
+const MODE_WELCOME: Record<SessionMode, string> = {
+  build: "\n\nWe're in **Build** mode — I'll help you model and mature your resource and relationship *types*, and simulate how new ones would behave before you commit any data.",
+  operate: "\n\nWe're in **Operate** mode — I'll help you create and wire real instances using the existing types.",
+}
+
+function welcomeFor(pack: string, mode: SessionMode): Message {
   const w = PACK_WELCOME[pack] ?? PACK_WELCOME.operational
-  return { id: 'welcome', role: 'assistant', content: w.content }
+  return { id: 'welcome', role: 'assistant', content: w.content + MODE_WELCOME[mode] }
 }
 
 interface ConversationPanelProps {
   pack: string
+  mode: SessionMode
   onGraphPatched: () => void
   onReset: () => void
   onSaveLens?: (name: string, widget: WidgetPayload) => void
   onActivateLens?: (lensId: string) => void
 }
 
-export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens, onActivateLens }: ConversationPanelProps) {
-  const [messages, setMessages] = useState<Message[]>(() => [welcomeForPack(pack)])
+export function ConversationPanel({ pack, mode, onGraphPatched, onReset, onSaveLens, onActivateLens }: ConversationPanelProps) {
+  const [messages, setMessages] = useState<Message[]>(() => [welcomeFor(pack, mode)])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTools, setActiveTools] = useState<string[]>([])
@@ -60,8 +68,8 @@ export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens, o
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setMessages([welcomeForPack(pack)])
-  }, [pack])
+    setMessages([welcomeFor(pack, mode)])
+  }, [pack, mode])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -164,7 +172,7 @@ export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens, o
   async function handleReset() {
     if (isStreaming) return
     await fetch('/api/reset', { method: 'POST' })
-    setMessages([welcomeForPack(pack)])
+    setMessages([welcomeFor(pack, mode)])
     setInput('')
     setActiveTools([])
     onReset()

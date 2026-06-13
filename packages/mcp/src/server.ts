@@ -3,7 +3,8 @@ import { randomUUID } from 'crypto'
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { z } from 'zod'
-import type { McpServerOptions, PatchOp, PatchResult, PatchError, AuthMiddleware } from './types.js'
+import type { McpServerOptions, SessionMode, PatchOp, PatchResult, PatchError, AuthMiddleware } from './types.js'
+import { patchGraphInputShape } from './patch-schema.js'
 import { WIDGET_KINDS } from './widgets.js'
 import { buildOrgChart } from './lenses/org-chart.js'
 import { buildPeoplePositions } from './lenses/people-positions.js'
@@ -13,6 +14,7 @@ import { buildGraphData } from './lenses/graph-data.js'
 import { buildJobDescriptions } from './lenses/job-descriptions.js'
 import { buildPipeline } from './lenses/pipeline.js'
 import { buildAccounts } from './lenses/accounts.js'
+import { buildTypeRegistryGraph } from './lenses/type-registry.js'
 import type { DnaDataStore } from '@dna-codes/dna-core'
 
 export { McpServerOptions }
@@ -21,11 +23,13 @@ const passthroughAuth: AuthMiddleware = (_req, _res, next) => next()
 
 // ── Validation helpers ────────────────────────────────────────────────────────
 
-async function validatePatchOps(
+export async function validatePatchOps(
   ops: PatchOp[],
   store: DnaDataStore,
-  locked = false,
+  mode: SessionMode = 'build',
 ): Promise<string[]> {
+  // Locking is derived from mode: Operate is locked, Build is open.
+  const locked = mode === 'operate'
   const violations: string[] = []
   const [rtList, relTypeList] = await Promise.all([
     store.resourceType.list(),
@@ -37,7 +41,7 @@ async function validatePatchOps(
   for (let i = 0; i < ops.length; i++) {
     const op = ops[i]
     if (locked && (op.op === 'add_resource_type' || op.op === 'add_relationship_type')) {
-      violations.push(`op[${i}]: Type registry is locked — switch to open mode to add new types.`)
+      violations.push(`op[${i}]: Type registry is locked in Operate mode — switch to Build mode to add or change types.`)
       continue
     }
     if (op.op === 'add_instance') {
@@ -148,13 +152,13 @@ async function applyPatchOps(
 // McpServer allows only one active transport at a time, so we create a fresh
 // instance for every HTTP request (stateless mode).
 
-function buildMcpInstance(dataStore: DnaDataStore, locked: boolean): McpServer {
+function buildMcpInstance(dataStore: DnaDataStore, mode: SessionMode): McpServer {
   const mcp = new McpServer({ name: 'dna-mcp', version: '0.1.0' })
-  registerHandlers(mcp, dataStore, locked)
+  registerHandlers(mcp, dataStore, mode)
   return mcp
 }
 
-function registerHandlers(mcp: McpServer, dataStore: DnaDataStore, locked: boolean): void {
+function registerHandlers(mcp: McpServer, dataStore: DnaDataStore, mode: SessionMode): void {
   // ── Resources ──────────────────────────────────────────────────────────────
 
   mcp.resource(
@@ -268,12 +272,10 @@ function registerHandlers(mcp: McpServer, dataStore: DnaDataStore, locked: boole
   mcp.tool(
     'patch_graph',
     'Validate and apply a list of graph mutation operations atomically.',
-    {
-      ops: z.array(z.any()).describe('Array of PatchOp objects'),
-    },
+    patchGraphInputShape,
     async ({ ops }) => {
       const patchOps = ops as unknown as PatchOp[]
-      const violations = await validatePatchOps(patchOps, dataStore, locked)
+      const violations = await validatePatchOps(patchOps, dataStore, mode)
       if (violations.length > 0) {
         const err: PatchError = { error: 'Patch validation failed', violations }
         return { content: [{ type: 'text' as const, text: JSON.stringify(err) }], isError: true }
@@ -341,7 +343,7 @@ export function createMcpServer(options: McpServerOptions): http.Server {
   const store = { current: options.dataStore }
   const config = {
     pack: options.initialPack ?? 'operational',
-    locked: options.lockedTypes ?? false,
+    mode: options.initialMode ?? 'build' as SessionMode,
   }
 
   // Session store: one McpServer + Transport per connected client
@@ -361,17 +363,17 @@ export function createMcpServer(options: McpServerOptions): http.Server {
           for await (const chunk of req) body += chunk
           const parsed = body ? JSON.parse(body) : {}
           const newPack = parsed.pack ?? config.pack
-          const newLocked = parsed.locked ?? false
+          const newMode: SessionMode = parsed.mode === 'operate' ? 'operate' : 'build'
           store.current = await options.createFreshStore(newPack)
           config.pack = newPack
-          config.locked = newLocked
+          config.mode = newMode
           for (const transport of sessions.values()) {
             await transport.close().catch(() => {})
           }
           sessions.clear()
           res.setHeader('Content-Type', 'application/json')
           res.writeHead(200)
-          res.end(JSON.stringify({ ok: true, pack: config.pack, locked: config.locked }))
+          res.end(JSON.stringify({ ok: true, pack: config.pack, mode: config.mode }))
         } catch (err) {
           res.writeHead(500)
           res.end(JSON.stringify({ error: String(err) }))
@@ -379,12 +381,12 @@ export function createMcpServer(options: McpServerOptions): http.Server {
         return
       }
 
-      // Session config — read and update pack/lock state
+      // Session config — read and update pack/mode state
       if (req.method === 'GET' && req.url === '/session-config') {
         res.setHeader('Content-Type', 'application/json')
         res.setHeader('Access-Control-Allow-Origin', '*')
         res.writeHead(200)
-        res.end(JSON.stringify({ pack: config.pack, locked: config.locked }))
+        res.end(JSON.stringify({ pack: config.pack, mode: config.mode }))
         return
       }
       if (req.method === 'POST' && req.url === '/session-config') {
@@ -392,11 +394,11 @@ export function createMcpServer(options: McpServerOptions): http.Server {
           let body = ''
           for await (const chunk of req) body += chunk
           const parsed = JSON.parse(body)
-          if (typeof parsed.locked === 'boolean') config.locked = parsed.locked
+          if (parsed.mode === 'build' || parsed.mode === 'operate') config.mode = parsed.mode
           res.setHeader('Content-Type', 'application/json')
           res.setHeader('Access-Control-Allow-Origin', '*')
           res.writeHead(200)
-          res.end(JSON.stringify({ pack: config.pack, locked: config.locked }))
+          res.end(JSON.stringify({ pack: config.pack, mode: config.mode }))
         } catch (err) {
           res.writeHead(400)
           res.end(JSON.stringify({ error: String(err) }))
@@ -427,7 +429,7 @@ export function createMcpServer(options: McpServerOptions): http.Server {
       }
 
       // New session: create McpServer + Transport, connect, then handle
-      const mcp = buildMcpInstance(store.current, config.locked)
+      const mcp = buildMcpInstance(store.current, config.mode)
       const newSessionId = randomUUID()
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => newSessionId,
@@ -475,6 +477,9 @@ async function handleLensRequest(
     } else if (lensName === 'accounts') {
       res.writeHead(200)
       res.end(JSON.stringify(await buildAccounts(dataStore)))
+    } else if (lensName === 'type-registry') {
+      res.writeHead(200)
+      res.end(JSON.stringify(await buildTypeRegistryGraph(dataStore)))
     } else {
       res.writeHead(404)
       res.end(JSON.stringify({ error: `Unknown lens "${lensName}"` }))

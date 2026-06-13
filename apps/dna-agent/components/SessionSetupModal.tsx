@@ -24,14 +24,20 @@ const PACKS = [
 ]
 
 type PackName = 'operational' | 'crm' | 'hr'
+type SessionMode = 'build' | 'operate'
+
+const MODES: { name: SessionMode; label: string; icon: string; description: string }[] = [
+  { name: 'build', label: 'Build', icon: '🧬', description: 'Model and mature resource & relationship types. Simulate how new types would behave.' },
+  { name: 'operate', label: 'Operate', icon: '⚙️', description: 'Run operations on real instances. Types are locked — work within the existing grammar.' },
+]
 
 interface SessionSetupModalProps {
-  onComplete: (pack: PackName, locked: boolean) => Promise<void>
+  onComplete: (pack: PackName, mode: SessionMode) => Promise<void>
 }
 
 export function SessionSetupModal({ onComplete }: SessionSetupModalProps) {
   const [selectedPack, setSelectedPack] = useState<PackName>('operational')
-  const [locked, setLocked] = useState(false)
+  const [mode, setMode] = useState<SessionMode>('build')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -39,7 +45,7 @@ export function SessionSetupModal({ onComplete }: SessionSetupModalProps) {
     setLoading(true)
     setError('')
     try {
-      await onComplete(selectedPack, locked)
+      await onComplete(selectedPack, mode)
     } catch (e) {
       setError(String(e))
       setLoading(false)
@@ -99,33 +105,42 @@ export function SessionSetupModal({ onComplete }: SessionSetupModalProps) {
             )
           })}
 
-          {/* Governance */}
-          <div
-            data-ui-card=""
-            style={{
-              padding: 'var(--ui-space-3) var(--ui-space-4)',
-              display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--ui-space-4)',
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--ui-space-1)' }}>
-              <span style={{ fontSize: 'var(--ui-font-size-sm)', fontWeight: 'var(--ui-font-weight-semibold)' }}>
-                Type governance
-              </span>
-              <span style={{ fontSize: 'var(--ui-font-size-xs)', color: 'var(--ui-color-text-muted)' }}>
-                {locked
-                  ? 'Locked — agent cannot create new types.'
-                  : 'Open — agent can propose and create new types.'}
-              </span>
+          {/* Mode */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--ui-space-1)', marginTop: 'var(--ui-space-2)' }}>
+            <span style={{ fontSize: 'var(--ui-font-size-xs)', fontWeight: 'var(--ui-font-weight-semibold)', color: 'var(--ui-color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Start in
+            </span>
+            <div style={{ display: 'flex', gap: 'var(--ui-space-2)' }}>
+              {MODES.map(m => {
+                const active = mode === m.name
+                return (
+                  <button
+                    key={m.name}
+                    data-ui-card=""
+                    onClick={() => setMode(m.name)}
+                    style={{
+                      flex: 1, textAlign: 'left', cursor: 'pointer',
+                      padding: 'var(--ui-space-3) var(--ui-space-4)',
+                      display: 'flex', flexDirection: 'column', gap: 'var(--ui-space-1)',
+                      background: active ? 'var(--ui-color-selection)' : undefined,
+                      borderColor: active ? 'var(--ui-color-primary)' : undefined,
+                      borderStyle: active ? 'solid' : undefined,
+                    }}
+                  >
+                    <span style={{
+                      fontSize: 'var(--ui-font-size-sm)',
+                      fontWeight: 'var(--ui-font-weight-semibold)',
+                      color: active ? 'var(--ui-color-primary)' : 'var(--ui-color-text)',
+                    }}>
+                      {m.icon} {m.label}
+                    </span>
+                    <span style={{ fontSize: 'var(--ui-font-size-xs)', color: 'var(--ui-color-text-muted)' }}>
+                      {m.description}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
-            <button
-              data-ui-button=""
-              data-variant={locked ? 'outline' : 'ghost'}
-              data-size="sm"
-              onClick={() => setLocked(l => !l)}
-              style={{ flexShrink: 0, borderColor: locked ? 'var(--ui-color-primary)' : undefined, color: locked ? 'var(--ui-color-primary)' : undefined }}
-            >
-              {locked ? '🔒 Locked' : '🔓 Open'}
-            </button>
           </div>
 
           {error && (

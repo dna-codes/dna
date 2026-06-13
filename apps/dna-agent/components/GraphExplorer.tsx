@@ -7,6 +7,22 @@ interface GraphEdge { id: string; source: string; target: string; type: string }
 interface GraphData { nodes: GraphNode[]; edges: GraphEdge[] }
 
 type LayoutMode = 'tree' | 'force' | 'directed'
+type GraphSource = 'instances' | 'types'
+
+// Type-registry payload (Build mode): resource types are nodes, relationship
+// types are directed edges between type names.
+interface TypeRegistryPayload {
+  resourceTypes: Array<{ name: string; category: string }>
+  relationshipTypes: Array<{ name: string; from: string; to: string }>
+}
+
+function typesToGraph(payload: TypeRegistryPayload): GraphData {
+  return {
+    nodes: payload.resourceTypes.map(rt => ({ id: rt.name, type: rt.category, name: rt.name })),
+    // id must be unique per edge; a relationship name can appear once, so name suffices.
+    edges: payload.relationshipTypes.map(rel => ({ id: rel.name, source: rel.from, target: rel.to, type: rel.name })),
+  }
+}
 
 const NODE_W = 160
 const NODE_H = 56
@@ -63,7 +79,7 @@ function linkAttrs(relType: string) {
   }
 }
 
-export function GraphExplorer({ refreshSignal }: { refreshSignal: number }) {
+export function GraphExplorer({ refreshSignal, source = 'instances' }: { refreshSignal: number; source?: GraphSource }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const paperRef = useRef<any>(null)
   const cleanupRef = useRef<(() => void) | null>(null)
@@ -99,9 +115,10 @@ export function GraphExplorer({ refreshSignal }: { refreshSignal: number }) {
 
     let data: GraphData
     try {
-      const res = await fetch('/api/graph')
+      const res = await fetch(source === 'types' ? '/api/lens/type-registry' : '/api/graph')
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      data = await res.json()
+      const json = await res.json()
+      data = source === 'types' ? typesToGraph(json as TypeRegistryPayload) : json as GraphData
     } catch (e) {
       setErrorMsg(String(e)); setStatus('error'); return
     }
@@ -125,11 +142,15 @@ export function GraphExplorer({ refreshSignal }: { refreshSignal: number }) {
 
     const nodeIds = new Set(data.nodes.map(n => n.id))
     const validEdges = data.edges.filter(e => nodeIds.has(e.source) && nodeIds.has(e.target))
+    // Self-referential edges (e.g. type-graph `reports_to: position→position`) are
+    // rendered as self-loops but excluded from layout and direction detection,
+    // where they would skew the heuristic or break the dagre ranker.
+    const nonSelfEdges = validEdges.filter(e => e.source !== e.target)
 
     // Detect edge direction: if exactly one node has no outgoing edges (e.g. CEO in a
     // reports_to graph), edges flow child→parent and need reversal for top-down display.
-    const hasSrc = new Set(validEdges.map(e => e.source))
-    const hasTgt = new Set(validEdges.map(e => e.target))
+    const hasSrc = new Set(nonSelfEdges.map(e => e.source))
+    const hasTgt = new Set(nonSelfEdges.map(e => e.target))
     const noOutgoing = data.nodes.filter(n => !hasSrc.has(n.id))
     const noIncoming = data.nodes.filter(n => !hasTgt.has(n.id))
     const reversed = noOutgoing.length === 1 && noIncoming.length > 1
@@ -171,7 +192,7 @@ export function GraphExplorer({ refreshSignal }: { refreshSignal: number }) {
       const { layout } = await import('@joint/plus')
 
       // Root = node with no incoming edges after reversal (the authority apex)
-      const incomingIds = new Set(validEdges.map(e => tgt(e)))
+      const incomingIds = new Set(nonSelfEdges.map(e => tgt(e)))
       const rootNode = data.nodes.find(n => !incomingIds.has(n.id))
       if (rootNode) {
         elementById.get(rootNode.id)?.position(W / 2 - NODE_W / 2, 40)
@@ -210,7 +231,7 @@ export function GraphExplorer({ refreshSignal }: { refreshSignal: number }) {
       for (const node of data.nodes) {
         g.setNode(node.id, { width: NODE_W, height: NODE_H })
       }
-      for (const edge of validEdges) {
+      for (const edge of nonSelfEdges) {
         g.setEdge(src(edge), tgt(edge))
       }
       dagre.layout(g)
@@ -281,7 +302,7 @@ export function GraphExplorer({ refreshSignal }: { refreshSignal: number }) {
     }
 
     setStatus('ready')
-  }, [layoutMode])
+  }, [layoutMode, source])
 
   useEffect(() => {
     build()
@@ -310,7 +331,9 @@ export function GraphExplorer({ refreshSignal }: { refreshSignal: number }) {
       )}
       {status === 'empty' && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-          No instances yet. Ask the agent to build your graph.
+          {source === 'types'
+            ? 'No types defined yet. Ask the agent to model your grammar.'
+            : 'No instances yet. Ask the agent to build your graph.'}
         </div>
       )}
       {status === 'error' && (

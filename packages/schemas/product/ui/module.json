@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/product/ui/module",
+  "title": "Module",
+  "description": "A Module is a feature-area grouping beneath an App and above Workflow/Page — typically the product surface of a sub-Domain or a Process. It groups the Workflows and Pages that realize a business process area.",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The PascalCase name of the module.",
+      "examples": ["Origination", "Servicing", "Onboarding"]
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable explanation of what this module surfaces."
+    },
+    "realizes": {
+      "type": "string",
+      "description": "The business node (sub-Domain or Process) this module surfaces, by name.",
+      "examples": ["LoanOrigination", "Servicing"]
+    },
+    "workflows": {
+      "type": "array",
+      "description": "The Workflows that make up this module. Each entry is the PascalCase name of a Workflow defined in this UI.",
+      "items": {
+        "type": "string",
+        "description": "A reference to a Workflow by its PascalCase name.",
+        "examples": ["LoanApplication"]
+      }
+    },
+    "pages": {
+      "type": "array",
+      "description": "Pages contained directly by this module. Each entry is the PascalCase name of a Page defined in this UI.",
+      "items": {
+        "type": "string",
+        "description": "A reference to a Page by its PascalCase name.",
+        "examples": ["ApplicationPage", "ReviewPage"]
+      }
+    }
+  },
+  "examples": [
+    {
+      "name": "Origination",
+      "realizes": "LoanOrigination",
+      "description": "Surfaces the loan origination process.",
+      "workflows": ["LoanApplication"]
+    }
+  ]
+}

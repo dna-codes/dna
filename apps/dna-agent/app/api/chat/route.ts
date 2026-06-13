@@ -32,13 +32,13 @@ export async function POST(req: Request) {
       try {
         // Fetch session config to build context-aware system prompt
         const mcpUrl = process.env.DNA_MCP_URL
-        let systemPrompt = buildSystemPrompt('operational', false)
+        let systemPrompt = buildSystemPrompt('operational', 'build')
         if (mcpUrl) {
           try {
             const cfgRes = await fetch(`${mcpUrl.replace(/\/mcp$/, '')}/session-config`)
             if (cfgRes.ok) {
               const cfg = await cfgRes.json()
-              systemPrompt = buildSystemPrompt(cfg.pack ?? 'operational', cfg.locked ?? false)
+              systemPrompt = buildSystemPrompt(cfg.pack ?? 'operational', cfg.mode ?? 'build')
             }
           } catch { /* fall back to default */ }
         }

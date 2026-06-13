@@ -9,6 +9,9 @@ import { GraphExplorer } from './GraphExplorer'
 import { JobDescriptionsPanel } from './JobDescriptionsPanel'
 import { PipelinePanel } from './PipelinePanel'
 import { AccountsPanel } from './AccountsPanel'
+import { TypeOrgChartPanel } from './TypeOrgChartPanel'
+import { TypeReportingChainsPanel } from './TypeReportingChainsPanel'
+import { TypeJobDescriptionsPanel } from './TypeJobDescriptionsPanel'
 import { InlineWidget } from './InlineWidget'
 import type { SavedLens } from '@/lib/saved-lenses'
 
@@ -17,6 +20,16 @@ interface TabDef {
   label: string
   render: (refreshSignal: number) => React.ReactNode
 }
+
+// Build mode is type-focused: every lens renders the type registry (the grammar),
+// not instances. Tab IDs mirror the Operate lenses so agent activate_lens routing
+// maps naturally; the panel rendered differs by mode.
+const BUILD_TABS: TabDef[] = [
+  { id: 'graph-explorer',   label: 'Schema Graph',     render: s => <GraphExplorer refreshSignal={s} source="types" /> },
+  { id: 'org-chart',        label: 'Org Chart',        render: s => <TypeOrgChartPanel refreshSignal={s} /> },
+  { id: 'reporting-chains', label: 'Reporting Chains', render: s => <TypeReportingChainsPanel refreshSignal={s} /> },
+  { id: 'job-descriptions', label: 'Job Descriptions', render: s => <TypeJobDescriptionsPanel refreshSignal={s} /> },
+]
 
 const PACK_TABS: Record<string, TabDef[]> = {
   operational: [
@@ -41,25 +54,36 @@ const PACK_TABS: Record<string, TabDef[]> = {
   ],
 }
 
+type SessionMode = 'build' | 'operate'
+
+// The visible lens set is gated by mode: Build shows type/modeling lenses,
+// Operate shows the pack's operational instance lenses.
+function tabsForMode(pack: string, mode: SessionMode): TabDef[] {
+  if (mode === 'build') return BUILD_TABS
+  return PACK_TABS[pack] ?? PACK_TABS.operational
+}
+
 interface LensPanelShellProps {
   pack: string
+  mode: SessionMode
   refreshSignal: number
   savedLenses: SavedLens[]
   onRemoveLens: (id: string) => void
   agentLens?: { lensId: string; seq: number } | null
 }
 
-export function LensPanelShell({ pack, refreshSignal, savedLenses, onRemoveLens, agentLens }: LensPanelShellProps) {
-  const packTabs = PACK_TABS[pack] ?? PACK_TABS.operational
+export function LensPanelShell({ pack, mode, refreshSignal, savedLenses, onRemoveLens, agentLens }: LensPanelShellProps) {
+  const packTabs = tabsForMode(pack, mode)
   const [activeTab, setActiveTab] = useState(packTabs[0].id)
 
-  // Reset to first pack tab when pack changes
+  // Reset to first tab when the pack or mode changes
   useEffect(() => {
-    const newTabs = PACK_TABS[pack] ?? PACK_TABS.operational
+    const newTabs = tabsForMode(pack, mode)
     setActiveTab(newTabs[0].id)
-  }, [pack])
+  }, [pack, mode])
 
-  // If the active tab was a saved lens that got removed, fall back to first pack tab
+  // If the active tab is no longer valid (mode switch hid it, or a saved lens
+  // was removed), fall back to the first tab valid in the current mode.
   useEffect(() => {
     const isPackTab = packTabs.some(t => t.id === activeTab)
     const isSavedTab = savedLenses.some(l => l.id === activeTab)
@@ -68,7 +92,7 @@ export function LensPanelShell({ pack, refreshSignal, savedLenses, onRemoveLens,
     }
   }, [savedLenses, activeTab, packTabs])
 
-  // Agent-driven tab switch — only honor if the lensId is valid for current pack or saved lenses
+  // Agent-driven tab switch — only honor if the lensId is valid for current mode or saved lenses
   useEffect(() => {
     if (!agentLens) return
     const isPackTab = packTabs.some(t => t.id === agentLens.lensId)
