@@ -1,5 +1,5 @@
 import { DnaInput } from './types';
-export type Section = 'summary' | 'domain-model' | 'operations' | 'sops' | 'process-flow';
+export type Section = 'summary' | 'domain-model' | 'operations' | 'sops' | 'process-flow' | 'product-ui';
 export declare const DEFAULT_SECTIONS: readonly Section[];
 export interface RenderOptions {
     /** Which sections to include, in the given order. Defaults to DEFAULT_SECTIONS. */

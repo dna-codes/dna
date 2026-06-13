@@ -33,8 +33,7 @@ While packages remain pre-1.0, breaking changes (renames, schema breaks, API rem
 - **THEN** every non-private package bumps its minor version on its first npmjs.com publish, signaling the observably-breaking distribution change to consumers
 
 ### Requirement: Packages publish to npmjs.com under the public `@dna-codes` scope
-
-Every package in this repo SHALL publish to the default npm registry (`https://registry.npmjs.org`) under the `@dna-codes` scope, with public access. Versions previously published to GitHub Packages on the `0.4.x` line are deprecated historical artifacts and SHALL NOT be updated.
+Every package in this repo — both under `packages/*` and `engine/*` — SHALL publish to the default npm registry (`https://registry.npmjs.org`) under the `@dna-codes` scope, with public access.
 
 Each package's `package.json#publishConfig` SHALL declare public access:
 
@@ -44,17 +43,21 @@ Each package's `package.json#publishConfig` SHALL declare public access:
 }
 ```
 
-`publishConfig.registry` SHALL be omitted; npm's default precedence (CLI flag → `npm config` → built-in default of `https://registry.npmjs.org`) provides the registry. The publish workflow sets the registry via `actions/setup-node`'s `registry-url`.
+`publishConfig.registry` SHALL be omitted. `publishConfig.access` SHALL be `"public"` for every non-private package.
 
-`publishConfig.access` SHALL be `"public"` for every non-private package. Scoped `@dna-codes/*` packages otherwise default to `restricted` and fail to publish on the npm free org plan.
+The root `package.json#workspaces` SHALL include both `packages/*` and `engine/*` so that `npm publish --workspaces` in CI covers the full published surface in a single pass.
 
 #### Scenario: A non-private package missing publishConfig.access fails publish
-- **WHEN** a `package.json` lacks `publishConfig.access: "public"` and is not marked `"private": true`
-- **THEN** `npm publish` returns 402 Payment Required (npm's surface error for "scoped package + restricted access on a free org plan"); the publish job exits non-zero
+- **WHEN** a `package.json` (in `packages/` or `engine/`) lacks `publishConfig.access: "public"` and is not marked `"private": true`
+- **THEN** `npm publish` returns 402 Payment Required; the publish job exits non-zero
 
-#### Scenario: A package mistakenly pins publishConfig.registry to GitHub Packages is corrected
-- **WHEN** a contributor adds `"registry": "https://npm.pkg.github.com"` (or any non-npmjs registry) to publishConfig in a PR
-- **THEN** the change is rejected; the field is removed before merge so the workflow's registry-url controls the destination
+#### Scenario: Engine packages are published alongside SDK packages
+- **WHEN** a release tag `v*` is pushed and the publish workflow runs
+- **THEN** all non-private packages from both `packages/*` and `engine/*` are published in a single workflow run
+
+#### Scenario: Already-published versions are skipped without error
+- **WHEN** the publish workflow runs and some packages have not had their version bumped
+- **THEN** those packages are skipped (not re-published) and the workflow exits 0
 
 ### Requirement: Packages are public; access flows from the npmjs.com registry
 
@@ -71,4 +74,15 @@ Published packages SHALL be publicly installable from npmjs.com with no per-cons
 #### Scenario: A package marked private is not published
 - **WHEN** the publish workflow iterates workspaces and encounters `dna-integration-jira` (`"private": true`)
 - **THEN** npm skips it automatically; nothing is uploaded for that package
+
+### Requirement: No `file:` dep rewrites in publish CI
+The publish workflow SHALL NOT contain any step that rewrites `file:` dependency paths to registry pins. Intra-repo deps SHALL use `workspace:*` in source, which npm rewrites to the actual version on publish automatically.
+
+#### Scenario: Publish workflow has no dep-rewrite step
+- **WHEN** `.github/workflows/publish.yml` is inspected
+- **THEN** there is no script or step that modifies `package.json` files to replace `file:` paths
+
+#### Scenario: Published package resolves its dna-core dep from registry
+- **WHEN** a consumer installs `@dna-codes/cells` from npmjs.com
+- **THEN** its declared dep on `@dna-codes/dna-core` resolves to a versioned registry range (e.g. `^0.11.0`), not a `file:` or `workspace:` path
 

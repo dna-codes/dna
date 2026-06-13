@@ -21,6 +21,16 @@
       "description": "The URL patterns that resolve to pages in this UI.",
       "minItems": 1,
       "items": { "$ref": "https://dna.codes/schemas/product/web/route" }
+    },
+    "workflows": {
+      "type": "array",
+      "description": "Navigable groupings of Pages above the Page level — the user journeys this UI supports.",
+      "items": { "$ref": "https://dna.codes/schemas/product/ui/workflow" }
+    },
+    "operations": {
+      "type": "array",
+      "description": "The behavioral UIOperations of this UI — trigger plus effects describing what happens on user interaction.",
+      "items": { "$ref": "https://dna.codes/schemas/product/ui/operation" }
     }
   },
   "examples": [

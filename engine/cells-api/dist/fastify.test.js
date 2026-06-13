@@ -42,7 +42,7 @@ const os = __importStar(require("os"));
 const path = __importStar(require("path"));
 const fastifyAdapter = __importStar(require("./adapters/node/fastify"));
 const repoRoot = path.resolve(__dirname, '../../../../');
-const dnaBase = path.join(repoRoot, 'dna/engine/fixtures/lending');
+const dnaBase = path.join(repoRoot, 'dna/engine/fixtures/dna/lending');
 function loadFixture() {
     const api = JSON.parse(fs.readFileSync(path.join(dnaBase, 'product.api.json'), 'utf-8'));
     const core = JSON.parse(fs.readFileSync(path.join(dnaBase, 'product.core.json'), 'utf-8'));

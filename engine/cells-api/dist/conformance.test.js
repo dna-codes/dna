@@ -94,8 +94,8 @@ function extractRailsSurface(dir) {
 /** Extract surface from NestJS adapter output (parse controller files). */
 function extractNestJsSurface(dir) {
     const repoRoot = path.resolve(__dirname, '../../../../');
-    const api = JSON.parse(fs.readFileSync(path.join(repoRoot, 'dna/engine/fixtures/lending/product.api.json'), 'utf-8'));
-    const core = JSON.parse(fs.readFileSync(path.join(repoRoot, 'dna/engine/fixtures/lending/product.core.json'), 'utf-8'));
+    const api = JSON.parse(fs.readFileSync(path.join(repoRoot, 'dna/engine/fixtures/dna/lending/product.api.json'), 'utf-8'));
+    const core = JSON.parse(fs.readFileSync(path.join(repoRoot, 'dna/engine/fixtures/dna/lending/product.core.json'), 'utf-8'));
     // NestJS generates typed controllers; rather than fragile regex parsing,
     // use the source DNA (same input all adapters receive) to build the surface,
     // then verify the generated controller files actually contain the expected
@@ -159,7 +159,7 @@ function extractRoles(surface) {
 // ── Test suite ───────────────────────────────────────────────────────────────
 describe('api-cell adapter conformance', () => {
     const repoRoot = path.resolve(__dirname, '../../../../');
-    const technicalPath = path.join(repoRoot, 'dna/engine/fixtures/lending/technical.json');
+    const technicalPath = path.join(repoRoot, 'dna/engine/fixtures/dna/lending/technical.json');
     let expressDir;
     let nestjsDir;
     let railsDir;

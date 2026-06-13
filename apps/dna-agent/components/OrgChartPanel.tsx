@@ -10,9 +10,39 @@ interface OrgChartPanelProps {
 const GROUP_TYPES = new Set(['company', 'department', 'domain', 'group'])
 const isGroup = (node: OrgChartNode) => GROUP_TYPES.has(node.type.toLowerCase())
 
-function PositionCard({ node, depth = 0 }: { node: OrgChartNode; depth?: number }) {
+/**
+ * Renders one node and its descendants top-down. Groups (company, department)
+ * render as section headings; positions render as cards. Children — sub-groups,
+ * top-level positions, and reports_to subordinates — all live on `node.reports`
+ * and recurse one level deeper, so the visual nesting mirrors the org hierarchy:
+ * company > department > position > position…
+ */
+function OrgNode({ node, depth }: { node: OrgChartNode; depth: number }) {
+  const children = node.reports
+
+  if (isGroup(node)) {
+    return (
+      <div style={{ marginBottom: 'var(--ui-space-3)' }}>
+        <div style={{
+          fontSize: depth === 0 ? '0.8rem' : '0.65rem',
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.07em',
+          color: depth === 0 ? 'var(--ui-color-primary)' : 'var(--ui-color-text-muted)',
+          borderBottom: '1px solid var(--border)',
+          paddingBottom: '0.25rem',
+          marginBottom: '0.625rem',
+        }}>
+          {node.name}
+        </div>
+        <NestedChildren nodes={children} depth={depth + 1} />
+      </div>
+    )
+  }
+
+  // Position card
   return (
-    <div style={{ marginLeft: depth > 0 ? '1.25rem' : 0 }}>
+    <div>
       <div data-ui-card="" style={{ padding: 'var(--ui-space-2) var(--ui-space-3)', marginBottom: 'var(--ui-space-2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--ui-space-2)' }}>
           <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{node.name}</span>
@@ -22,33 +52,21 @@ function PositionCard({ node, depth = 0 }: { node: OrgChartNode; depth?: number 
           <div key={h.id} style={{ fontSize: '0.75rem', color: 'var(--ui-color-primary)', marginTop: 'var(--ui-space-1)' }}>{h.name}</div>
         ))}
       </div>
-      {node.reports.map(r => (
-        <PositionCard key={r.id} node={r} depth={depth + 1} />
-      ))}
+      <NestedChildren nodes={children} depth={depth + 1} />
     </div>
   )
 }
 
-function DeptSection({ node, depth = 0 }: { node: OrgChartNode; depth?: number }) {
+/** Indented, left-bordered container that guides the eye down each level of the hierarchy. */
+function NestedChildren({ nodes, depth }: { nodes: OrgChartNode[]; depth: number }) {
+  if (nodes.length === 0) return null
   return (
-    <div style={{ marginBottom: '1.5rem', marginLeft: depth > 0 ? '1rem' : 0 }}>
-      <div style={{
-        fontSize: '0.65rem',
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        letterSpacing: '0.07em',
-        color: depth === 0 ? 'var(--ui-color-primary)' : 'var(--ui-color-text-muted)',
-        borderBottom: '1px solid var(--border)',
-        paddingBottom: '0.25rem',
-        marginBottom: '0.625rem',
-      }}>
-        {node.name}
-      </div>
-      {node.reports.map(child =>
-        isGroup(child)
-          ? <DeptSection key={child.id} node={child} depth={depth + 1} />
-          : <PositionCard key={child.id} node={child} />
-      )}
+    <div style={{
+      marginLeft: '0.5rem',
+      paddingLeft: '0.75rem',
+      borderLeft: '1px solid var(--border)',
+    }}>
+      {nodes.map(child => <OrgNode key={child.id} node={child} depth={depth} />)}
     </div>
   )
 }
@@ -118,11 +136,7 @@ export function OrgChartPanel({ refreshSignal }: OrgChartPanelProps) {
           <style>{`@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }`}</style>
         </span>
       )}
-      {viewModel.roots.map(root =>
-        isGroup(root)
-          ? <DeptSection key={root.id} node={root} />
-          : <PositionCard key={root.id} node={root} />
-      )}
+      {viewModel.roots.map(root => <OrgNode key={root.id} node={root} depth={0} />)}
     </div>
   )
 }

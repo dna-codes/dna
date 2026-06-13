@@ -196,7 +196,12 @@ Every primitive in every layer may carry an optional `stability` maturity marker
 
 **API** (`product.api.json`) — REST surface: `Endpoint`, `Namespace`, `Param`, `Schema`
 
-**UI** (`product.ui.json`) — web surface: `Layout`, `Page`, `Route`, `Block`
+**UI** (`product.ui.json`) — web surface. Two complementary models:
+
+- **Structural hierarchy:** `Layout`, `Route`, and the nested `Workflow → Page → Section → Component → Element` chain. A `Workflow` is a navigable grouping of Pages above the Page level (a user journey); `Section`, `Component`, and `Element` decompose a Page into semantic regions, reusable units, and leaf primitives. (`Block` remains as the flat, pre-hierarchy Page child.)
+- **Behavioral primitive:** `UIOperation` — the product-layer equivalent of Operational's `Operation`. Each carries a `trigger` (a Component plus a user event) and an ordered list of `effects` (`navigate`, `api-call`, `state-change`, `render`). This lets DNA describe *what happens* on interaction, not just *what exists* — making the UI fully graph-queryable (e.g. "what breaks if `LoanDetailPage` is removed?"). Relationships: `contains`, `renders`, `triggers`, `navigates_to`, `calls`, `requires`, `updates`.
+
+See [docs/concepts/product-ui.md](./docs/concepts/product-ui.md) for the full resources-and-relationships model and example queries. All new fields are additive — existing `product.ui.json` documents remain valid.
 
 ## Technical Layer
 

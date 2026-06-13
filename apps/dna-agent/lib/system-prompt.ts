@@ -130,11 +130,11 @@ NEVER skip Phase 2. Every relationship listed in the plan MUST appear in Phase 2
 
 Expected wiring by pack — include ALL of these that apply:
 
-**Operational:**
-- Every person -> [fills] -> their position
-- Every position (except the top) -> [reports_to] -> their manager position
-- Every position -> [belongs_to] -> their department
+**Operational:** wire the structural spine top-down — company > department > position > position:
 - Every department -> [belongs_to] -> the company
+- Every position -> [belongs_to] -> its department — EXCEPT the top position (e.g. CEO), which has no department and -> [belongs_to] -> the company directly. Never invent a department just to house the CEO.
+- Every position (except the top of its chain) -> [reports_to] -> its manager position
+- Every person -> [fills] -> their position
 - Every step -> [belongs_to] -> its process
 - Every step -> [assigned_to] -> the position responsible for it
 - Sequential steps -> [next_step] -> the following step

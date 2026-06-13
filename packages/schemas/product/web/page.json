@@ -25,6 +25,16 @@
       "type": "array",
       "description": "The named Blocks that make up this page, in order.",
       "items": { "$ref": "https://dna.codes/schemas/product/web/block" }
+    },
+    "sections": {
+      "type": "array",
+      "description": "The structural Sections that make up this page, in order. The richer UI hierarchy (Section -> Component -> Element) supplementing or replacing flat Blocks.",
+      "items": { "$ref": "https://dna.codes/schemas/product/ui/section" }
+    },
+    "components": {
+      "type": "array",
+      "description": "Components rendered directly on this page, outside any Section. For simple pages that do not need Section grouping.",
+      "items": { "$ref": "https://dna.codes/schemas/product/ui/component" }
     }
   },
   "examples": [

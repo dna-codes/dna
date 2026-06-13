@@ -136,9 +136,9 @@
 
 ## 8. Release
 
-- [ ] 8.1 Confirm bumps applied: `dna-core@0.9.0`, `dna-adapters@0.9.0`, `dna-api@0.2.0`
-- [ ] 8.2 Smoke build: `npm run build --workspaces --if-present` succeeds across all four packages
-- [ ] 8.3 Smoke test: full workspace `npm test` passes (memory tests will cover everything except live Neo4j; that gate continues to skip when `NEO4J_URI` is unset)
-- [ ] 8.4 Pause before tagging — confirm with user that release is wanted
+- [x] 8.1 Confirm bumps applied: `dna-core@0.9.0`, `dna-adapters@0.9.0`, `dna-api@0.2.0` (actual versions now higher: core@0.11.0, adapters@0.10.0, api@0.3.0 — bumped further since)
+- [x] 8.2 Smoke build: `npm run build --workspaces --if-present` succeeds across all four packages
+- [x] 8.3 Smoke test: full workspace `npm test` passes (memory tests will cover everything except live Neo4j; that gate continues to skip when `NEO4J_URI` is unset)
+- [ ] 8.4 Pause before tagging — confirm with user that release is wanted (STOPPED HERE per user: archive at built & tested, do not release)
 - [ ] 8.5 Tag and push (triggers publish workflow)
 - [ ] 8.6 Post-release smoke test: install all three bumped packages in a scratch project; run the API CLI against a fixture DNA + `integration/memory`; introspect the schema; verify `createResourceType` works via GraphQL and a new typed type appears in subsequent introspection

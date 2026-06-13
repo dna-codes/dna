@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/product/ui/operation",
+  "title": "UIOperation",
+  "description": "A UIOperation is a first-class behavioral primitive at the product UI layer: a trigger (a Component plus a user event) and an ordered list of effects (navigate, api-call, state-change, render). It is the product-layer equivalent of Operational's Operation — describing what happens when a user interacts with the UI.",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
+  "required": ["id", "name", "trigger", "effects"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "A stable identifier for this operation, unique within the UI document.",
+      "examples": ["submit-loan-application", "open-loan-detail"]
+    },
+    "name": {
+      "type": "string",
+      "description": "The PascalCase name of the operation.",
+      "examples": ["SubmitLoanApplication", "OpenLoanDetail"]
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable explanation of what this operation does."
+    },
+    "trigger": {
+      "type": "object",
+      "description": "What sets this operation off: a Component and the user event on it.",
+      "required": ["component", "event"],
+      "properties": {
+        "component": {
+          "type": "string",
+          "description": "The PascalCase name of the Component that triggers this operation.",
+          "examples": ["SubmitButton", "LoanRow"]
+        },
+        "event": {
+          "type": "string",
+          "description": "The user event that fires the trigger.",
+          "enum": ["click", "submit", "change", "load", "hover", "focus", "blur"]
+        }
+      }
+    },
+    "effects": {
+      "type": "array",
+      "description": "The ordered effects this operation produces when triggered.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "oneOf": [
+          {
+            "title": "NavigateEffect",
+            "required": ["type", "to"],
+            "properties": {
+              "type": { "const": "navigate" },
+              "to": {
+                "type": "string",
+                "description": "The Page or route this effect navigates to.",
+                "examples": ["LoanConfirm", "/loans/:id"]
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "title": "ApiCallEffect",
+            "required": ["type", "operation"],
+            "properties": {
+              "type": { "const": "api-call" },
+              "operation": {
+                "type": "string",
+                "description": "The backend Operation invoked, expressed as Resource.Action.",
+                "pattern": "^[A-Z][a-zA-Z]*\\.[A-Z][a-zA-Z]*$",
+                "examples": ["Loan.Apply", "Loan.Approve"]
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "title": "StateChangeEffect",
+            "required": ["type", "target"],
+            "properties": {
+              "type": { "const": "state-change" },
+              "target": {
+                "type": "string",
+                "description": "The state key this effect updates.",
+                "examples": ["loan.status", "form.submitting"]
+              },
+              "value": {
+                "description": "The value the target is set to (any JSON value)."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "title": "RenderEffect",
+            "required": ["type", "component"],
+            "properties": {
+              "type": { "const": "render" },
+              "component": {
+                "type": "string",
+                "description": "The Component this effect renders.",
+                "examples": ["SuccessBanner", "ErrorToast"]
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "submit-loan-application",
+      "name": "SubmitLoanApplication",
+      "description": "Validates and submits the loan application, then advances the workflow.",
+      "trigger": { "component": "SubmitButton", "event": "click" },
+      "effects": [
+        { "type": "state-change", "target": "form.submitting", "value": true },
+        { "type": "api-call", "operation": "Loan.Apply" },
+        { "type": "navigate", "to": "LoanConfirm" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/product/ui/section",
+  "title": "Section",
+  "description": "A Section is a named structural region within a Page (e.g. header, main, sidebar). It groups Components and gives the page layout a semantic, graph-addressable structure.",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The PascalCase name of the section.",
+      "examples": ["Header", "Main", "Sidebar", "Footer"]
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable explanation of what this section contains."
+    },
+    "role": {
+      "type": "string",
+      "description": "The semantic role this section plays within the page.",
+      "enum": ["header", "main", "sidebar", "footer", "nav", "aside"]
+    },
+    "components": {
+      "type": "array",
+      "description": "The Components rendered within this section, in order.",
+      "items": { "$ref": "https://dna.codes/schemas/product/ui/component" }
+    }
+  },
+  "examples": [
+    {
+      "name": "Main",
+      "role": "main",
+      "description": "Primary content region of the loan detail page.",
+      "components": [
+        { "name": "LoanSummaryCard", "type": "card", "resource": "Loan" }
+      ]
+    }
+  ]
+}

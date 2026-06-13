@@ -57,6 +57,7 @@ export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens, o
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTools, setActiveTools] = useState<string[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setMessages([welcomeForPack(pack)])
@@ -156,6 +157,7 @@ export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens, o
     } finally {
       setIsStreaming(false)
       setActiveTools([])
+      inputRef.current?.focus()
     }
   }
 
@@ -166,6 +168,7 @@ export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens, o
     setInput('')
     setActiveTools([])
     onReset()
+    inputRef.current?.focus()
   }
 
   const toolLabel: Record<string, string> = {
@@ -253,7 +256,9 @@ export function ConversationPanel({ pack, onGraphPatched, onReset, onSaveLens, o
         }}
       >
         <input
+          ref={inputRef}
           data-ui-input=""
+          autoFocus
           value={input}
           onChange={e => setInput(e.target.value)}
           placeholder={(PACK_WELCOME[pack] ?? PACK_WELCOME.operational).placeholder}

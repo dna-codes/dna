@@ -4,6 +4,7 @@ import { renderDomainModel } from './sections/domain-model'
 import { renderOperations } from './sections/operations'
 import { renderSops } from './sections/sops'
 import { renderProcessFlow } from './sections/process-flow'
+import { renderProductUi } from './sections/product-ui'
 import { hashes } from './util'
 
 export type Section =
@@ -12,6 +13,7 @@ export type Section =
   | 'operations'
   | 'sops'
   | 'process-flow'
+  | 'product-ui'
 
 export const DEFAULT_SECTIONS: readonly Section[] = [
   'summary',
@@ -19,6 +21,7 @@ export const DEFAULT_SECTIONS: readonly Section[] = [
   'operations',
   'sops',
   'process-flow',
+  'product-ui',
 ]
 
 export interface RenderOptions {
@@ -75,6 +78,8 @@ function renderSection(
       return renderSops(dna, h)
     case 'process-flow':
       return renderProcessFlow(dna, h)
+    case 'product-ui':
+      return renderProductUi(dna, h)
   }
 }
 

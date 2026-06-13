@@ -68,6 +68,13 @@ export declare const schemas: {
             readonly page: JsonSchema;
             readonly route: JsonSchema;
         };
+        readonly ui: {
+            readonly workflow: JsonSchema;
+            readonly section: JsonSchema;
+            readonly component: JsonSchema;
+            readonly element: JsonSchema;
+            readonly operation: JsonSchema;
+        };
     };
     readonly technical: {
         readonly cell: JsonSchema;
@@ -92,6 +99,7 @@ export declare const documents: {
 export declare const lenses: {
     readonly operational: LensDefinition;
     readonly product: LensDefinition;
+    readonly productUi: LensDefinition;
     readonly technical: LensDefinition;
     readonly people: LensDefinition;
     readonly accessControl: LensDefinition;
@@ -112,6 +120,7 @@ export { DEFAULT_STYLES } from './types/adapters';
 export type { DnaDataStore, InstanceRef, InstanceRecord, InstanceCreateInput, LinkCreateOptions, LinkRecord, LinkListFilter, NounCategory, Stability, AttributeSchema, AttributeSchemaEntry, ResourceType, ResourceTypeVersion, ResourceTypeInput, ResourceTypeUpdate, RelationshipType, RelationshipTypeVersion, RelationshipTypeInput, RelationshipTypeUpdate, TypeDeleteOptions, SeedReport, } from './types/data-store';
 export { TypeInUseError, STABILITIES, FOUNDATIONAL_RESOURCE_TYPE_NAMES, isFoundationalTypeName, defaultStabilityForType, } from './types/data-store';
 export type { Action, ActionType, Attribute, AttributeType, BasePrimitive, Domain, Group, Membership, Operation, OperationChange, Person, PrimitiveInput, Process, ProcessStep, Relationship, RelationshipCardinality, Resource, Role, RoleScope, Rule, RuleAllowEntry, RuleCondition, RuleConditionOperator, RuleType, Task, Trigger, TriggerSource, } from './types/operational';
+export type { Element, Component, Section, Workflow, UIOperation, UIOperationTrigger, UIOperationEffect, NavigateEffect, ApiCallEffect, StateChangeEffect, RenderEffect, } from './types/product-ui';
 export { OPERATIONAL_PRIMITIVE_VERSIONS, } from './version';
 export type { OperationalPrimitiveType } from './version';
 export { bookshopInput } from './fixtures/bookshop';

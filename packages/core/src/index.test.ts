@@ -83,9 +83,9 @@ describe('@dna-codes/dna-core', () => {
       const ids = all.map((s) => s.$id)
       expect(new Set(ids).size).toBe(ids.length)
 
-      // 1 meta + 15 op + 6 product-core + 4 product-api + 4 product-web + 10 technical = 40 primitives
-      // + 5 aggregates = 45 schemas total
-      expect(all.length).toBe(45)
+      // 1 meta + 15 op + 6 product-core + 4 product-api + 4 product-web + 5 product-ui + 10 technical = 45 primitives
+      // + 5 aggregates = 50 schemas total
+      expect(all.length).toBe(50)
     })
   })
 
@@ -118,13 +118,14 @@ describe('@dna-codes/dna-core', () => {
   })
 
   describe('lenses', () => {
-    it('has all six core lens keys and each has a $id', () => {
+    it('has all seven core lens keys and each has a $id', () => {
       expect(Object.keys(lenses).sort()).toEqual([
         'accessControl',
         'execution',
         'operational',
         'people',
         'product',
+        'productUi',
         'technical',
       ])
       for (const lens of Object.values(lenses)) {
@@ -133,8 +134,8 @@ describe('@dna-codes/dna-core', () => {
       }
     })
 
-    it('allLenses() returns exactly 6 items', () => {
-      expect(allLenses()).toHaveLength(6)
+    it('allLenses() returns exactly 7 items', () => {
+      expect(allLenses()).toHaveLength(7)
     })
 
     it('validates each core lens against base.json using AJV', () => {

@@ -1,5 +1,7 @@
-## ADDED Requirements
+## Purpose
 
+Render structured UI widgets (stat rows, record tables, record cards, badge lists) inline within agent chat messages, so the agent can surface visual summaries of graph data alongside its text responses.
+## Requirements
 ### Requirement: Message type extended with widgets field
 The `Message` interface in `ConversationPanel.tsx` SHALL include an optional `widgets?: WidgetPayload[]` array. When a `widget` stream chunk arrives for the active assistant message, the payload SHALL be appended to that message's `widgets` array.
 
@@ -12,12 +14,7 @@ The `Message` interface in `ConversationPanel.tsx` SHALL include an optional `wi
 - **THEN** both payloads appear under the same message, in emission order
 
 ### Requirement: InlineWidget component renders all four widget kinds
-A `InlineWidget` component SHALL accept a `WidgetPayload` and render the appropriate layout using `data-ui-*` attribute-based elements from the ui-library skin.
-
-- `stat-row`: horizontal row of tiles, each a `data-ui-card` with a label and large value
-- `record-table`: `<table>` with `data-ui-tag` column headers and muted row cells
-- `record-card`: `data-ui-card` with a title, optional subtitle, and a field grid of label+value pairs
-- `badge-list`: optional label followed by a flex-wrapped row of `data-ui-badge` elements
+The `InlineWidget` component SHALL accept an optional `onSave?: (name: string) => void` prop in addition to `widget`. When `onSave` is provided, a save button SHALL appear in the top-right of the widget. Clicking it reveals a compact inline name input; submitting calls `onSave(name)` and closes the input. Pressing Escape or blurring without submitting cancels without saving.
 
 #### Scenario: stat-row renders stat tiles
 - **WHEN** a `stat-row` widget is rendered
@@ -39,6 +36,22 @@ A `InlineWidget` component SHALL accept a `WidgetPayload` and render the appropr
 - **WHEN** a widget payload has an unrecognized `kind`
 - **THEN** `InlineWidget` renders nothing (returns `null`) without throwing
 
+#### Scenario: save button visible when onSave provided
+- **WHEN** `InlineWidget` is rendered with an `onSave` prop
+- **THEN** a save/pin icon button is visible in the widget header area
+
+#### Scenario: save button absent when onSave not provided
+- **WHEN** `InlineWidget` is rendered without an `onSave` prop
+- **THEN** no save button or name input is rendered
+
+#### Scenario: inline name input on save click
+- **WHEN** the user clicks the save button
+- **THEN** a text input replaces the button; the user types a name and presses Enter; `onSave(name)` is called; the input closes
+
+#### Scenario: escape cancels save
+- **WHEN** the inline name input is open and the user presses Escape
+- **THEN** the input closes without calling `onSave`
+
 ### Requirement: Widgets appear below message text, inside the message bubble
 Widgets SHALL render below the message text content within the same assistant message container. They are not separate message items.
 
@@ -56,3 +69,4 @@ Widgets SHALL render below the message text content within the same assistant me
 #### Scenario: type import from mcp package
 - **WHEN** `ConversationPanel.tsx` does `import type { WidgetPayload } from '@dna-codes/dna-mcp'`
 - **THEN** TypeScript resolves the type without error
+

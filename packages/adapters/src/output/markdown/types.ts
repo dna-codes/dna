@@ -180,5 +180,67 @@ export interface ProcessStep {
 /** Product/technical layers modeled loosely — unused in v1 but reserved. */
 export type ProductCoreDna = Record<string, unknown>
 export type ProductApiDna = Record<string, unknown>
-export type ProductUiDna = Record<string, unknown>
 export type TechnicalDna = Record<string, unknown>
+
+export interface UiElement {
+  name: string
+  type?: string
+  field?: string
+  description?: string
+}
+
+export interface UiComponent {
+  name: string
+  type?: string
+  resource?: string
+  operation?: string
+  description?: string
+  elements?: UiElement[]
+}
+
+export interface UiSection {
+  name: string
+  role?: string
+  description?: string
+  components?: UiComponent[]
+}
+
+export interface UiPage {
+  name: string
+  resource?: string
+  sections?: UiSection[]
+  components?: UiComponent[]
+}
+
+export interface UiWorkflow {
+  name: string
+  resource?: string
+  description?: string
+  pages?: string[]
+}
+
+export interface UiOperationEffect {
+  type: string
+  to?: string
+  operation?: string
+  target?: string
+  component?: string
+  value?: unknown
+}
+
+export interface UiOperation {
+  id: string
+  name: string
+  description?: string
+  trigger?: { component: string; event: string }
+  effects?: UiOperationEffect[]
+}
+
+export interface ProductUiDna {
+  layout?: { name?: string; type?: string; description?: string }
+  pages?: UiPage[]
+  routes?: { path?: string; page?: string }[]
+  workflows?: UiWorkflow[]
+  operations?: UiOperation[]
+  [key: string]: unknown
+}

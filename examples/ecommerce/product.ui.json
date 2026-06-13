@@ -1,0 +1,115 @@
+{
+  "layout": {
+    "name": "StorefrontShell",
+    "type": "full-width",
+    "description": "Primary shell for the shopper-facing storefront."
+  },
+  "workflows": [
+    {
+      "name": "Checkout",
+      "resource": "Order",
+      "description": "Carries a shopper from cart review through payment to confirmation.",
+      "pages": ["CartReview", "Payment", "OrderConfirmation"]
+    }
+  ],
+  "pages": [
+    {
+      "name": "CartReview",
+      "resource": "Cart",
+      "sections": [
+        {
+          "name": "Main",
+          "role": "main",
+          "components": [
+            {
+              "name": "CartTable",
+              "type": "table",
+              "resource": "Cart",
+              "operation": "Cart.List",
+              "elements": [
+                { "name": "QuantityInput", "type": "input", "field": "quantity" },
+                { "name": "RemoveButton", "type": "button" }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Sidebar",
+          "role": "sidebar",
+          "components": [
+            {
+              "name": "OrderSummaryCard",
+              "type": "card",
+              "resource": "Order",
+              "elements": [
+                { "name": "SubtotalLabel", "type": "label", "field": "subtotal" },
+                { "name": "CheckoutButton", "type": "button" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "resource": "Order",
+      "components": [
+        {
+          "name": "PaymentForm",
+          "type": "form",
+          "resource": "Order",
+          "operation": "Order.Pay",
+          "elements": [
+            { "name": "CardNumberInput", "type": "input", "field": "card_number" },
+            { "name": "PayButton", "type": "button" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OrderConfirmation",
+      "resource": "Order",
+      "components": [
+        { "name": "ConfirmationBanner", "type": "banner", "resource": "Order" }
+      ]
+    }
+  ],
+  "routes": [
+    { "path": "/cart", "page": "CartReview" },
+    { "path": "/checkout/payment", "page": "Payment" },
+    { "path": "/checkout/done", "page": "OrderConfirmation" }
+  ],
+  "operations": [
+    {
+      "id": "proceed-to-payment",
+      "name": "ProceedToPayment",
+      "description": "Advances the shopper from cart review to the payment page.",
+      "trigger": { "component": "CheckoutButton", "event": "click" },
+      "effects": [
+        { "type": "navigate", "to": "Payment" }
+      ]
+    },
+    {
+      "id": "submit-payment",
+      "name": "SubmitPayment",
+      "description": "Charges the order and advances to confirmation on success.",
+      "trigger": { "component": "PayButton", "event": "click" },
+      "effects": [
+        { "type": "state-change", "target": "order.processing", "value": true },
+        { "type": "api-call", "operation": "Order.Pay" },
+        { "type": "render", "component": "ConfirmationBanner" },
+        { "type": "navigate", "to": "OrderConfirmation" }
+      ]
+    },
+    {
+      "id": "remove-cart-item",
+      "name": "RemoveCartItem",
+      "description": "Removes a line item from the cart and refreshes the totals.",
+      "trigger": { "component": "RemoveButton", "event": "click" },
+      "effects": [
+        { "type": "api-call", "operation": "Cart.Remove" },
+        { "type": "state-change", "target": "cart.dirty", "value": true }
+      ]
+    }
+  ]
+}

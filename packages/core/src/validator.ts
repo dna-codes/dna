@@ -109,6 +109,8 @@ interface ProductApiDNA {
 interface ProductUiDNA {
   pages?: { name: string; resource?: string; blocks?: { name: string; operation?: string }[] }[]
   routes?: { page: string }[]
+  workflows?: { name: string; resource?: string; pages?: string[] }[]
+  operations?: { id: string; name: string; trigger?: { component: string; event: string }; effects?: { type: string }[] }[]
 }
 
 interface TechnicalDNA {

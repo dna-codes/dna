@@ -92,6 +92,13 @@ exports.schemas = {
             page: load('product/web/page.json'),
             route: load('product/web/route.json'),
         },
+        ui: {
+            workflow: load('product/ui/workflow.json'),
+            section: load('product/ui/section.json'),
+            component: load('product/ui/component.json'),
+            element: load('product/ui/element.json'),
+            operation: load('product/ui/operation.json'),
+        },
     },
     technical: {
         cell: load('technical/cell.json'),
@@ -116,6 +123,7 @@ exports.documents = {
 exports.lenses = {
     operational: loadLens('operational.json'),
     product: loadLens('product.json'),
+    productUi: loadLens('product-ui.json'),
     technical: loadLens('technical.json'),
     people: loadLens('people.json'),
     accessControl: loadLens('access-control.json'),

@@ -9,28 +9,37 @@ interface GraphData { nodes: GraphNode[]; edges: GraphEdge[] }
 type LayoutMode = 'tree' | 'force' | 'directed'
 
 const NODE_W = 160
-const NODE_H = 44
+const NODE_H = 56
 
-const TYPE_COLORS = [
-  '#0D9488', '#7C3AED', '#EA580C', '#0284C7', '#65A30D',
-  '#BE123C', '#B45309', '#0E7490', '#6D28D9', '#047857',
-]
-function typeColor(type: string): string {
-  let hash = 0
-  for (let i = 0; i < type.length; i++) hash = (hash * 31 + type.charCodeAt(i)) >>> 0
-  return TYPE_COLORS[hash % TYPE_COLORS.length]
-}
+const BRAND_COLOR = '#0D9488'
 
 function nodeAttrs(name: string, type: string) {
+  const color = BRAND_COLOR
   return {
-    body: { fill: typeColor(type), stroke: 'rgba(255,255,255,0.12)', strokeWidth: 1, rx: 6, ry: 6 },
+    body: { refWidth: '100%', refHeight: '100%', fill: 'transparent', stroke: color, strokeWidth: 1.5, rx: 6, ry: 6 },
     label: {
       text: name,
       fill: '#E5ECF6',
       fontSize: 11,
       fontFamily: 'ui-monospace, monospace',
       fontWeight: 600,
-      textWrap: { width: NODE_W - 16, maxLineCount: 2, ellipsis: true },
+      textVerticalAnchor: 'middle',
+      textAnchor: 'middle',
+      refX: '50%',
+      refY: '38%',
+      textWrap: { width: NODE_W - 16, maxLineCount: 1, ellipsis: true },
+    },
+    sublabel: {
+      text: type,
+      fill: color,
+      fontSize: 9,
+      fontFamily: 'ui-monospace, monospace',
+      fontWeight: 400,
+      textVerticalAnchor: 'middle',
+      textAnchor: 'middle',
+      refX: '50%',
+      refY: '70%',
+      textWrap: { width: NODE_W - 16, maxLineCount: 1, ellipsis: true },
     },
   }
 }
@@ -130,7 +139,13 @@ export function GraphExplorer({ refreshSignal }: { refreshSignal: number }) {
     // ── Create elements ──────────────────────────────────────────────────────
     const elementById = new Map<string, any>()
     for (const node of data.nodes) {
-      const el = new joint.shapes.standard.Rectangle({
+      const el = new joint.dia.Element({
+        type: 'dna.Node',
+        markup: [
+          { tagName: 'rect', selector: 'body' },
+          { tagName: 'text', selector: 'label' },
+          { tagName: 'text', selector: 'sublabel' },
+        ],
         position: { x: 0, y: 0 },
         size: { width: NODE_W, height: NODE_H },
         attrs: nodeAttrs(node.name, node.type),

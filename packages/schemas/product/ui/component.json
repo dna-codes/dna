@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/product/ui/component",
+  "title": "Component",
+  "description": "A Component is a named, reusable UI unit within a Section (e.g. a card, table, or form). It maps from a Resource and optionally an Operation, and composes Elements.",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
+  "required": ["name", "type"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The PascalCase name of the component.",
+      "examples": ["LoanSummaryCard", "ApplicantForm", "LoanTable"]
+    },
+    "type": {
+      "type": "string",
+      "description": "The structural type of the component.",
+      "enum": ["card", "table", "form", "list", "detail", "actions", "chart", "banner"]
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable explanation of what this component does."
+    },
+    "resource": {
+      "type": "string",
+      "description": "The Resource this component represents.",
+      "examples": ["Loan", "Order", "User"]
+    },
+    "operation": {
+      "type": "string",
+      "description": "The Operation this component maps from, expressed as Resource.Action.",
+      "pattern": "^[A-Z][a-zA-Z]*\\.[A-Z][a-zA-Z]*$",
+      "examples": ["Loan.View", "Loan.Apply", "Loan.Approve"]
+    },
+    "elements": {
+      "type": "array",
+      "description": "The Elements composed within this component, in order.",
+      "items": { "$ref": "https://dna.codes/schemas/product/ui/element" }
+    }
+  },
+  "examples": [
+    {
+      "name": "ApplicantForm",
+      "type": "form",
+      "operation": "Loan.Apply",
+      "elements": [
+        { "name": "AmountInput", "type": "input", "field": "amount" },
+        { "name": "SubmitButton", "type": "button" }
+      ]
+    }
+  ]
+}

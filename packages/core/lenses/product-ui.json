@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/lenses/product-ui",
+  "allOf": [{ "$ref": "https://dna.codes/lenses/base" }],
+  "name": "Product UI",
+  "nodes": [
+    { "slot": "workflow", "type": "Workflow" },
+    { "slot": "page", "type": "Page" },
+    { "slot": "section", "type": "Section" },
+    { "slot": "component", "type": "Component" },
+    { "slot": "element", "type": "Element" },
+    { "slot": "uiOperation", "type": "UIOperation" },
+    { "slot": "resource", "type": "Resource" },
+    { "slot": "operation", "type": "Operation" },
+    { "slot": "field", "type": "Field" }
+  ],
+  "edges": [
+    { "from": "workflow", "to": "page", "via": "contains" },
+    { "from": "page", "to": "section", "via": "contains" },
+    { "from": "section", "to": "component", "via": "contains" },
+    { "from": "component", "to": "element", "via": "contains" },
+    { "from": "component", "to": "resource", "via": "renders" },
+    { "from": "component", "to": "uiOperation", "via": "triggers" },
+    { "from": "uiOperation", "to": "page", "via": "navigates_to" },
+    { "from": "uiOperation", "to": "operation", "via": "calls" },
+    { "from": "element", "to": "field", "via": "requires" },
+    { "from": "uiOperation", "to": "resource", "via": "updates" }
+  ]
+}

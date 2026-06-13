@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/product/ui/workflow",
+  "title": "Workflow",
+  "description": "A Workflow is a navigable grouping of Pages above the Page level — a coherent user journey through a product Resource (e.g. the loan application flow). It gives module-scoped journeys a first-class, graph-queryable container.",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The PascalCase name of the workflow.",
+      "examples": ["LoanApplication", "Onboarding", "Checkout"]
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable explanation of the user journey this workflow represents."
+    },
+    "resource": {
+      "type": "string",
+      "description": "The primary Resource this workflow operates on.",
+      "examples": ["Loan", "Order", "User"]
+    },
+    "pages": {
+      "type": "array",
+      "description": "The Pages that make up this workflow, in journey order. Each entry is the PascalCase name of a Page defined in this UI.",
+      "items": {
+        "type": "string",
+        "description": "A reference to a Page by its PascalCase name.",
+        "examples": ["LoanApply", "LoanReview", "LoanConfirm"]
+      }
+    }
+  },
+  "examples": [
+    {
+      "name": "LoanApplication",
+      "resource": "Loan",
+      "description": "Guides an applicant from intake through submission.",
+      "pages": ["LoanApply", "LoanReview", "LoanConfirm"]
+    }
+  ]
+}

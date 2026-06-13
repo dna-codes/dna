@@ -64,7 +64,7 @@ function listFilesRecursive(dir, base = '') {
 // ── Test suite ───────────────────────────────────────────────────────────────
 describe('ui-cell adapter conformance', () => {
     const repoRoot = path.resolve(__dirname, '../../../../');
-    const technicalPath = path.join(repoRoot, 'dna/engine/fixtures/lending/technical.json');
+    const technicalPath = path.join(repoRoot, 'dna/engine/fixtures/dna/lending/technical.json');
     let viteReactDir;
     let viteVueDir;
     let nextReactDir;

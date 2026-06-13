@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/product/ui/element",
+  "title": "Element",
+  "description": "An Element is a leaf UI primitive within a Component (e.g. an input, button, or label). It optionally binds to a Field on the Component's Resource.",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
+  "required": ["name", "type"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The PascalCase name of the element.",
+      "examples": ["AmountInput", "SubmitButton", "StatusLabel"]
+    },
+    "type": {
+      "type": "string",
+      "description": "The structural type of the element.",
+      "enum": ["input", "button", "label", "select", "checkbox", "link", "text", "image", "icon"]
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable explanation of what this element does."
+    },
+    "field": {
+      "type": "string",
+      "description": "The Field on the parent Component's Resource that this element binds to.",
+      "examples": ["amount", "term_months", "status"]
+    }
+  },
+  "examples": [
+    { "name": "AmountInput", "type": "input", "field": "amount" },
+    { "name": "SubmitButton", "type": "button", "description": "Submits the loan application." }
+  ]
+}

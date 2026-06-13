@@ -364,7 +364,7 @@ describe('docker generators', () => {
 // ── Integration ───────────────────────────────────────────────────────────────
 describe('api-cell integration (nestjs)', () => {
     const repoRoot = path.resolve(__dirname, '../../../../');
-    const technicalPath = path.join(repoRoot, 'dna/engine/fixtures/lending/technical.json');
+    const technicalPath = path.join(repoRoot, 'dna/engine/fixtures/dna/lending/technical.json');
     let outputDir;
     beforeAll(() => {
         outputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'api-cell-test-'));
@@ -443,7 +443,7 @@ describe('api-cell integration (nestjs)', () => {
 // ── Express integration ──────────────────────────────────────────────────────
 describe('api-cell integration (express)', () => {
     const repoRoot = path.resolve(__dirname, '../../../../');
-    const technicalPath = path.join(repoRoot, 'dna/engine/fixtures/lending/technical.json');
+    const technicalPath = path.join(repoRoot, 'dna/engine/fixtures/dna/lending/technical.json');
     let outputDir;
     beforeAll(() => {
         outputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'api-cell-express-test-'));

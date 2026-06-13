@@ -3,9 +3,14 @@ export type ResourceType =
   | 'domain' | 'group'
   | 'position' | 'person'
   | 'process' | 'step'
+  // Product UI layer
+  | 'workflow' | 'page' | 'section' | 'component' | 'element' | 'ui-operation'
   | (string & {})  // extensible — preserves autocomplete for known values
 
-export type RelationshipType = 'membership' | 'reports_to' | 'fills' | 'belongs_to' | 'part_of' | 'next_step' | 'assigned_to' | 'has_position'
+export type RelationshipType =
+  | 'membership' | 'reports_to' | 'fills' | 'belongs_to' | 'part_of' | 'next_step' | 'assigned_to' | 'has_position'
+  // Product UI layer
+  | 'contains' | 'renders' | 'triggers' | 'navigates_to' | 'calls' | 'requires' | 'updates'
 
 export interface GraphNode {
   id: string

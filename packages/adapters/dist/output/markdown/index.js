@@ -21,6 +21,7 @@ const domain_model_1 = require("./sections/domain-model");
 const operations_1 = require("./sections/operations");
 const sops_1 = require("./sections/sops");
 const process_flow_1 = require("./sections/process-flow");
+const product_ui_1 = require("./sections/product-ui");
 const util_1 = require("./util");
 exports.DEFAULT_SECTIONS = [
     'summary',
@@ -28,6 +29,7 @@ exports.DEFAULT_SECTIONS = [
     'operations',
     'sops',
     'process-flow',
+    'product-ui',
 ];
 function render(dna, options = {}) {
     const sections = options.sections ?? exports.DEFAULT_SECTIONS;
@@ -58,6 +60,8 @@ function renderSection(section, dna, h, options) {
             return (0, sops_1.renderSops)(dna, h);
         case 'process-flow':
             return (0, process_flow_1.renderProcessFlow)(dna, h);
+        case 'product-ui':
+            return (0, product_ui_1.renderProductUi)(dna, h);
     }
 }
 function inferTitle(dna) {
