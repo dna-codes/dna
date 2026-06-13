@@ -167,6 +167,10 @@ export { isSchemaResult } from './lens/types'
 export { validateLensDefinition } from './lens/validate-def'
 export type { LensDefValidation } from './lens/validate-def'
 
+// Business → product projection (pure; persistence is a follow-on)
+export { project } from './projection/project'
+export type { ProductLevel, ProductNode, ProductEdge, ProductSubgraph, ProjectOptions } from './projection/types'
+
 export {
   createOperationalDna,
   addResource,

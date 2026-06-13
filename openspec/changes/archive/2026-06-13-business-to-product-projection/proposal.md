@@ -11,10 +11,16 @@ Once App/Module/Page and Endpoint exist as graph nodes (`product-ui-app-module-n
 - Compute a **completeness state** per node from the forward invariant chain; a node whose business backing is incomplete is marked `planned` (the signal a renderer surfaces as `data-ui-planned`).
 - Run the projection on the runtime lens evaluator (it consumes the evaluated subgraph; it does not re-implement traversal).
 
+## Scope note (narrowed)
+
+This change ships the **pure projection** only: `project(businessSubgraph) → productSubgraph` as a deterministic function — the type-driven walk, level resolution (default + override), stable identity keying, the forward-invariant `planned` state, and API endpoint/namespace derivation. It writes nothing to the store.
+
+**Deferred to follow-ups** (each needs grounding/decisions surfaced during implementation): `apply()` persistence + **runtime registration of the UI resource types** (you can't create an `App` instance until the store knows the `App` type); the **core-vs-pack relationship vocabulary bridge** (core uses `Process_Task`; the dna-agent packs use `belongs_to`/`assigned_to`); and confirming the exact `Domain↔Process`/`Task↔Operation` relationship names. The walk here is **node-type driven** (adjacency by node type, not relationship name), so it is robust to whichever vocabulary the subgraph uses.
+
 ## Capabilities
 
 ### New Capabilities
-- `product-projection`: The runtime derivation of the Product UI + API subgraph from a business subgraph — the projection rules (business node → UI level with default + override), stable identity keying, idempotent structural re-sync that preserves governance edges, and the forward-invariant completeness/`planned` state.
+- `product-projection`: The pure derivation `project(businessSubgraph) → productSubgraph` — the type-driven walk (`Domain→Process→Task→Operation`), business-node→UI-level resolution (default + per-node override), stable identity keying, forward-invariant completeness/`planned` state, and API endpoint/namespace derivation. Persistence (`apply`), runtime type registration, and the vocabulary bridge are out of scope (follow-ups).
 
 ## Impact
 

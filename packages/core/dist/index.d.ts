@@ -103,6 +103,8 @@ export { evaluateLens } from './lens/evaluate';
 export { isSchemaResult } from './lens/types';
 export { validateLensDefinition } from './lens/validate-def';
 export type { LensDefValidation } from './lens/validate-def';
+export { project } from './projection/project';
+export type { ProductLevel, ProductNode, ProductEdge, ProductSubgraph, ProjectOptions } from './projection/types';
 export { createOperationalDna, addResource, addPerson, addRole, addGroup, addMembership, addOperation, addTrigger, addRule, addTask, addProcess, addRelationship, } from './builders';
 export type { BuilderOptions, BuilderResult, CreateOperationalDnaOptions, } from './builders';
 export { merge } from './merge';
