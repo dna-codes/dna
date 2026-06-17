@@ -4,6 +4,9 @@ node_modules
 .env.*
 !.env.example
 
+# Conductor local workspace settings (any level).
+.conductor/
+
 # Local-dev DNA copies that the api docker-compose mounts.
 packages/api/dna.json
 
