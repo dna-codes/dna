@@ -32,6 +32,16 @@ design." The intent is that teams keep the structure and state machine, then mak
 it theirs — including swapping in a light theme by overriding the surface/text
 tokens.
 
+The `Application` shell composed from structural primitives (`Header`, `Sidebar`,
+`Content`, `Page`, `Footer`) — the default wireframe skin out of the box:
+
+![Composed Application layout](./docs/application-layout.png)
+
+The same components in Storybook, where every primitive and state-machine
+component is documented and exercised:
+
+![Storybook catalog](./docs/storybook.png)
+
 Conventions baked into the skin:
 
 | Convention | Meaning |
