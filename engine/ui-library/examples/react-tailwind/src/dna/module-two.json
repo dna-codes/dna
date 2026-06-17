@@ -1,0 +1,650 @@
+{
+  "resources": [
+    {
+      "id": "m2",
+      "type": "module",
+      "props": {
+        "name": "Module 2",
+        "className": "space-y-4"
+      }
+    },
+    {
+      "id": "m2-headrow",
+      "type": "box",
+      "props": {
+        "className": "flex items-center gap-3"
+      }
+    },
+    {
+      "id": "m2-title",
+      "type": "heading",
+      "props": {
+        "level": 2,
+        "text": "Module 2 — Machine",
+        "className": "text-ui-lg font-ui-semibold"
+      }
+    },
+    {
+      "id": "m2-badge",
+      "type": "badge",
+      "props": {
+        "variant": "primary",
+        "text": "XState"
+      }
+    },
+    {
+      "id": "m2-desc",
+      "type": "text",
+      "props": {
+        "text": "A headless Machine.Root (declared once at the shell level) drives this content lifecycle. The trail shows where it is; each state offers only its valid next moves. The inspector on the right tracks the same actor live.",
+        "className": "text-ui-text-muted"
+      }
+    },
+    {
+      "id": "m2-card",
+      "type": "card"
+    },
+    {
+      "id": "m2-body",
+      "type": "box",
+      "props": {
+        "className": "space-y-5"
+      }
+    },
+    {
+      "id": "m2-flow",
+      "type": "flow-steps",
+      "props": {
+        "steps": [
+          {
+            "value": "draft",
+            "label": "Draft"
+          },
+          {
+            "value": "inReview",
+            "label": "In review"
+          },
+          {
+            "value": "approved",
+            "label": "Approved"
+          },
+          {
+            "value": "published",
+            "label": "Published"
+          },
+          {
+            "value": "archived",
+            "label": "Archived"
+          }
+        ]
+      }
+    },
+    {
+      "id": "m2-sep",
+      "type": "separator"
+    },
+    {
+      "id": "m2-state-draft",
+      "type": "machine-state",
+      "props": {
+        "match": "draft"
+      }
+    },
+    {
+      "id": "m2-state-draft-wrap",
+      "type": "box",
+      "props": {
+        "className": "space-y-3"
+      }
+    },
+    {
+      "id": "m2-state-draft-head",
+      "type": "box",
+      "props": {
+        "className": "space-y-1"
+      }
+    },
+    {
+      "id": "m2-state-draft-title",
+      "type": "text",
+      "props": {
+        "text": "Draft",
+        "className": "font-ui-medium"
+      }
+    },
+    {
+      "id": "m2-state-draft-hint",
+      "type": "text",
+      "props": {
+        "text": "The document is editable. An editor or admin may submit it for review.",
+        "className": "text-ui-sm text-ui-text-muted"
+      }
+    },
+    {
+      "id": "m2-state-draft-moves",
+      "type": "box",
+      "props": {
+        "className": "flex flex-wrap items-center gap-2"
+      }
+    },
+    {
+      "id": "m2-send-draft-SUBMIT",
+      "type": "machine-send",
+      "props": {
+        "event": "SUBMIT",
+        "variant": "primary",
+        "label": "Submit for review →",
+        "requires": "content:submit"
+      }
+    },
+    {
+      "id": "m2-state-inReview",
+      "type": "machine-state",
+      "props": {
+        "match": "inReview"
+      }
+    },
+    {
+      "id": "m2-state-inReview-wrap",
+      "type": "box",
+      "props": {
+        "className": "space-y-3"
+      }
+    },
+    {
+      "id": "m2-state-inReview-head",
+      "type": "box",
+      "props": {
+        "className": "space-y-1"
+      }
+    },
+    {
+      "id": "m2-state-inReview-title",
+      "type": "text",
+      "props": {
+        "text": "In review",
+        "className": "font-ui-medium"
+      }
+    },
+    {
+      "id": "m2-state-inReview-hint",
+      "type": "text",
+      "props": {
+        "text": "Awaiting a decision — only an admin may approve or send it back.",
+        "className": "text-ui-sm text-ui-text-muted"
+      }
+    },
+    {
+      "id": "m2-state-inReview-moves",
+      "type": "box",
+      "props": {
+        "className": "flex flex-wrap items-center gap-2"
+      }
+    },
+    {
+      "id": "m2-send-inReview-REQUEST_CHANGES",
+      "type": "machine-send",
+      "props": {
+        "event": "REQUEST_CHANGES",
+        "variant": "ghost",
+        "label": "← Request changes",
+        "requires": "content:review"
+      }
+    },
+    {
+      "id": "m2-send-inReview-APPROVE",
+      "type": "machine-send",
+      "props": {
+        "event": "APPROVE",
+        "variant": "primary",
+        "label": "Approve →",
+        "requires": "content:review"
+      }
+    },
+    {
+      "id": "m2-state-approved",
+      "type": "machine-state",
+      "props": {
+        "match": "approved"
+      }
+    },
+    {
+      "id": "m2-state-approved-wrap",
+      "type": "box",
+      "props": {
+        "className": "space-y-3"
+      }
+    },
+    {
+      "id": "m2-state-approved-head",
+      "type": "box",
+      "props": {
+        "className": "space-y-1"
+      }
+    },
+    {
+      "id": "m2-state-approved-title",
+      "type": "text",
+      "props": {
+        "text": "Approved",
+        "className": "font-ui-medium"
+      }
+    },
+    {
+      "id": "m2-state-approved-hint",
+      "type": "text",
+      "props": {
+        "text": "Ready to go live (admin only).",
+        "className": "text-ui-sm text-ui-text-muted"
+      }
+    },
+    {
+      "id": "m2-state-approved-moves",
+      "type": "box",
+      "props": {
+        "className": "flex flex-wrap items-center gap-2"
+      }
+    },
+    {
+      "id": "m2-send-approved-REQUEST_CHANGES",
+      "type": "machine-send",
+      "props": {
+        "event": "REQUEST_CHANGES",
+        "variant": "ghost",
+        "label": "← Request changes",
+        "requires": "content:review"
+      }
+    },
+    {
+      "id": "m2-send-approved-PUBLISH",
+      "type": "machine-send",
+      "props": {
+        "event": "PUBLISH",
+        "variant": "primary",
+        "label": "Publish →",
+        "requires": "content:publish"
+      }
+    },
+    {
+      "id": "m2-state-published",
+      "type": "machine-state",
+      "props": {
+        "match": "published"
+      }
+    },
+    {
+      "id": "m2-state-published-wrap",
+      "type": "box",
+      "props": {
+        "className": "space-y-3"
+      }
+    },
+    {
+      "id": "m2-state-published-head",
+      "type": "box",
+      "props": {
+        "className": "space-y-1"
+      }
+    },
+    {
+      "id": "m2-state-published-title",
+      "type": "text",
+      "props": {
+        "text": "Published",
+        "className": "font-ui-medium"
+      }
+    },
+    {
+      "id": "m2-state-published-hint",
+      "type": "text",
+      "props": {
+        "text": "Live for readers.",
+        "className": "text-ui-sm text-ui-text-muted"
+      }
+    },
+    {
+      "id": "m2-state-published-moves",
+      "type": "box",
+      "props": {
+        "className": "flex flex-wrap items-center gap-2"
+      }
+    },
+    {
+      "id": "m2-send-published-ARCHIVE",
+      "type": "machine-send",
+      "props": {
+        "event": "ARCHIVE",
+        "variant": "secondary",
+        "label": "Archive →",
+        "requires": "content:archive"
+      }
+    },
+    {
+      "id": "m2-state-archived",
+      "type": "machine-state",
+      "props": {
+        "match": "archived"
+      }
+    },
+    {
+      "id": "m2-state-archived-wrap",
+      "type": "box",
+      "props": {
+        "className": "space-y-3"
+      }
+    },
+    {
+      "id": "m2-state-archived-head",
+      "type": "box",
+      "props": {
+        "className": "space-y-1"
+      }
+    },
+    {
+      "id": "m2-state-archived-title",
+      "type": "text",
+      "props": {
+        "text": "Archived",
+        "className": "font-ui-medium"
+      }
+    },
+    {
+      "id": "m2-state-archived-hint",
+      "type": "text",
+      "props": {
+        "text": "Retired — start over when ready.",
+        "className": "text-ui-sm text-ui-text-muted"
+      }
+    },
+    {
+      "id": "m2-state-archived-moves",
+      "type": "box",
+      "props": {
+        "className": "flex flex-wrap items-center gap-2"
+      }
+    },
+    {
+      "id": "m2-send-archived-RESTORE",
+      "type": "machine-send",
+      "props": {
+        "event": "RESTORE",
+        "variant": "primary",
+        "label": "↺ Restore to draft",
+        "requires": "content:archive"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "from": "m2",
+      "to": "m2-headrow",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2",
+      "to": "m2-desc",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2",
+      "to": "m2-card",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "m2-headrow",
+      "to": "m2-title",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-headrow",
+      "to": "m2-badge",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-card",
+      "to": "m2-body",
+      "kind": "contains",
+      "slot": "body",
+      "order": 0
+    },
+    {
+      "from": "m2-body",
+      "to": "m2-flow",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-body",
+      "to": "m2-sep",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-body",
+      "to": "m2-state-draft",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "m2-state-draft",
+      "to": "m2-state-draft-wrap",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-draft-wrap",
+      "to": "m2-state-draft-head",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-draft-wrap",
+      "to": "m2-state-draft-moves",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-state-draft-head",
+      "to": "m2-state-draft-title",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-draft-head",
+      "to": "m2-state-draft-hint",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-state-draft-moves",
+      "to": "m2-send-draft-SUBMIT",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-body",
+      "to": "m2-state-inReview",
+      "kind": "contains",
+      "order": 3
+    },
+    {
+      "from": "m2-state-inReview",
+      "to": "m2-state-inReview-wrap",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-inReview-wrap",
+      "to": "m2-state-inReview-head",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-inReview-wrap",
+      "to": "m2-state-inReview-moves",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-state-inReview-head",
+      "to": "m2-state-inReview-title",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-inReview-head",
+      "to": "m2-state-inReview-hint",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-state-inReview-moves",
+      "to": "m2-send-inReview-REQUEST_CHANGES",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-inReview-moves",
+      "to": "m2-send-inReview-APPROVE",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-body",
+      "to": "m2-state-approved",
+      "kind": "contains",
+      "order": 4
+    },
+    {
+      "from": "m2-state-approved",
+      "to": "m2-state-approved-wrap",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-approved-wrap",
+      "to": "m2-state-approved-head",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-approved-wrap",
+      "to": "m2-state-approved-moves",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-state-approved-head",
+      "to": "m2-state-approved-title",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-approved-head",
+      "to": "m2-state-approved-hint",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-state-approved-moves",
+      "to": "m2-send-approved-REQUEST_CHANGES",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-approved-moves",
+      "to": "m2-send-approved-PUBLISH",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-body",
+      "to": "m2-state-published",
+      "kind": "contains",
+      "order": 5
+    },
+    {
+      "from": "m2-state-published",
+      "to": "m2-state-published-wrap",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-published-wrap",
+      "to": "m2-state-published-head",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-published-wrap",
+      "to": "m2-state-published-moves",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-state-published-head",
+      "to": "m2-state-published-title",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-published-head",
+      "to": "m2-state-published-hint",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-state-published-moves",
+      "to": "m2-send-published-ARCHIVE",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-body",
+      "to": "m2-state-archived",
+      "kind": "contains",
+      "order": 6
+    },
+    {
+      "from": "m2-state-archived",
+      "to": "m2-state-archived-wrap",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-archived-wrap",
+      "to": "m2-state-archived-head",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-archived-wrap",
+      "to": "m2-state-archived-moves",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-state-archived-head",
+      "to": "m2-state-archived-title",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m2-state-archived-head",
+      "to": "m2-state-archived-hint",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m2-state-archived-moves",
+      "to": "m2-send-archived-RESTORE",
+      "kind": "contains",
+      "order": 0
+    }
+  ]
+}

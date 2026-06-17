@@ -1,0 +1,280 @@
+{
+  "resources": [
+    {
+      "id": "m1",
+      "type": "module",
+      "props": {
+        "name": "Module 1",
+        "className": "space-y-6"
+      }
+    },
+    {
+      "id": "m1-intro",
+      "type": "box"
+    },
+    {
+      "id": "m1-headrow",
+      "type": "box",
+      "props": {
+        "className": "flex items-center gap-3"
+      }
+    },
+    {
+      "id": "m1-title",
+      "type": "heading",
+      "props": {
+        "level": 1,
+        "text": "Module 1",
+        "className": "text-ui-xl font-ui-semibold"
+      }
+    },
+    {
+      "id": "m1-badge",
+      "type": "badge",
+      "props": {
+        "variant": "primary",
+        "text": "rendered from DNA"
+      }
+    },
+    {
+      "id": "m1-desc",
+      "type": "text",
+      "props": {
+        "text": "Placeholder description text.",
+        "className": "text-ui-text-muted"
+      }
+    },
+    {
+      "id": "m1-metrics",
+      "type": "box",
+      "props": {
+        "className": "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+      }
+    },
+    {
+      "id": "metric-1",
+      "type": "metric",
+      "props": {
+        "label": "Metric 1",
+        "value": "000",
+        "badge": "Badge"
+      }
+    },
+    {
+      "id": "metric-2",
+      "type": "metric",
+      "props": {
+        "label": "Metric 2",
+        "value": "000",
+        "badge": "Badge"
+      }
+    },
+    {
+      "id": "metric-3",
+      "type": "metric",
+      "props": {
+        "label": "Metric 3",
+        "value": "000",
+        "badge": "Badge"
+      }
+    },
+    {
+      "id": "metric-4",
+      "type": "metric",
+      "props": {
+        "label": "Metric 4",
+        "value": "000",
+        "badge": "Badge"
+      }
+    },
+    {
+      "id": "m1-cards",
+      "type": "box",
+      "props": {
+        "className": "grid gap-4 lg:grid-cols-2"
+      }
+    },
+    {
+      "id": "card-a",
+      "type": "card"
+    },
+    {
+      "id": "card-a-title",
+      "type": "card-title",
+      "props": {
+        "text": "Card Title"
+      }
+    },
+    {
+      "id": "card-a-desc",
+      "type": "card-description",
+      "props": {
+        "text": "Card description"
+      }
+    },
+    {
+      "id": "card-a-progress",
+      "type": "progress",
+      "props": {
+        "value": 64,
+        "indicatorProps": {
+          "style": {
+            "transform": "translateX(-36%)"
+          }
+        }
+      }
+    },
+    {
+      "id": "card-b",
+      "type": "card",
+      "meta": {
+        "planned": true
+      }
+    },
+    {
+      "id": "card-b-title",
+      "type": "card-title",
+      "props": {
+        "text": "Card Title"
+      }
+    },
+    {
+      "id": "card-b-desc",
+      "type": "card-description",
+      "props": {
+        "text": "Planned content"
+      }
+    },
+    {
+      "id": "card-b-skeleton",
+      "type": "skeleton",
+      "props": {
+        "style": {
+          "height": 84
+        }
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "from": "m1",
+      "to": "m1-intro",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m1",
+      "to": "m1-metrics",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m1",
+      "to": "m1-cards",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "m1-intro",
+      "to": "m1-headrow",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m1-intro",
+      "to": "m1-desc",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m1-headrow",
+      "to": "m1-title",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m1-headrow",
+      "to": "m1-badge",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m1-metrics",
+      "to": "metric-1",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m1-metrics",
+      "to": "metric-2",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m1-metrics",
+      "to": "metric-3",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "m1-metrics",
+      "to": "metric-4",
+      "kind": "contains",
+      "order": 3
+    },
+    {
+      "from": "m1-cards",
+      "to": "card-a",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m1-cards",
+      "to": "card-b",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "card-a",
+      "to": "card-a-title",
+      "kind": "contains",
+      "slot": "header",
+      "order": 0
+    },
+    {
+      "from": "card-a",
+      "to": "card-a-desc",
+      "kind": "contains",
+      "slot": "header",
+      "order": 1
+    },
+    {
+      "from": "card-a",
+      "to": "card-a-progress",
+      "kind": "contains",
+      "slot": "body",
+      "order": 0
+    },
+    {
+      "from": "card-b",
+      "to": "card-b-title",
+      "kind": "contains",
+      "slot": "header",
+      "order": 0
+    },
+    {
+      "from": "card-b",
+      "to": "card-b-desc",
+      "kind": "contains",
+      "slot": "header",
+      "order": 1
+    },
+    {
+      "from": "card-b",
+      "to": "card-b-skeleton",
+      "kind": "contains",
+      "slot": "body",
+      "order": 0
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+/* The DNA UI Tailwind plugin injects the --ui-* tokens and the default skin
+   into the `base` layer, so just pulling in Tailwind's layers is enough — no
+   library CSS imports required. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Inspector → DNA tree: the element ringed when its tree node is selected.
+   Uses the skin's teal selection token so a re-brand carries through. */
+.dna-highlight {
+  outline: 2px solid var(--ui-color-selection-line, #2dd4bf);
+  outline-offset: 2px;
+  border-radius: var(--ui-radius-md, 5px);
+  scroll-margin: 1rem;
+}

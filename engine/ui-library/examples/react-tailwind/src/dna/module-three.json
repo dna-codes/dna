@@ -1,0 +1,617 @@
+{
+  "resources": [
+    {
+      "id": "m3",
+      "type": "module",
+      "props": {
+        "name": "Module 3",
+        "className": "space-y-4"
+      }
+    },
+    {
+      "id": "m3-headrow",
+      "type": "box",
+      "props": {
+        "className": "flex items-center gap-3"
+      }
+    },
+    {
+      "id": "m3-title",
+      "type": "heading",
+      "props": {
+        "level": 2,
+        "text": "Module 3",
+        "className": "text-ui-lg font-ui-semibold"
+      }
+    },
+    {
+      "id": "m3-badge",
+      "type": "badge",
+      "props": {
+        "variant": "primary",
+        "text": "Badge"
+      }
+    },
+    {
+      "id": "m3-tabs",
+      "type": "tabs",
+      "props": {
+        "defaultValue": "tab1"
+      }
+    },
+    {
+      "id": "m3-tablist",
+      "type": "tabs-list"
+    },
+    {
+      "id": "m3-trig1",
+      "type": "tabs-trigger",
+      "props": {
+        "value": "tab1",
+        "label": "Tab 1"
+      }
+    },
+    {
+      "id": "m3-trig2",
+      "type": "tabs-trigger",
+      "props": {
+        "value": "tab2",
+        "label": "Tab 2"
+      }
+    },
+    {
+      "id": "m3-trig3",
+      "type": "tabs-trigger",
+      "props": {
+        "value": "tab3",
+        "label": "Tab 3"
+      }
+    },
+    {
+      "id": "m3-tab1",
+      "type": "tabs-content",
+      "props": {
+        "value": "tab1"
+      }
+    },
+    {
+      "id": "m3-tab1-text",
+      "type": "text",
+      "props": {
+        "text": "Tab 1 placeholder content.",
+        "className": "text-ui-text-muted"
+      }
+    },
+    {
+      "id": "m3-tags",
+      "type": "box",
+      "props": {
+        "className": "mt-3 flex flex-wrap gap-2"
+      }
+    },
+    {
+      "id": "m3-tag1",
+      "type": "badge",
+      "props": {
+        "text": "Tag 1"
+      }
+    },
+    {
+      "id": "m3-tag2",
+      "type": "badge",
+      "props": {
+        "text": "Tag 2"
+      }
+    },
+    {
+      "id": "m3-tag3",
+      "type": "badge",
+      "props": {
+        "variant": "warning",
+        "text": "Tag 3"
+      }
+    },
+    {
+      "id": "m3-tab2",
+      "type": "tabs-content",
+      "props": {
+        "value": "tab2"
+      }
+    },
+    {
+      "id": "m3-items",
+      "type": "item-list",
+      "props": {
+        "items": [
+          "Item 1",
+          "Item 2",
+          "Item 3"
+        ]
+      }
+    },
+    {
+      "id": "m3-tab3",
+      "type": "tabs-content",
+      "props": {
+        "value": "tab3"
+      }
+    },
+    {
+      "id": "m3-form",
+      "type": "form",
+      "props": {
+        "className": "max-w-md space-y-5"
+      }
+    },
+    {
+      "id": "m3-f-input-wrap",
+      "type": "box",
+      "props": {
+        "className": "space-y-1.5"
+      }
+    },
+    {
+      "id": "m3-f-input-label",
+      "type": "label",
+      "props": {
+        "htmlFor": "input",
+        "text": "Label"
+      }
+    },
+    {
+      "id": "m3-f-input",
+      "type": "input",
+      "props": {
+        "id": "input",
+        "defaultValue": "Value"
+      }
+    },
+    {
+      "id": "m3-f-select-wrap",
+      "type": "box",
+      "props": {
+        "className": "space-y-1.5"
+      }
+    },
+    {
+      "id": "m3-f-select-label",
+      "type": "label",
+      "props": {
+        "text": "Select"
+      }
+    },
+    {
+      "id": "m3-f-select",
+      "type": "select",
+      "props": {
+        "options": [
+          {
+            "value": "opt1",
+            "label": "Option 1"
+          },
+          {
+            "value": "opt2",
+            "label": "Option 2"
+          },
+          {
+            "value": "opt3",
+            "label": "Option 3"
+          }
+        ],
+        "defaultValue": "opt2",
+        "placeholder": "Select…",
+        "ariaLabel": "Select"
+      }
+    },
+    {
+      "id": "m3-f-slider-wrap",
+      "type": "box",
+      "props": {
+        "className": "space-y-2"
+      }
+    },
+    {
+      "id": "m3-f-slider-label",
+      "type": "label",
+      "props": {
+        "text": "Slider"
+      }
+    },
+    {
+      "id": "m3-f-slider",
+      "type": "slider",
+      "props": {
+        "defaultValue": [
+          40
+        ],
+        "max": 100,
+        "step": 5
+      }
+    },
+    {
+      "id": "m3-f-radio",
+      "type": "radio-group",
+      "props": {
+        "legend": "Radio Group",
+        "options": [
+          {
+            "value": "opt1",
+            "label": "Option 1"
+          },
+          {
+            "value": "opt2",
+            "label": "Option 2"
+          },
+          {
+            "value": "opt3",
+            "label": "Option 3"
+          }
+        ],
+        "defaultValue": "opt2"
+      }
+    },
+    {
+      "id": "m3-f-switch-label",
+      "type": "label",
+      "props": {
+        "className": "flex items-center justify-between"
+      }
+    },
+    {
+      "id": "m3-f-switch-text",
+      "type": "span",
+      "props": {
+        "text": "Switch"
+      }
+    },
+    {
+      "id": "m3-f-switch",
+      "type": "switch",
+      "props": {
+        "defaultChecked": true
+      }
+    },
+    {
+      "id": "m3-f-textarea-wrap",
+      "type": "box",
+      "props": {
+        "className": "space-y-1.5"
+      }
+    },
+    {
+      "id": "m3-f-textarea-label",
+      "type": "label",
+      "props": {
+        "htmlFor": "textarea",
+        "text": "Textarea"
+      }
+    },
+    {
+      "id": "m3-f-textarea",
+      "type": "textarea",
+      "props": {
+        "id": "textarea",
+        "placeholder": "Placeholder…"
+      }
+    },
+    {
+      "id": "m3-f-check-label",
+      "type": "label",
+      "props": {
+        "className": "flex items-center gap-2"
+      }
+    },
+    {
+      "id": "m3-f-check",
+      "type": "checkbox",
+      "props": {
+        "text": "✓"
+      }
+    },
+    {
+      "id": "m3-f-check-text",
+      "type": "span",
+      "props": {
+        "text": "Checkbox label",
+        "className": "text-ui-sm"
+      }
+    },
+    {
+      "id": "m3-f-sep",
+      "type": "separator"
+    },
+    {
+      "id": "m3-f-actions",
+      "type": "box",
+      "props": {
+        "className": "flex items-center gap-2"
+      }
+    },
+    {
+      "id": "m3-f-submit",
+      "type": "button",
+      "props": {
+        "variant": "primary",
+        "type": "submit",
+        "label": "Button"
+      }
+    },
+    {
+      "id": "m3-f-reset",
+      "type": "button",
+      "props": {
+        "variant": "ghost",
+        "type": "reset",
+        "label": "Reset"
+      }
+    },
+    {
+      "id": "m3-f-dialog",
+      "type": "dialog",
+      "props": {
+        "triggerLabel": "Delete",
+        "triggerVariant": "danger",
+        "triggerClassName": "ml-auto",
+        "title": "Dialog Title",
+        "description": "Dialog description text.",
+        "cancelLabel": "Cancel",
+        "confirmLabel": "Confirm",
+        "confirmVariant": "danger"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "from": "m3",
+      "to": "m3-headrow",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3",
+      "to": "m3-tabs",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-headrow",
+      "to": "m3-title",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-headrow",
+      "to": "m3-badge",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-tabs",
+      "to": "m3-tablist",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-tabs",
+      "to": "m3-tab1",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-tabs",
+      "to": "m3-tab2",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "m3-tabs",
+      "to": "m3-tab3",
+      "kind": "contains",
+      "order": 3
+    },
+    {
+      "from": "m3-tablist",
+      "to": "m3-trig1",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-tablist",
+      "to": "m3-trig2",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-tablist",
+      "to": "m3-trig3",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "m3-tab1",
+      "to": "m3-tab1-text",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-tab1",
+      "to": "m3-tags",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-tags",
+      "to": "m3-tag1",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-tags",
+      "to": "m3-tag2",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-tags",
+      "to": "m3-tag3",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "m3-tab2",
+      "to": "m3-items",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-tab3",
+      "to": "m3-form",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-form",
+      "to": "m3-f-input-wrap",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-f-input-wrap",
+      "to": "m3-f-input-label",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-f-input-wrap",
+      "to": "m3-f-input",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-form",
+      "to": "m3-f-select-wrap",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-f-select-wrap",
+      "to": "m3-f-select-label",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-f-select-wrap",
+      "to": "m3-f-select",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-form",
+      "to": "m3-f-slider-wrap",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "m3-f-slider-wrap",
+      "to": "m3-f-slider-label",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-f-slider-wrap",
+      "to": "m3-f-slider",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-form",
+      "to": "m3-f-radio",
+      "kind": "contains",
+      "order": 3
+    },
+    {
+      "from": "m3-form",
+      "to": "m3-f-switch-label",
+      "kind": "contains",
+      "order": 4
+    },
+    {
+      "from": "m3-f-switch-label",
+      "to": "m3-f-switch-text",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-f-switch-label",
+      "to": "m3-f-switch",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-form",
+      "to": "m3-f-textarea-wrap",
+      "kind": "contains",
+      "order": 5
+    },
+    {
+      "from": "m3-f-textarea-wrap",
+      "to": "m3-f-textarea-label",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-f-textarea-wrap",
+      "to": "m3-f-textarea",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-form",
+      "to": "m3-f-check-label",
+      "kind": "contains",
+      "order": 6
+    },
+    {
+      "from": "m3-f-check-label",
+      "to": "m3-f-check",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-f-check-label",
+      "to": "m3-f-check-text",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-form",
+      "to": "m3-f-sep",
+      "kind": "contains",
+      "order": 7
+    },
+    {
+      "from": "m3-form",
+      "to": "m3-f-actions",
+      "kind": "contains",
+      "order": 8
+    },
+    {
+      "from": "m3-f-actions",
+      "to": "m3-f-submit",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m3-f-actions",
+      "to": "m3-f-reset",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m3-f-actions",
+      "to": "m3-f-dialog",
+      "kind": "contains",
+      "order": 2
+    }
+  ]
+}

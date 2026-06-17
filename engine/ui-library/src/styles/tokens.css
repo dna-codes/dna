@@ -1,0 +1,129 @@
+/**
+ * Design tokens — the skinning surface for `@dna/ui-library`.
+ *
+ * These `--ui-*` CSS custom properties are the ONLY thing the default skin
+ * (`@dna/ui-library/skin.css`) reads. The default look is a **dark
+ * prototype-engine / blueprint** aesthetic on purpose: it signals "this is a
+ * working skeleton, not finished design." Two kinds of override:
+ *
+ *   1. RE-BRAND — set the color tokens (`--ui-color-*`) to your palette
+ *      (including a light theme — just swap bg/surface/text/border values).
+ *   2. PRODUCTIONIZE — flip `--ui-border-style: solid` and set
+ *      `--ui-canvas-grid: none` to drop the wireframe cues entirely.
+ *
+ * Palette is drawn from dna.codes: bright teal primary on a deep-navy slate
+ * system. Published as `@dna/ui-library/styles.css`; the components are headless
+ * and do not depend on these — importing is opt-in.
+ */
+:root {
+  /* Color — brand / primary (dna.codes teal, brightened for dark) */
+  --ui-color-primary: #2dd4bf;
+  --ui-color-primary-hover: #5eead4;
+  --ui-color-primary-active: #14b8a6;
+  --ui-color-on-primary: #042f2a;
+
+  /* Color — surfaces & text (deep-navy slate, dark) */
+  --ui-color-bg: #0a0f1c;
+  --ui-color-surface: #111a2e;
+  --ui-color-surface-raised: #16213a;
+  --ui-color-surface-sunken: #0c1424;
+  --ui-color-muted: #1b2740;
+  --ui-color-muted-hover: #283750;
+  --ui-color-border: #2f3e58;
+  --ui-color-border-strong: #475569;
+  --ui-color-text: #e2e8f0;
+  --ui-color-text-muted: #94a3b8;
+  --ui-color-text-subtle: #64748b;
+  --ui-color-text-on-muted: #cbd5e1;
+
+  /* Color — feedback (bright accents with dark on-text) */
+  --ui-color-danger: #fb7185;
+  --ui-color-danger-hover: #fda4af;
+  --ui-color-on-danger: #4c0519;
+  --ui-color-success: #34d399;
+  --ui-color-on-success: #022c22;
+  --ui-color-warning: #fbbf24;
+  --ui-color-on-warning: #2b1d02;
+  --ui-color-info: #60a5fa;
+
+  /* Overlay (dialog/alert backdrops) — deep navy */
+  --ui-color-overlay: rgb(2 6 23 / 0.72);
+
+  /* Prototype-engine cues -------------------------------------------------- *
+   * These are what make the default look like a wireframe. Override them to
+   * "productionize": `--ui-border-style: solid` + `--ui-canvas-grid: none`.   */
+  /* Border treatment — dashed reads as "scaffold / planned". */
+  --ui-border-style: dashed;
+  --ui-border-width: 1.5px;
+  /* The dotted canvas grid drawn behind the app shell. */
+  --ui-grid-dot: rgb(148 163 184 / 0.16);
+  --ui-grid-size: 22px;
+  --ui-canvas-grid: radial-gradient(
+    var(--ui-grid-dot) 1.2px,
+    transparent 1.2px
+  );
+  /* Selection / active highlight (tracks the primary, so re-brands carry). */
+  --ui-color-selection: rgb(45 212 191 / 0.14);
+  --ui-color-selection-line: var(--ui-color-primary);
+  /* "Planned functionality" marker (the dotted-outline convention). */
+  --ui-color-planned: #64748b;
+
+  /* Typography */
+  --ui-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  /* Mono is used for "annotations": badges, labels, step numbers — the engine vibe. */
+  --ui-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+    monospace;
+  --ui-font-weight-normal: 400;
+  --ui-font-weight-medium: 500;
+  --ui-font-weight-semibold: 600;
+  --ui-font-size-xs: 0.75rem;
+  --ui-font-size-sm: 0.875rem;
+  --ui-font-size-md: 1rem;
+  --ui-font-size-lg: 1.125rem;
+  --ui-font-size-xl: 1.375rem;
+  --ui-line-height: 1.5;
+
+  /* Spacing */
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-5: 1.5rem;
+  --ui-space-6: 2rem;
+
+  /* Radius — crisp/technical */
+  --ui-radius-sm: 3px;
+  --ui-radius-md: 5px;
+  --ui-radius-lg: 8px;
+  --ui-radius-xl: 12px;
+  --ui-radius-pill: 9999px;
+
+  /* Control sizing (buttons, inputs, triggers) */
+  --ui-control-height-sm: 1.75rem;
+  --ui-control-height-md: 2.25rem;
+  --ui-control-height-lg: 2.75rem;
+  --ui-control-padding-x: var(--ui-space-3);
+
+  /* Elevation — flat by default (the wireframe relies on borders, not shadow) */
+  --ui-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --ui-shadow-md: 0 6px 18px rgb(0 0 0 / 0.5);
+  --ui-shadow-lg: 0 22px 50px rgb(0 0 0 / 0.6);
+
+  /* Focus ring (teal) */
+  --ui-focus-ring-color: rgb(45 212 191 / 0.5);
+  --ui-focus-ring: 0 0 0 3px var(--ui-focus-ring-color);
+
+  /* Motion */
+  --ui-transition: 150ms ease;
+
+  /* Layering */
+  --ui-z-popover: 50;
+  --ui-z-overlay: 60;
+  --ui-z-modal: 70;
+  --ui-z-toast: 80;
+
+  /* App shell */
+  --ui-shell-header-height: 3.5rem;
+  --ui-shell-sidebar-width: 15rem;
+}

@@ -1,0 +1,378 @@
+{
+  "resources": [
+    {
+      "id": "app",
+      "type": "application"
+    },
+    {
+      "id": "tip",
+      "type": "tooltipProvider",
+      "props": {
+        "delayDuration": 200
+      }
+    },
+    {
+      "id": "header",
+      "type": "header"
+    },
+    {
+      "id": "header-title",
+      "type": "span",
+      "props": {
+        "text": "Application",
+        "className": "text-ui-lg font-ui-semibold"
+      }
+    },
+    {
+      "id": "header-badge",
+      "type": "badge",
+      "props": {
+        "variant": "primary",
+        "text": "Badge"
+      }
+    },
+    {
+      "id": "header-actions",
+      "type": "box",
+      "props": {
+        "className": "ml-auto flex items-center gap-3"
+      }
+    },
+    {
+      "id": "header-tooltip",
+      "type": "tooltip",
+      "props": {
+        "triggerLabel": "?",
+        "ariaLabel": "Tooltip",
+        "content": "Tooltip",
+        "triggerVariant": "ghost",
+        "triggerSize": "sm"
+      }
+    },
+    {
+      "id": "header-avatar",
+      "type": "avatar",
+      "props": {
+        "fallback": "AV"
+      }
+    },
+    {
+      "id": "header-button",
+      "type": "button",
+      "props": {
+        "variant": "primary",
+        "label": "Button"
+      },
+      "meta": {
+        "requires": "settings:read"
+      }
+    },
+    {
+      "id": "row",
+      "type": "machine-root",
+      "props": {
+        "machine": "content",
+        "className": "flex flex-1 min-h-0"
+      }
+    },
+    {
+      "id": "sidebar",
+      "type": "sidebar"
+    },
+    {
+      "id": "nav",
+      "type": "nav",
+      "props": {
+        "items": [
+          "Nav Item 1",
+          "Nav Item 2",
+          "Nav Item 3",
+          "Nav Item 4"
+        ]
+      }
+    },
+    {
+      "id": "page",
+      "type": "page",
+      "props": {
+        "path": "/",
+        "title": "Prototype",
+        "className": "flex-1 overflow-auto"
+      }
+    },
+    {
+      "id": "page-inner",
+      "type": "box",
+      "props": {
+        "className": "mx-auto max-w-5xl space-y-12"
+      }
+    },
+    {
+      "id": "inspector",
+      "type": "inspector"
+    },
+    {
+      "id": "footer",
+      "type": "footer",
+      "props": {
+        "className": "flex items-center gap-2"
+      }
+    },
+    {
+      "id": "footer-text",
+      "type": "span",
+      "props": {
+        "text": "Footer"
+      }
+    },
+    {
+      "id": "footer-badge",
+      "type": "badge",
+      "props": {
+        "variant": "success",
+        "text": "Badge",
+        "className": "ml-auto"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "from": "app",
+      "to": "tip",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "tip",
+      "to": "header",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "tip",
+      "to": "row",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "tip",
+      "to": "footer",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "header",
+      "to": "header-title",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "header",
+      "to": "header-badge",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "header",
+      "to": "header-actions",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "header-actions",
+      "to": "header-tooltip",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "header-actions",
+      "to": "header-avatar",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "header-actions",
+      "to": "header-button",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "row",
+      "to": "sidebar",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "row",
+      "to": "page",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "row",
+      "to": "inspector",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "sidebar",
+      "to": "nav",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "page",
+      "to": "page-inner",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "page-inner",
+      "to": "m1",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "page-inner",
+      "to": "m2",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "page-inner",
+      "to": "m3",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "page-inner",
+      "to": "m4",
+      "kind": "contains",
+      "order": 3
+    },
+    {
+      "from": "footer",
+      "to": "footer-text",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "footer",
+      "to": "footer-badge",
+      "kind": "contains",
+      "order": 1
+    }
+  ],
+  "machines": {
+    "content": {
+      "id": "content",
+      "initial": "draft",
+      "states": {
+        "draft": {
+          "on": {
+            "SUBMIT": "inReview"
+          }
+        },
+        "inReview": {
+          "on": {
+            "APPROVE": "approved",
+            "REQUEST_CHANGES": "draft"
+          }
+        },
+        "approved": {
+          "on": {
+            "PUBLISH": "published",
+            "REQUEST_CHANGES": "draft"
+          }
+        },
+        "published": {
+          "on": {
+            "ARCHIVE": "archived"
+          }
+        },
+        "archived": {
+          "on": {
+            "RESTORE": "draft"
+          }
+        }
+      }
+    },
+    "session": {
+      "id": "session",
+      "initial": "alice",
+      "states": {
+        "alice": {
+          "on": {
+            "AS_BOB": "bob",
+            "AS_CAROL": "carol"
+          }
+        },
+        "bob": {
+          "on": {
+            "AS_ALICE": "alice",
+            "AS_CAROL": "carol"
+          }
+        },
+        "carol": {
+          "on": {
+            "AS_ALICE": "alice",
+            "AS_BOB": "bob"
+          }
+        }
+      }
+    }
+  },
+  "access": {
+    "machine": "session",
+    "users": [
+      {
+        "id": "alice",
+        "name": "Alice",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "id": "bob",
+        "name": "Bob",
+        "roles": [
+          "editor"
+        ]
+      },
+      {
+        "id": "carol",
+        "name": "Carol",
+        "roles": [
+          "viewer"
+        ]
+      }
+    ],
+    "rules": [
+      {
+        "role": "admin",
+        "action": "*",
+        "resource": "*"
+      },
+      {
+        "role": "editor",
+        "action": "view",
+        "resource": "*"
+      },
+      {
+        "role": "editor",
+        "action": "content:write",
+        "resource": "*"
+      },
+      {
+        "role": "editor",
+        "action": "content:submit",
+        "resource": "*"
+      },
+      {
+        "role": "viewer",
+        "action": "view",
+        "resource": "*"
+      }
+    ]
+  }
+}

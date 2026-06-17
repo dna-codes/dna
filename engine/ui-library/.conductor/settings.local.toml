@@ -1,0 +1,9 @@
+"$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
+
+[git]
+archive_on_merge = true
+
+[scripts]
+run = "npm run dev"
+run_mode = "concurrent"
+setup = "git rebase main"

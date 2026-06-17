@@ -1,0 +1,338 @@
+{
+  "resources": [
+    {
+      "id": "m4",
+      "type": "module",
+      "props": {
+        "name": "Module 4",
+        "className": "space-y-4"
+      },
+      "meta": {
+        "requires": "content:write"
+      }
+    },
+    {
+      "id": "m4-title",
+      "type": "heading",
+      "props": {
+        "level": 2,
+        "text": "Module 4",
+        "className": "text-ui-lg font-ui-semibold"
+      }
+    },
+    {
+      "id": "m4-card",
+      "type": "card"
+    },
+    {
+      "id": "m4-wf",
+      "type": "workflow-root",
+      "props": {
+        "defaultValue": "step1"
+      }
+    },
+    {
+      "id": "m4-steps",
+      "type": "workflow-steps"
+    },
+    {
+      "id": "m4-step1",
+      "type": "workflow-step",
+      "props": {
+        "value": "step1",
+        "label": "Step 1"
+      }
+    },
+    {
+      "id": "m4-step2",
+      "type": "workflow-step",
+      "props": {
+        "value": "step2",
+        "label": "Step 2"
+      }
+    },
+    {
+      "id": "m4-step3",
+      "type": "workflow-step",
+      "props": {
+        "value": "step3",
+        "label": "Step 3"
+      }
+    },
+    {
+      "id": "m4-panel1",
+      "type": "workflow-panel",
+      "props": {
+        "value": "step1",
+        "className": "space-y-3"
+      }
+    },
+    {
+      "id": "m4-p1-field",
+      "type": "box",
+      "props": {
+        "className": "space-y-1.5"
+      }
+    },
+    {
+      "id": "m4-p1-label",
+      "type": "label",
+      "props": {
+        "htmlFor": "f1",
+        "text": "Label"
+      }
+    },
+    {
+      "id": "m4-p1-input",
+      "type": "input",
+      "props": {
+        "id": "f1",
+        "placeholder": "Placeholder…"
+      }
+    },
+    {
+      "id": "m4-p1-next",
+      "type": "workflow-next",
+      "props": {
+        "label": "Next"
+      }
+    },
+    {
+      "id": "m4-panel2",
+      "type": "workflow-panel",
+      "props": {
+        "value": "step2",
+        "className": "space-y-3"
+      }
+    },
+    {
+      "id": "m4-p2-field",
+      "type": "box",
+      "props": {
+        "className": "space-y-1.5"
+      }
+    },
+    {
+      "id": "m4-p2-label",
+      "type": "label",
+      "props": {
+        "htmlFor": "f2",
+        "text": "Label"
+      }
+    },
+    {
+      "id": "m4-p2-input",
+      "type": "input",
+      "props": {
+        "id": "f2",
+        "placeholder": "Placeholder…"
+      }
+    },
+    {
+      "id": "m4-p2-nav",
+      "type": "box",
+      "props": {
+        "className": "flex gap-2"
+      }
+    },
+    {
+      "id": "m4-p2-prev",
+      "type": "workflow-previous",
+      "props": {
+        "label": "Back"
+      }
+    },
+    {
+      "id": "m4-p2-next",
+      "type": "workflow-next",
+      "props": {
+        "label": "Next"
+      }
+    },
+    {
+      "id": "m4-panel3",
+      "type": "workflow-panel",
+      "props": {
+        "value": "step3",
+        "className": "space-y-3"
+      }
+    },
+    {
+      "id": "m4-p3-text",
+      "type": "text",
+      "props": {
+        "text": "Step 3 placeholder content.",
+        "className": "text-ui-text-muted"
+      }
+    },
+    {
+      "id": "m4-p3-nav",
+      "type": "box",
+      "props": {
+        "className": "flex gap-2"
+      }
+    },
+    {
+      "id": "m4-p3-prev",
+      "type": "workflow-previous",
+      "props": {
+        "label": "Back"
+      }
+    },
+    {
+      "id": "m4-p3-button",
+      "type": "button",
+      "props": {
+        "variant": "primary",
+        "label": "Button"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "from": "m4",
+      "to": "m4-title",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m4",
+      "to": "m4-card",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m4-card",
+      "to": "m4-wf",
+      "kind": "contains",
+      "slot": "body",
+      "order": 0
+    },
+    {
+      "from": "m4-wf",
+      "to": "m4-steps",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m4-wf",
+      "to": "m4-panel1",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m4-wf",
+      "to": "m4-panel2",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "m4-wf",
+      "to": "m4-panel3",
+      "kind": "contains",
+      "order": 3
+    },
+    {
+      "from": "m4-steps",
+      "to": "m4-step1",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m4-steps",
+      "to": "m4-step2",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m4-steps",
+      "to": "m4-step3",
+      "kind": "contains",
+      "order": 2
+    },
+    {
+      "from": "m4-panel1",
+      "to": "m4-p1-field",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m4-p1-field",
+      "to": "m4-p1-label",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m4-p1-field",
+      "to": "m4-p1-input",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m4-panel1",
+      "to": "m4-p1-next",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m4-panel2",
+      "to": "m4-p2-field",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m4-p2-field",
+      "to": "m4-p2-label",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m4-p2-field",
+      "to": "m4-p2-input",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m4-panel2",
+      "to": "m4-p2-nav",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m4-p2-nav",
+      "to": "m4-p2-prev",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m4-p2-nav",
+      "to": "m4-p2-next",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m4-panel3",
+      "to": "m4-p3-text",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m4-panel3",
+      "to": "m4-p3-nav",
+      "kind": "contains",
+      "order": 1
+    },
+    {
+      "from": "m4-p3-nav",
+      "to": "m4-p3-prev",
+      "kind": "contains",
+      "order": 0
+    },
+    {
+      "from": "m4-p3-nav",
+      "to": "m4-p3-button",
+      "kind": "contains",
+      "order": 1
+    }
+  ]
+}
