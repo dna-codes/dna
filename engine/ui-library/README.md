@@ -33,12 +33,9 @@ it theirs — including swapping in a light theme by overriding the surface/text
 tokens.
 
 The `Application` shell composed from structural primitives (`Header`, `Sidebar`,
-`Content`, `Page`, `Footer`) — the default wireframe skin out of the box:
-
-![Composed Application layout](./docs/application-layout.png)
-
-The same components in Storybook, where every primitive and state-machine
-component is documented and exercised:
+`Content`, `Page`, `Footer`) in Storybook, where every primitive and
+state-machine component is documented and exercised — the default wireframe skin
+out of the box:
 
 ![Storybook catalog](./docs/storybook.png)
 
