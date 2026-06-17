@@ -5,7 +5,7 @@ describe('@dna-codes/dna-output-html', () => {
   describe('render() — document scaffolding', () => {
     it('renders every default section', () => {
       const html = render(bookshopInput)
-      expect(html).toContain('<h1>shop.books</h1>')
+      expect(html).toContain('<h1>shop</h1>')
       expect(html).toContain('<h2>Summary</h2>')
       expect(html).toContain('<h2>Domain Model</h2>')
       expect(html).toContain('<h2>Operations</h2>')
@@ -25,7 +25,7 @@ describe('@dna-codes/dna-output-html', () => {
     it('supports a custom title override', () => {
       const html = render(bookshopInput, { title: 'Bookshop Handbook' })
       expect(html).toContain('<h1>Bookshop Handbook</h1>')
-      expect(html).not.toContain('<h1>shop.books</h1>')
+      expect(html).not.toContain('<h1>shop</h1>')
     })
 
     it('falls back to domain.name when path is missing', () => {
@@ -43,7 +43,7 @@ describe('@dna-codes/dna-output-html', () => {
         sections: ['summary'],
         headingLevel: 2,
       })
-      expect(html).toContain('<h2>shop.books</h2>')
+      expect(html).toContain('<h2>shop</h2>')
       expect(html).toContain('<h3>Summary</h3>')
     })
 
@@ -54,7 +54,7 @@ describe('@dna-codes/dna-output-html', () => {
     it('wraps output as a full HTML document when standalone is true', () => {
       const html = render(bookshopInput, { sections: ['summary'], standalone: true })
       expect(html).toMatch(/^<!DOCTYPE html><html>/)
-      expect(html).toContain('<title>shop.books</title>')
+      expect(html).toContain('<title>shop</title>')
       expect(html).toContain('<body>')
       expect(html.endsWith('</html>')).toBe(true)
     })
@@ -113,7 +113,7 @@ describe('@dna-codes/dna-output-html', () => {
     it('leaves canonical labels untouched when no rename is provided', () => {
       const html = render(bookshopInput, { sections: ['summary'] })
       expect(html).toContain('<li>Persons: 1</li>')
-      expect(html).toContain('<li>Roles: 1</li>')
+      expect(html).toContain('<li>Positions: 1</li>')
       expect(html).toContain('<strong>Top-level resources:</strong>')
     })
   })

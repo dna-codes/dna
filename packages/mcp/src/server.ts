@@ -12,9 +12,11 @@ import { buildReportingChains } from './lenses/reporting-chains.js'
 import { buildSpanOfControl } from './lenses/span-of-control.js'
 import { buildGraphData } from './lenses/graph-data.js'
 import { buildJobDescriptions } from './lenses/job-descriptions.js'
+import { buildProcessFlow } from './lenses/process-flow.js'
 import { buildPipeline } from './lenses/pipeline.js'
 import { buildAccounts } from './lenses/accounts.js'
 import { buildTypeRegistryGraph } from './lenses/type-registry.js'
+import { buildProductAppPreview } from './lenses/product-app-preview.js'
 import type { DnaDataStore } from '@dna-codes/dna-core'
 
 export { McpServerOptions }
@@ -448,6 +450,20 @@ export function createMcpServer(options: McpServerOptions): http.Server {
   return server
 }
 
+/** The REST lens builders, keyed by URL name. Each maps a store to a JSON view model. */
+const LENS_BUILDERS: Record<string, (store: DnaDataStore) => Promise<unknown>> = {
+  'org-chart': buildOrgChart,
+  'people-positions': buildPeoplePositions,
+  'reporting-chains': buildReportingChains,
+  'span-of-control': buildSpanOfControl,
+  'job-descriptions': buildJobDescriptions,
+  'process-flow': buildProcessFlow,
+  'pipeline': buildPipeline,
+  'accounts': buildAccounts,
+  'type-registry': buildTypeRegistryGraph,
+  'product-app-preview': buildProductAppPreview,
+}
+
 async function handleLensRequest(
   lensName: string,
   dataStore: DnaDataStore,
@@ -455,36 +471,22 @@ async function handleLensRequest(
 ): Promise<void> {
   res.setHeader('Content-Type', 'application/json')
   res.setHeader('Access-Control-Allow-Origin', '*')
+
+  const builder = LENS_BUILDERS[lensName]
+  if (!builder) {
+    res.writeHead(404)
+    res.end(JSON.stringify({ error: `Unknown lens "${lensName}"` }))
+    return
+  }
+
   try {
-    if (lensName === 'org-chart') {
-      res.writeHead(200)
-      res.end(JSON.stringify(await buildOrgChart(dataStore)))
-    } else if (lensName === 'people-positions') {
-      res.writeHead(200)
-      res.end(JSON.stringify(await buildPeoplePositions(dataStore)))
-    } else if (lensName === 'reporting-chains') {
-      res.writeHead(200)
-      res.end(JSON.stringify(await buildReportingChains(dataStore)))
-    } else if (lensName === 'span-of-control') {
-      res.writeHead(200)
-      res.end(JSON.stringify(await buildSpanOfControl(dataStore)))
-    } else if (lensName === 'job-descriptions') {
-      res.writeHead(200)
-      res.end(JSON.stringify(await buildJobDescriptions(dataStore)))
-    } else if (lensName === 'pipeline') {
-      res.writeHead(200)
-      res.end(JSON.stringify(await buildPipeline(dataStore)))
-    } else if (lensName === 'accounts') {
-      res.writeHead(200)
-      res.end(JSON.stringify(await buildAccounts(dataStore)))
-    } else if (lensName === 'type-registry') {
-      res.writeHead(200)
-      res.end(JSON.stringify(await buildTypeRegistryGraph(dataStore)))
-    } else {
-      res.writeHead(404)
-      res.end(JSON.stringify({ error: `Unknown lens "${lensName}"` }))
-    }
+    // Build (and serialize) the body BEFORE sending headers, so a builder error
+    // can return a clean 500 rather than throwing ERR_HTTP_HEADERS_SENT.
+    const body = JSON.stringify(await builder(dataStore))
+    res.writeHead(200)
+    res.end(body)
   } catch (err) {
+    console.error(`Lens "${lensName}" failed:`, err)
     res.writeHead(500)
     res.end(JSON.stringify({ error: String(err) }))
   }

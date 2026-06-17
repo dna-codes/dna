@@ -21,6 +21,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./packs": {
+      "types": "./dist/packs/index.d.ts",
+      "default": "./dist/packs/index.js"
+    },
     "./package.json": "./package.json"
   },
   "bin": {
@@ -31,6 +35,7 @@
     "README.md"
   ],
   "scripts": {
+    "start": "node --env-file=.env dist/bin.js",
     "dev": "tsx watch src/bin.ts",
     "build": "tsc",
     "test": "node --experimental-vm-modules ../../node_modules/.bin/jest"

@@ -37,7 +37,7 @@ function lendingTypes(): ResourceType[] {
     }),
     makeResourceType('Borrower', { attribute_schema: [{ name: 'email', type: 'string' }] }),
     makeResourceType('Customer', { category: 'person' }),
-    makeResourceType('Underwriter', { category: 'role' }),
+    makeResourceType('Underwriter', { category: 'position' }),
     makeResourceType('BankDepartment', { category: 'group' }),
   ]
 }

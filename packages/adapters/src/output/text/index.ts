@@ -79,7 +79,7 @@ function unitDocs(unit: Unit, style: Style, op: OperationalDna): TextDocument[] 
     case 'operation':
       return (op.operations ?? []).map((o) => operationDoc(o, op, style))
     case 'resource':
-      return collectResources(op.domain).map((r) => resourceDoc(r, op))
+      return (op.resources ?? []).map((r) => resourceDoc(r, op))
     case 'process':
       return (op.processes ?? []).map((p) => processDoc(p, op))
   }
@@ -125,12 +125,6 @@ function unitHeading(unit: Unit): string {
   if (unit === 'operation') return 'Operations'
   if (unit === 'resource') return 'Domain model'
   return 'Processes'
-}
-
-function collectResources(domain: OperationalDomain): Resource[] {
-  const out = [...(domain.resources ?? [])]
-  for (const sub of domain.domains ?? []) out.push(...collectResources(sub))
-  return out
 }
 
 export { Style, StyleMap, Unit, TextDocument, RenderOptions, RenderManyOptions } from './types'

@@ -12,7 +12,7 @@ describe('schema-to-tool', () => {
     expect(tools.map((t) => t.name)).toEqual([
       'add_resource',
       'add_person',
-      'add_role',
+      'add_position',
       'add_group',
       'add_membership',
       'add_operation',
@@ -61,12 +61,12 @@ describe('schema-to-tool', () => {
     })
   })
 
-  it('injectEnums narrows membership.role to declared role names', () => {
+  it('injectEnums narrows membership.position to declared position names', () => {
     const tools = buildLayeredTools()
-    const narrowed = injectEnums(tools, { roles: ['Underwriter', 'LoanOfficer'] })
+    const narrowed = injectEnums(tools, { positions: ['Underwriter', 'LoanOfficer'] })
     const membership = narrowed.find((t) => t.name === 'add_membership')!
     const props = membership.parameters.properties as Record<string, { enum?: string[] }>
-    expect(props.role.enum).toEqual(['Underwriter', 'LoanOfficer'])
+    expect(props.position.enum).toEqual(['Underwriter', 'LoanOfficer'])
   })
 
   it('injectEnums leaves fields alone when the pool is empty', () => {
@@ -74,13 +74,13 @@ describe('schema-to-tool', () => {
     const narrowed = injectEnums(tools, {})
     const membership = narrowed.find((t) => t.name === 'add_membership')!
     const props = membership.parameters.properties as Record<string, { enum?: string[] }>
-    expect(props.role.enum).toBeUndefined()
+    expect(props.position.enum).toBeUndefined()
   })
 
   it('injectEnums does not mutate the source tool list', () => {
     const tools = buildLayeredTools()
     const before = JSON.stringify(tools)
-    injectEnums(tools, { roles: ['Underwriter'] })
+    injectEnums(tools, { positions: ['Underwriter'] })
     expect(JSON.stringify(tools)).toBe(before)
   })
 })

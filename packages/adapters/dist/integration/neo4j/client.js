@@ -213,6 +213,15 @@ function createClient(opts, _dna) {
                 await s.close();
             }
         },
+        async clear() {
+            const s = session();
+            try {
+                await s.run(cypher_1.CLEAR_GRAPH_CYPHER);
+            }
+            finally {
+                await s.close();
+            }
+        },
         async seedFromDna(dna) {
             const report = {
                 resourceTypesCreated: 0,
@@ -241,11 +250,11 @@ function createClient(opts, _dna) {
                 }
                 report.resourceTypesCreated += 1;
             }
-            // 2. Domain ResourceTypes.
-            const domain = dna.domain ?? {};
+            // 2. Tenant ResourceTypes from the document's top-level noun collections
+            //    (home-edge model — nouns no longer live under `dna.domain`).
             for (const { key, category } of NOUN_KEYS) {
-                const list = Array.isArray(domain[key])
-                    ? domain[key]
+                const list = Array.isArray(dna[key])
+                    ? dna[key]
                     : [];
                 for (const entry of list) {
                     if (typeof entry?.name !== 'string')

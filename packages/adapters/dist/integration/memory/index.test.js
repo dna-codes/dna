@@ -7,16 +7,14 @@ const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f
 const REGISTRY_FIXTURE_PATH = (0, path_1.join)(__dirname, '..', '..', '..', '..', '..', 'examples', 'registry', 'operational.json');
 function makeLendingDna() {
     return {
-        domain: {
-            name: 'lending',
-            resources: [
-                { name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] },
-                { name: 'Borrower', attributes: [{ name: 'email', type: 'string' }] },
-            ],
-            persons: [{ name: 'Customer' }],
-            roles: [{ name: 'Underwriter' }],
-            groups: [{ name: 'BankDepartment' }],
-        },
+        domain: { name: 'lending' },
+        resources: [
+            { name: 'Loan', domain: 'lending', attributes: [{ name: 'amount', type: 'number' }] },
+            { name: 'Borrower', domain: 'lending', attributes: [{ name: 'email', type: 'string' }] },
+        ],
+        persons: [{ name: 'Customer', domain: 'lending' }],
+        roles: [{ name: 'Underwriter', domain: 'lending' }],
+        groups: [{ name: 'BankDepartment', domain: 'lending' }],
         relationships: [
             {
                 name: 'Loan.borrower',
@@ -247,7 +245,8 @@ describe('integration/memory stability', () => {
         const client = (0, client_1.createClient)();
         await client.migrate();
         await client.seedFromDna({
-            domain: { name: 'd', resources: [{ name: 'Widget', stability: 'beta' }] },
+            domain: { name: 'd' },
+            resources: [{ name: 'Widget', domain: 'd', stability: 'beta' }],
             relationships: [
                 { name: 'Widget.maker', from: 'Widget', to: 'Maker', cardinality: 'many-to-one', attribute: 'maker_id', stability: 'stable' },
             ],
@@ -255,6 +254,27 @@ describe('integration/memory stability', () => {
         expect((await rtByName(client, 'Widget')).stability).toBe('beta');
         const rels = await client.relationshipType.list();
         expect(rels.find((r) => r.name === 'Widget.maker').stability).toBe('stable');
+    });
+    it('seeds nouns from the top-level collections (home-edge model)', async () => {
+        const client = (0, client_1.createClient)();
+        await client.migrate();
+        await client.seedFromDna({
+            domain: { name: 'lending' },
+            resources: [{ name: 'Loan', domain: 'lending' }],
+            persons: [{ name: 'Customer', domain: 'lending' }],
+        });
+        const rts = (await client.resourceType.list()).map((r) => r.name);
+        expect(rts).toEqual(expect.arrayContaining(['Loan', 'Customer']));
+    });
+    it('does NOT seed nouns nested under domain (legacy shape is ignored)', async () => {
+        const client = (0, client_1.createClient)();
+        await client.migrate();
+        await client.seedFromDna({
+            // Legacy containment shape — no top-level collections.
+            domain: { name: 'lending', resources: [{ name: 'Loan' }] },
+        });
+        const rts = (await client.resourceType.list()).map((r) => r.name);
+        expect(rts).not.toContain('Loan');
     });
     it('round-trips stability set at create() and records it on the version', async () => {
         const client = await seeded();

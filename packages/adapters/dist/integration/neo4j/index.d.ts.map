@@ -1,1 +1,1 @@
-{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../src/integration/neo4j/index.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;GAWG;AAEH,OAAO,EAAE,YAAY,EAAE,MAAM,UAAU,CAAA;AACvC,YAAY,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAA;AACjD,OAAO,EAAE,MAAM,EAAE,MAAM,OAAO,CAAA"}
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../src/integration/neo4j/index.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;GAWG;AAEH,OAAO,EAAE,YAAY,EAAE,MAAM,UAAU,CAAA;AACvC,YAAY,EAAE,kBAAkB,EAAE,UAAU,EAAE,MAAM,SAAS,CAAA;AAC7D,OAAO,EAAE,MAAM,EAAE,MAAM,OAAO,CAAA"}

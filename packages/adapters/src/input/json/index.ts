@@ -42,15 +42,13 @@ export function parse(data: unknown, options: ParseOptions): ParseResult {
   const rootSample = Array.isArray(data) ? mergeRecords(data) : data
   dna = walk(rootSample, options.name, dna, options)
 
-  const resources = ((dna.domain.resources ?? []) as ParsedResource[])
+  const resources = ((dna.resources ?? []) as ParsedResource[])
   const relationships = ((dna.relationships ?? []) as ParsedRelationship[])
 
   return {
     operational: {
-      domain: {
-        name: domainName,
-        resources,
-      },
+      domain: { name: domainName },
+      resources,
       ...(relationships.length ? { relationships } : {}),
     },
   }
@@ -99,7 +97,7 @@ function walk(
   }
 
   // Ensure the resource exists even if it had no recognizable keys.
-  const targetResources = (dna.domain.resources ?? []) as Array<{ name: string }>
+  const targetResources = (dna.resources ?? []) as Array<{ name: string }>
   if (!targetResources.some((r) => r.name === resourceName)) {
     dna = addResource(dna, { name: resourceName }).dna
   }

@@ -21,8 +21,8 @@ export interface ParsedRelationship {
 export interface ParsedOperational {
   domain: {
     name: string
-    resources: ParsedResource[]
   }
+  resources: ParsedResource[]
   relationships?: ParsedRelationship[]
 }
 

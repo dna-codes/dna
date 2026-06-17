@@ -147,7 +147,7 @@ describe('DnaDataStore type contract', () => {
   })
 
   it('foundational types default to stable, everything else to experimental', () => {
-    for (const name of ['Person', 'Role', 'Group', 'Resource']) {
+    for (const name of ['Person', 'Position', 'Group', 'Resource']) {
       expect(isFoundationalTypeName(name)).toBe(true)
       expect(defaultStabilityForType(name)).toBe('stable')
     }

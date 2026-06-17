@@ -35,81 +35,85 @@ exports.bookshopInput = {
     operational: {
         domain: {
             name: 'shop',
-            path: 'shop.books',
             description: 'Tiny bookshop domain — canonical fixture for adapter tests.',
-            resources: [
-                {
-                    id: ID.book,
-                    type: 'resource',
-                    version: '1',
-                    name: 'Book',
-                    description: 'A book for sale.',
-                    attributes: [
-                        { name: 'id', type: 'string', required: true, description: 'Unique identifier' },
-                        { name: 'title', type: 'string', required: true, description: 'Book title' },
-                        { name: 'author_id', type: 'reference', required: true, description: 'Reference to Author' },
-                        {
-                            name: 'status',
-                            type: 'enum',
-                            required: true,
-                            description: 'draft | active | retired',
-                        },
-                    ],
-                    actions: [
-                        { name: 'Publish', description: 'Publish a draft book.', type: 'write' },
-                        { name: 'Retire', description: 'Retire an active book.', type: 'destructive' },
-                    ],
-                },
-                {
-                    id: ID.author,
-                    type: 'resource',
-                    version: '1',
-                    name: 'Author',
-                    description: "A book's author.",
-                    attributes: [
-                        { name: 'id', type: 'string', required: true },
-                        { name: 'name', type: 'string', required: true },
-                    ],
-                },
-            ],
-            persons: [
-                {
-                    id: ID.employee,
-                    type: 'person',
-                    version: '1',
-                    name: 'Employee',
-                    description: 'Internal worker at the shop.',
-                },
-            ],
-            groups: [
-                {
-                    id: ID.shop,
-                    type: 'group',
-                    version: '1',
-                    name: 'Shop',
-                    description: 'The bookshop itself — the work-unit Editors are scoped to.',
-                },
-            ],
-            roles: [
-                {
-                    id: ID.editor,
-                    type: 'role',
-                    version: '1',
-                    name: 'Editor',
-                    description: 'Reviews and publishes books within a Shop.',
-                    scope: 'Shop',
-                },
-            ],
         },
+        resources: [
+            {
+                id: ID.book,
+                type: 'resource',
+                version: '1',
+                name: 'Book',
+                domain: 'shop',
+                description: 'A book for sale.',
+                attributes: [
+                    { name: 'id', type: 'string', required: true, description: 'Unique identifier' },
+                    { name: 'title', type: 'string', required: true, description: 'Book title' },
+                    { name: 'author_id', type: 'reference', required: true, description: 'Reference to Author' },
+                    {
+                        name: 'status',
+                        type: 'enum',
+                        required: true,
+                        description: 'draft | active | retired',
+                    },
+                ],
+                actions: [
+                    { name: 'Publish', description: 'Publish a draft book.', type: 'write' },
+                    { name: 'Retire', description: 'Retire an active book.', type: 'destructive' },
+                ],
+            },
+            {
+                id: ID.author,
+                type: 'resource',
+                version: '1',
+                name: 'Author',
+                domain: 'shop',
+                description: "A book's author.",
+                attributes: [
+                    { name: 'id', type: 'string', required: true },
+                    { name: 'name', type: 'string', required: true },
+                ],
+            },
+        ],
+        persons: [
+            {
+                id: ID.employee,
+                type: 'person',
+                version: '1',
+                name: 'Employee',
+                domain: 'shop',
+                description: 'Internal worker at the shop.',
+            },
+        ],
+        groups: [
+            {
+                id: ID.shop,
+                type: 'group',
+                version: '1',
+                name: 'Shop',
+                domain: 'shop',
+                description: 'The bookshop itself — the work-unit Editors are scoped to.',
+            },
+        ],
+        positions: [
+            {
+                id: ID.editor,
+                type: 'position',
+                version: '1',
+                name: 'Editor',
+                domain: 'shop',
+                description: 'Reviews and publishes books within a Shop.',
+                scope: 'Shop',
+            },
+        ],
         memberships: [
             {
                 id: ID.employeeEditor,
                 type: 'membership',
                 version: '1',
                 name: 'EmployeeEditor',
-                description: 'Employees may hold the Editor role within a Shop.',
+                description: 'Employees may hold the Editor position within a Shop.',
                 person: 'Employee',
-                role: 'Editor',
+                position: 'Editor',
             },
         ],
         operations: [

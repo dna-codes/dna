@@ -1,5 +1,6 @@
 import {
   buildLinkListCypher,
+  CLEAR_GRAPH_CYPHER,
   COUNT_INSTANCES_OF_TYPE_CYPHER,
   COUNT_LINKS_OF_ROLE_CYPHER,
   CREATE_RELATIONSHIP_TYPE_CYPHER,
@@ -36,18 +37,22 @@ import {
 } from './cypher'
 
 describe('cypher/validateLabel', () => {
-  it('accepts PascalCase identifiers', () => {
+  it('accepts safe identifiers (either case — matching the in-memory adapter)', () => {
     expect(() => validateLabel('Loan')).not.toThrow()
     expect(() => validateLabel('ResourceType')).not.toThrow()
     expect(() => validateLabel('Borrower2')).not.toThrow()
+    // lowercase / underscore — the dna-agent packs (person, process, …)
+    expect(() => validateLabel('loan')).not.toThrow()
+    expect(() => validateLabel('person')).not.toThrow()
+    expect(() => validateLabel('open_position')).not.toThrow()
   })
 
-  it('rejects unsafe / non-PascalCase labels', () => {
-    expect(() => validateLabel('loan')).toThrow(/invalid typeName/)
+  it('rejects unsafe labels (injection / invalid identifiers)', () => {
     expect(() => validateLabel('Loan; DROP')).toThrow(/invalid typeName/)
     expect(() => validateLabel('')).toThrow(/invalid typeName/)
     expect(() => validateLabel('1Loan')).toThrow(/invalid typeName/)
     expect(() => validateLabel('Loan-2')).toThrow(/invalid typeName/)
+    expect(() => validateLabel('`inj`')).toThrow(/invalid typeName/)
   })
 })
 
@@ -171,6 +176,12 @@ describe('cypher/seed marker', () => {
     expect(WRITE_SEED_MARKER_CYPHER).toContain('MERGE (m:SeedMarker)')
     expect(WRITE_SEED_MARKER_CYPHER).toContain('m.createdAt = $createdAt')
     expect(WRITE_SEED_MARKER_CYPHER).toContain('m.dnaHash = $dnaHash')
+  })
+})
+
+describe('cypher/full-graph clear', () => {
+  it('CLEAR_GRAPH_CYPHER detaches and deletes every node', () => {
+    expect(CLEAR_GRAPH_CYPHER).toBe('MATCH (n) DETACH DELETE n')
   })
 })
 

@@ -35,14 +35,12 @@ function parse(data, options) {
     let dna = (0, dna_core_1.createOperationalDna)({ domain: { name: domainName } });
     const rootSample = Array.isArray(data) ? mergeRecords(data) : data;
     dna = walk(rootSample, options.name, dna, options);
-    const resources = (dna.domain.resources ?? []);
+    const resources = (dna.resources ?? []);
     const relationships = (dna.relationships ?? []);
     return {
         operational: {
-            domain: {
-                name: domainName,
-                resources,
-            },
+            domain: { name: domainName },
+            resources,
             ...(relationships.length ? { relationships } : {}),
         },
     };
@@ -82,7 +80,7 @@ function walk(data, resourceName, dna, options) {
         dna = (0, dna_core_1.addResource)(dna, { name: resourceName, attributes: [attr] }).dna;
     }
     // Ensure the resource exists even if it had no recognizable keys.
-    const targetResources = (dna.domain.resources ?? []);
+    const targetResources = (dna.resources ?? []);
     if (!targetResources.some((r) => r.name === resourceName)) {
         dna = (0, dna_core_1.addResource)(dna, { name: resourceName }).dna;
     }

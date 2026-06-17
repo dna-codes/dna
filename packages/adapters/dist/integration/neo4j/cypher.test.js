@@ -2,17 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const cypher_1 = require("./cypher");
 describe('cypher/validateLabel', () => {
-    it('accepts PascalCase identifiers', () => {
+    it('accepts safe identifiers (either case — matching the in-memory adapter)', () => {
         expect(() => (0, cypher_1.validateLabel)('Loan')).not.toThrow();
         expect(() => (0, cypher_1.validateLabel)('ResourceType')).not.toThrow();
         expect(() => (0, cypher_1.validateLabel)('Borrower2')).not.toThrow();
+        // lowercase / underscore — the dna-agent packs (person, process, …)
+        expect(() => (0, cypher_1.validateLabel)('loan')).not.toThrow();
+        expect(() => (0, cypher_1.validateLabel)('person')).not.toThrow();
+        expect(() => (0, cypher_1.validateLabel)('open_position')).not.toThrow();
     });
-    it('rejects unsafe / non-PascalCase labels', () => {
-        expect(() => (0, cypher_1.validateLabel)('loan')).toThrow(/invalid typeName/);
+    it('rejects unsafe labels (injection / invalid identifiers)', () => {
         expect(() => (0, cypher_1.validateLabel)('Loan; DROP')).toThrow(/invalid typeName/);
         expect(() => (0, cypher_1.validateLabel)('')).toThrow(/invalid typeName/);
         expect(() => (0, cypher_1.validateLabel)('1Loan')).toThrow(/invalid typeName/);
         expect(() => (0, cypher_1.validateLabel)('Loan-2')).toThrow(/invalid typeName/);
+        expect(() => (0, cypher_1.validateLabel)('`inj`')).toThrow(/invalid typeName/);
     });
 });
 describe('cypher/metadata schema (registry-native)', () => {
@@ -116,6 +120,11 @@ describe('cypher/seed marker', () => {
         expect(cypher_1.WRITE_SEED_MARKER_CYPHER).toContain('MERGE (m:SeedMarker)');
         expect(cypher_1.WRITE_SEED_MARKER_CYPHER).toContain('m.createdAt = $createdAt');
         expect(cypher_1.WRITE_SEED_MARKER_CYPHER).toContain('m.dnaHash = $dnaHash');
+    });
+});
+describe('cypher/full-graph clear', () => {
+    it('CLEAR_GRAPH_CYPHER detaches and deletes every node', () => {
+        expect(cypher_1.CLEAR_GRAPH_CYPHER).toBe('MATCH (n) DETACH DELETE n');
     });
 });
 describe('cypher/Instance CRUD', () => {

@@ -1,315 +1,327 @@
 {
   "domain": {
     "name": "academics",
-    "path": "berkeley.cs.academics",
-    "description": "University CS department academics. Course is the catalog Resource (stable); CourseOffering is the per-semester Group that scopes Instructor and Student Roles. The same Person template (FacultyMember) is eligible for the Instructor Role; the same Person template (UniversityMember) can hold either Instructor or Student.",
-    "resources": [
-      {
-        "id": "b15c3edf-f7b2-4361-8a48-06a572750c9c",
-        "type": "resource",
-        "version": "1",
-        "name": "Course",
-        "description": "A catalog course (e.g. CS101 'Intro to Programming'). Stable across semesters.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "code",
-            "type": "string",
-            "required": true,
-            "description": "e.g. CS101"
-          },
-          {
-            "name": "title",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "units",
-            "type": "number",
-            "required": true
-          }
-        ]
-      },
-      {
-        "id": "33ade451-d650-4e4c-bd38-23bd57bf8cc7",
-        "type": "resource",
-        "version": "1",
-        "name": "Enrollment",
-        "description": "A Student's enrollment in a CourseOffering.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "offering_id",
-            "type": "reference",
-            "resource": "CourseOffering",
-            "required": true
-          },
-          {
-            "name": "student_id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "enrolled",
-              "waitlisted",
-              "dropped",
-              "completed"
-            ]
-          }
-        ],
-        "actions": [
-          {
-            "name": "Request",
-            "type": "write"
-          },
-          {
-            "name": "Confirm",
-            "type": "write"
-          },
-          {
-            "name": "Drop",
-            "type": "destructive"
-          }
-        ]
-      },
-      {
-        "id": "c3658e0c-ff02-44fd-8f64-fcf5b2397240",
-        "type": "resource",
-        "version": "1",
-        "name": "Coursework",
-        "description": "An assignment or exam in a CourseOffering.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "offering_id",
-            "type": "reference",
-            "resource": "CourseOffering",
-            "required": true
-          },
-          {
-            "name": "kind",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "homework",
-              "midterm",
-              "final",
-              "project"
-            ]
-          },
-          {
-            "name": "due_at",
-            "type": "datetime"
-          }
-        ],
-        "actions": [
-          {
-            "name": "Submit",
-            "type": "write"
-          },
-          {
-            "name": "Grade",
-            "type": "write"
-          }
-        ]
-      },
-      {
-        "id": "d666d700-5a7a-4192-8b3d-ee311588afaa",
-        "type": "resource",
-        "version": "1",
-        "name": "GradeRecord",
-        "description": "A grade assigned by an Instructor for a Student's Coursework submission.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "coursework_id",
-            "type": "reference",
-            "resource": "Coursework",
-            "required": true
-          },
-          {
-            "name": "student_id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "score",
-            "type": "number",
-            "required": true
-          },
-          {
-            "name": "letter",
-            "type": "enum",
-            "values": [
-              "A",
-              "B",
-              "C",
-              "D",
-              "F",
-              "P",
-              "NP"
-            ]
-          }
-        ]
-      }
-    ],
-    "persons": [
-      {
-        "id": "ffecbb70-9c41-431a-b4e0-04bb8deb1531",
-        "type": "person",
-        "version": "1",
-        "name": "FacultyMember",
-        "description": "Faculty; eligible for Instructor and DepartmentChair Roles."
-      },
-      {
-        "id": "f442f970-561e-4f0b-bbd7-b712cc000738",
-        "type": "person",
-        "version": "1",
-        "name": "UniversityMember",
-        "description": "Anyone affiliated with the university; eligible for the Student Role (allows faculty to also enroll as students)."
-      },
-      {
-        "id": "ccd579a9-9dcc-4956-b9e8-967c7059c844",
-        "type": "person",
-        "version": "1",
-        "name": "RegistrarStaff",
-        "description": "Registrar's office staff; eligible for the global Registrar Role."
-      }
-    ],
-    "groups": [
-      {
-        "id": "8eaf1f74-155a-4c5b-9a52-cef7be7b6377",
-        "type": "group",
-        "version": "1",
-        "name": "CourseOffering",
-        "description": "A specific instance of a Course in a specific semester (CS101 Spring 2026 Section 1). Group that scopes Instructor + Student Roles and has its own lifecycle.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "course_id",
-            "type": "reference",
-            "resource": "Course",
-            "required": true
-          },
-          {
-            "name": "semester",
-            "type": "string",
-            "required": true,
-            "description": "e.g. spring-2026"
-          },
-          {
-            "name": "section",
-            "type": "number"
-          },
-          {
-            "name": "capacity",
-            "type": "number"
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "open",
-              "closed",
-              "in_session",
-              "complete"
-            ]
-          }
-        ],
-        "actions": [
-          {
-            "name": "Open",
-            "type": "write"
-          },
-          {
-            "name": "Close",
-            "type": "destructive"
-          },
-          {
-            "name": "Begin",
-            "type": "write"
-          },
-          {
-            "name": "Finalize",
-            "type": "write"
-          }
-        ]
-      },
-      {
-        "id": "c68c1922-1728-44a2-b974-88ce6fab8f6e",
-        "type": "group",
-        "version": "1",
-        "name": "Department",
-        "description": "The academic department (CS). Scopes DepartmentChair Memberships.",
-        "attributes": [
-          {
-            "name": "name",
-            "type": "string",
-            "required": true
-          }
-        ]
-      }
-    ],
-    "roles": [
-      {
-        "id": "6863b722-161d-4889-a5f4-86eb46b21836",
-        "type": "role",
-        "version": "1",
-        "name": "Instructor",
-        "description": "Instructor of a CourseOffering.",
-        "scope": "CourseOffering"
-      },
-      {
-        "id": "ef607189-e6e5-4d83-a768-ab5a5f816345",
-        "type": "role",
-        "version": "1",
-        "name": "Student",
-        "description": "Enrolled student in a CourseOffering.",
-        "scope": "CourseOffering"
-      },
-      {
-        "id": "43984e53-a891-4f7c-bbbf-02b7220a0dec",
-        "type": "role",
-        "version": "1",
-        "name": "DepartmentChair",
-        "description": "Department chair (scoped to the Department, not a CourseOffering).",
-        "scope": "Department",
-        "cardinality": "one"
-      },
-      {
-        "id": "4820aef7-fcda-4aff-9c73-a00997a41a23",
-        "type": "role",
-        "version": "1",
-        "name": "Registrar",
-        "description": "Registrar's office staff. Unscoped — global across all CourseOfferings."
-      }
-    ]
+    "description": "University CS department academics. Course is the catalog Resource (stable); CourseOffering is the per-semester Group that scopes Instructor and Student Roles. The same Person template (FacultyMember) is eligible for the Instructor Role; the same Person template (UniversityMember) can hold either Instructor or Student."
   },
+  "resources": [
+    {
+      "id": "b15c3edf-f7b2-4361-8a48-06a572750c9c",
+      "type": "resource",
+      "version": "1",
+      "name": "Course",
+      "description": "A catalog course (e.g. CS101 'Intro to Programming'). Stable across semesters.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "code",
+          "type": "string",
+          "required": true,
+          "description": "e.g. CS101"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "units",
+          "type": "number",
+          "required": true
+        }
+      ],
+      "domain": "academics"
+    },
+    {
+      "id": "33ade451-d650-4e4c-bd38-23bd57bf8cc7",
+      "type": "resource",
+      "version": "1",
+      "name": "Enrollment",
+      "description": "A Student's enrollment in a CourseOffering.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offering_id",
+          "type": "reference",
+          "resource": "CourseOffering",
+          "required": true
+        },
+        {
+          "name": "student_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "enrolled",
+            "waitlisted",
+            "dropped",
+            "completed"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "name": "Request",
+          "type": "write"
+        },
+        {
+          "name": "Confirm",
+          "type": "write"
+        },
+        {
+          "name": "Drop",
+          "type": "destructive"
+        }
+      ],
+      "domain": "academics"
+    },
+    {
+      "id": "c3658e0c-ff02-44fd-8f64-fcf5b2397240",
+      "type": "resource",
+      "version": "1",
+      "name": "Coursework",
+      "description": "An assignment or exam in a CourseOffering.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offering_id",
+          "type": "reference",
+          "resource": "CourseOffering",
+          "required": true
+        },
+        {
+          "name": "kind",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "homework",
+            "midterm",
+            "final",
+            "project"
+          ]
+        },
+        {
+          "name": "due_at",
+          "type": "datetime"
+        }
+      ],
+      "actions": [
+        {
+          "name": "Submit",
+          "type": "write"
+        },
+        {
+          "name": "Grade",
+          "type": "write"
+        }
+      ],
+      "domain": "academics"
+    },
+    {
+      "id": "d666d700-5a7a-4192-8b3d-ee311588afaa",
+      "type": "resource",
+      "version": "1",
+      "name": "GradeRecord",
+      "description": "A grade assigned by an Instructor for a Student's Coursework submission.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "coursework_id",
+          "type": "reference",
+          "resource": "Coursework",
+          "required": true
+        },
+        {
+          "name": "student_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "score",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "letter",
+          "type": "enum",
+          "values": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "F",
+            "P",
+            "NP"
+          ]
+        }
+      ],
+      "domain": "academics"
+    }
+  ],
+  "persons": [
+    {
+      "id": "ffecbb70-9c41-431a-b4e0-04bb8deb1531",
+      "type": "person",
+      "version": "1",
+      "name": "FacultyMember",
+      "description": "Faculty; eligible for Instructor and DepartmentChair Roles.",
+      "domain": "academics"
+    },
+    {
+      "id": "f442f970-561e-4f0b-bbd7-b712cc000738",
+      "type": "person",
+      "version": "1",
+      "name": "UniversityMember",
+      "description": "Anyone affiliated with the university; eligible for the Student Role (allows faculty to also enroll as students).",
+      "domain": "academics"
+    },
+    {
+      "id": "ccd579a9-9dcc-4956-b9e8-967c7059c844",
+      "type": "person",
+      "version": "1",
+      "name": "RegistrarStaff",
+      "description": "Registrar's office staff; eligible for the global Registrar Role.",
+      "domain": "academics"
+    }
+  ],
+  "positions": [
+    {
+      "id": "6863b722-161d-4889-a5f4-86eb46b21836",
+      "type": "position",
+      "version": "1",
+      "name": "Instructor",
+      "description": "Instructor of a CourseOffering.",
+      "scope": "CourseOffering",
+      "domain": "academics"
+    },
+    {
+      "id": "ef607189-e6e5-4d83-a768-ab5a5f816345",
+      "type": "position",
+      "version": "1",
+      "name": "Student",
+      "description": "Enrolled student in a CourseOffering.",
+      "scope": "CourseOffering",
+      "domain": "academics"
+    },
+    {
+      "id": "43984e53-a891-4f7c-bbbf-02b7220a0dec",
+      "type": "position",
+      "version": "1",
+      "name": "DepartmentChair",
+      "description": "Department chair (scoped to the Department, not a CourseOffering).",
+      "scope": "Department",
+      "cardinality": "one",
+      "domain": "academics"
+    },
+    {
+      "id": "4820aef7-fcda-4aff-9c73-a00997a41a23",
+      "type": "position",
+      "version": "1",
+      "name": "Registrar",
+      "description": "Registrar's office staff. Unscoped — global across all CourseOfferings.",
+      "domain": "academics"
+    }
+  ],
+  "groups": [
+    {
+      "id": "8eaf1f74-155a-4c5b-9a52-cef7be7b6377",
+      "type": "group",
+      "version": "1",
+      "name": "CourseOffering",
+      "description": "A specific instance of a Course in a specific semester (CS101 Spring 2026 Section 1). Group that scopes Instructor + Student Roles and has its own lifecycle.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "course_id",
+          "type": "reference",
+          "resource": "Course",
+          "required": true
+        },
+        {
+          "name": "semester",
+          "type": "string",
+          "required": true,
+          "description": "e.g. spring-2026"
+        },
+        {
+          "name": "section",
+          "type": "number"
+        },
+        {
+          "name": "capacity",
+          "type": "number"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "open",
+            "closed",
+            "in_session",
+            "complete"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "name": "Open",
+          "type": "write"
+        },
+        {
+          "name": "Close",
+          "type": "destructive"
+        },
+        {
+          "name": "Begin",
+          "type": "write"
+        },
+        {
+          "name": "Finalize",
+          "type": "write"
+        }
+      ],
+      "domain": "academics"
+    },
+    {
+      "id": "c68c1922-1728-44a2-b974-88ce6fab8f6e",
+      "type": "group",
+      "version": "1",
+      "name": "Department",
+      "description": "The academic department (CS). Scopes DepartmentChair Memberships.",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "domain": "academics"
+    }
+  ],
   "memberships": [
     {
       "id": "3f9e5fde-c609-40d9-a676-edcfef5c03b9",
@@ -317,7 +329,7 @@
       "version": "1",
       "name": "FacultyInstructor",
       "person": "FacultyMember",
-      "role": "Instructor"
+      "position": "Instructor"
     },
     {
       "id": "f40314f7-93c5-46d9-ae5b-9eeaf2fa5ccf",
@@ -325,7 +337,7 @@
       "version": "1",
       "name": "FacultyDepartmentChair",
       "person": "FacultyMember",
-      "role": "DepartmentChair"
+      "position": "DepartmentChair"
     },
     {
       "id": "b0cffa69-072c-426c-8a89-97ee8fcbacec",
@@ -333,7 +345,7 @@
       "version": "1",
       "name": "UniversityMemberStudent",
       "person": "UniversityMember",
-      "role": "Student"
+      "position": "Student"
     },
     {
       "id": "0f671f48-f890-4b0a-ad4c-9f25b0179964",
@@ -341,7 +353,7 @@
       "version": "1",
       "name": "RegistrarStaffRegistrar",
       "person": "RegistrarStaff",
-      "role": "Registrar"
+      "position": "Registrar"
     }
   ],
   "operations": [

@@ -6,17 +6,22 @@
  * the published JSON Schemas.
  */
 export interface OperationalDNA {
+  /** The thin tenant-root Domain. Descendant domains live in top-level `domains[]`. */
   domain: {
     name: string
     path?: string
     description?: string
-    domains?: unknown[]
-    resources?: unknown[]
-    persons?: unknown[]
-    roles?: unknown[]
-    groups?: unknown[]
+    owner?: string
+    parent?: string
     [key: string]: unknown
   }
+  /** Descendant (non-root) thin Domain nodes, each naming its `parent`. */
+  domains?: unknown[]
+  /** Top-level noun type definitions; each names its home Domain via `domain`. */
+  resources?: unknown[]
+  persons?: unknown[]
+  positions?: unknown[]
+  groups?: unknown[]
   memberships?: unknown[]
   operations?: unknown[]
   triggers?: unknown[]

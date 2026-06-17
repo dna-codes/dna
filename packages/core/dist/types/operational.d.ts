@@ -87,34 +87,34 @@ export interface Group extends BasePrimitive {
     parent?: string;
     examples?: Record<string, unknown>[];
 }
-export type RoleScope = string | string[];
-export interface Role extends BasePrimitive {
-    type: 'role';
+export type PositionScope = string | string[];
+export interface Position extends BasePrimitive {
+    type: 'position';
     domain?: string;
     /** Single Group name, an array of Group names, or omitted (global). */
-    scope?: RoleScope;
-    /** Optional parent Role for position hierarchy. */
+    scope?: PositionScope;
+    /** Optional parent Position for hierarchy. */
     parent?: string;
     /** Marks a non-human / system actor; incompatible with `cardinality`/`required`/`excludes`. */
     system?: boolean;
-    /** Optional Resource template backing a system Role. */
+    /** Optional Resource template backing a system Position. */
     resource?: string;
     attributes?: Attribute[];
     actions?: Action[];
     /** Per-scope-instance Person-count limit. */
     cardinality?: 'one' | 'many';
-    /** Whether at least one Person must hold this Role on every scope instance at runtime. */
+    /** Whether at least one Person must hold this Position on every scope instance at runtime. */
     required?: boolean;
-    /** Other Role names that the same Person must not simultaneously hold on the same scope instance. */
+    /** Other Position names that the same Person must not simultaneously hold on the same scope instance. */
     excludes?: string[];
 }
 export interface Membership extends BasePrimitive {
     type: 'membership';
     /** References a declared Person. */
     person: string;
-    /** References a declared Role. */
-    role: string;
-    /** Required when the referenced Role has multi-scope and disambiguation is needed. */
+    /** References a declared Position. */
+    position: string;
+    /** Required when the referenced Position has multi-scope and disambiguation is needed. */
     group?: string;
     domain?: string;
 }
@@ -127,7 +127,7 @@ export interface Operation extends BasePrimitive {
     type: 'operation';
     /** Conventional shorthand: `${target}.${action}`. Base contract requires it. */
     name: string;
-    /** PascalCase noun name — Resource, Person, Role, Group, or Process. */
+    /** PascalCase noun name — Resource, Person, Position, Group, or Process. */
     target: string;
     /** PascalCase verb. */
     action: string;
@@ -223,14 +223,21 @@ export interface Relationship extends BasePrimitive {
     /** Optional name for the inverse direction. */
     inverse?: string;
 }
+/**
+ * A thin, identity-bearing Domain node. It does NOT contain primitives —
+ * membership is expressed by each primitive naming its home Domain via its
+ * `domain` reference (the authored form of the primary `belongs_to` edge). The
+ * hierarchy is the `parent` chain; the single rootless Domain is the tenant.
+ * `path` is a derived cache of the parent chain, never authoritative.
+ */
 export interface Domain {
     name: string;
     description?: string;
+    /** Owner accountable for this domain (Role/Person name); part of the identity test. */
+    owner?: string;
+    /** Name of the parent Domain. Omitted for exactly one Domain — the tenant root. */
+    parent?: string;
+    /** DERIVED CACHE of the parent chain (e.g. `acme.finance`). Never authoritative. */
     path?: string;
-    domains?: Domain[];
-    resources?: Resource[];
-    persons?: Person[];
-    roles?: Role[];
-    groups?: Group[];
 }
 //# sourceMappingURL=operational.d.ts.map

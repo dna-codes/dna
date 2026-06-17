@@ -46,6 +46,7 @@ import type {
 import { defaultStabilityForType, TypeInUseError } from '@dna-codes/dna-core'
 
 import {
+  CLEAR_GRAPH_CYPHER,
   CREATE_RELATIONSHIP_TYPE_CYPHER,
   CREATE_RELATIONSHIP_TYPE_VERSION_CYPHER,
   CREATE_RESOURCE_TYPE_CYPHER,
@@ -83,21 +84,21 @@ import {
   updateInstanceCypher,
   validateLabel,
 } from './cypher'
-import type { Neo4jClientOptions } from './types'
+import type { Neo4jClientOptions, Neo4jStore } from './types'
 
 const RESERVED_PROPS = new Set(['_id', '_typeName', '_createdAt', '_updatedAt', '_schemaVersion'])
 
 const FOUNDATIONAL: Array<{ name: string; category: NounCategory }> = [
   { name: 'Person', category: 'person' },
-  { name: 'Role', category: 'role' },
+  { name: 'Position', category: 'position' },
   { name: 'Group', category: 'group' },
   { name: 'Resource', category: 'resource' },
 ]
 
-const NOUN_KEYS: Array<{ key: 'resources' | 'persons' | 'roles' | 'groups'; category: NounCategory }> = [
+const NOUN_KEYS: Array<{ key: 'resources' | 'persons' | 'positions' | 'groups'; category: NounCategory }> = [
   { key: 'resources', category: 'resource' },
   { key: 'persons', category: 'person' },
-  { key: 'roles', category: 'role' },
+  { key: 'positions', category: 'position' },
   { key: 'groups', category: 'group' },
 ]
 
@@ -227,7 +228,7 @@ function serializeAttributeSchema(schema: AttributeSchema | undefined): string {
   return JSON.stringify(schema ?? [])
 }
 
-export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): DnaDataStore {
+export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): Neo4jStore {
   // Constructor DNA is no longer used internally — seedFromDna takes it
   // explicitly. The positional argument stays for API compatibility with
   // older callers.
@@ -297,6 +298,15 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
       }
     },
 
+    async clear(): Promise<void> {
+      const s = session()
+      try {
+        await s.run(CLEAR_GRAPH_CYPHER)
+      } finally {
+        await s.close()
+      }
+    },
+
     async seedFromDna(dna: OperationalDNA): Promise<SeedReport> {
       const report: SeedReport = {
         resourceTypesCreated: 0,
@@ -329,11 +339,11 @@ export function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): D
         report.resourceTypesCreated += 1
       }
 
-      // 2. Domain ResourceTypes.
-      const domain = dna.domain ?? {}
+      // 2. Tenant ResourceTypes from the document's top-level noun collections
+      //    (home-edge model — nouns no longer live under `dna.domain`).
       for (const { key, category } of NOUN_KEYS) {
-        const list = Array.isArray(domain[key])
-          ? (domain[key] as Array<{ name?: unknown; attributes?: unknown; description?: unknown; stability?: unknown }>)
+        const list = Array.isArray(dna[key])
+          ? (dna[key] as Array<{ name?: unknown; attributes?: unknown; description?: unknown; stability?: unknown }>)
           : []
         for (const entry of list) {
           if (typeof entry?.name !== 'string') continue

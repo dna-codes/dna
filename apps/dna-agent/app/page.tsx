@@ -73,13 +73,30 @@ export default function HomePage() {
     setRefreshSignal(n => n + 1)
   }, [])
 
-  const handleSetupComplete = useCallback(async (pack: PackName, mode: SessionMode) => {
-    const res = await fetch('/api/reset', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pack, mode }),
-    })
-    if (!res.ok) throw new Error('Failed to start session')
+  const handleSetupComplete = useCallback(async (pack: PackName, mode: SessionMode, exampleId?: string) => {
+    if (exampleId) {
+      // Loading an example resets the store and seeds the full example graph.
+      const res = await fetch('/api/examples', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: exampleId }),
+      })
+      if (!res.ok) throw new Error('Failed to load example')
+      await fetch('/api/session-config', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode }),
+      })
+    } else {
+      // Start the session by setting pack/mode only — do NOT wipe the graph here.
+      // The store is already seeded on the server (pack types on boot); resetting
+      // on every session start would destroy seeded/example data on each reload.
+      // Use the explicit reset control to start a fresh graph on purpose.
+      const res = await fetch('/api/session-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pack, mode }),
+      })
+      if (!res.ok) throw new Error('Failed to start session')
+    }
     setSessionConfig({ pack, mode })
     setModeLoading(false)
     setSetupDone(true)
@@ -194,7 +211,7 @@ export default function HomePage() {
           )}
         </div>
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          <ConversationPanel pack={sessionConfig.pack} mode={sessionConfig.mode} onGraphPatched={handleGraphPatched} onReset={handleReset} onSaveLens={handleSaveLens} onActivateLens={handleActivateLens} />
+          <ConversationPanel pack={sessionConfig.pack} mode={sessionConfig.mode} refreshSignal={refreshSignal} onGraphPatched={handleGraphPatched} onReset={handleReset} onSaveLens={handleSaveLens} onActivateLens={handleActivateLens} />
         </div>
       </div>
 

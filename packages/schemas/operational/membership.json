@@ -2,10 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational/membership",
   "title": "Membership",
-  "description": "A Membership is a template-level eligibility statement: 'Persons of type X may hold Roles of type Y, optionally in Groups of type Z.' It captures organizational RBAC at the template level — which kinds of people can fill which kinds of roles in which kinds of groups — without binding specific person-instances. Instance-level (Joe × Father × Family-4271) bindings live in Product/Technical layers.\n\nMembership does not share the noun base shape (no attributes, no actions). It is purely a relationship template.",
+  "description": "A Membership is a template-level eligibility statement: 'Persons of type X may hold Positions of type Y, optionally in Groups of type Z.' It captures organizational RBAC at the template level — which kinds of people can fill which kinds of positions in which kinds of groups — without binding specific person-instances. Instance-level (Joe × Father × Family-4271) bindings live in Product/Technical layers.\n\nMembership does not share the noun base shape (no attributes, no actions). It is purely a relationship template.",
   "type": "object",
   "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
-  "required": ["name", "person", "role"],
+  "required": ["name", "person", "position"],
   "unevaluatedProperties": false,
   "properties": {
     "type": { "const": "membership" },
@@ -17,23 +17,23 @@
     },
     "description": {
       "type": "string",
-      "description": "Human-readable explanation of who fills which role where."
+      "description": "Human-readable explanation of who fills which position where."
     },
     "person": {
       "type": "string",
-      "description": "The Person template eligible to hold this Role. References a declared Person.",
+      "description": "The Person template eligible to hold this Position. References a declared Person.",
       "pattern": "^[A-Z][a-zA-Z0-9]*$",
       "examples": ["Employee", "Partner", "Member", "Customer"]
     },
-    "role": {
+    "position": {
       "type": "string",
-      "description": "The Role template the Person is eligible to hold. References a declared Role.",
+      "description": "The Position template the Person is eligible to hold. References a declared Position.",
       "pattern": "^[A-Z][a-zA-Z0-9]*$",
       "examples": ["Underwriter", "LeadCounsel", "Host", "SuperAdmin"]
     },
     "group": {
       "type": "string",
-      "description": "Optional Group template specifying where the Role is exercised. Required when the referenced Role has multi-scope (Role.scope is an array) and disambiguation is needed; optional when Role has a single scope or no scope. The validator resolves this against the Role's scope when both are present.",
+      "description": "Optional Group template specifying where the Position is exercised. Required when the referenced Position has multi-scope (Position.scope is an array) and disambiguation is needed; optional when Position has a single scope or no scope. The validator resolves this against the Position's scope when both are present.",
       "pattern": "^[A-Z][a-zA-Z0-9]*$",
       "examples": ["BankDepartment", "Case", "Workspace"]
     },
@@ -45,21 +45,21 @@
   "examples": [
     {
       "name": "EmployeeUnderwriter",
-      "description": "Employees may hold the Underwriter role (in their BankDepartment, inferred from Underwriter.scope).",
+      "description": "Employees may hold the Underwriter position (in their BankDepartment, inferred from Underwriter.scope).",
       "person": "Employee",
-      "role": "Underwriter"
+      "position": "Underwriter"
     },
     {
       "name": "PartnerLeadCounsel",
-      "description": "Partners may hold the Lead Counsel role on Cases.",
+      "description": "Partners may hold the Lead Counsel position on Cases.",
       "person": "Partner",
-      "role": "LeadCounsel"
+      "position": "LeadCounsel"
     },
     {
       "name": "EmployeeAdminWorkspace",
-      "description": "Employees may hold the SuperAdmin role within Workspaces (disambiguating from Tenant).",
+      "description": "Employees may hold the SuperAdmin position within Workspaces (disambiguating from Tenant).",
       "person": "Employee",
-      "role": "SuperAdmin",
+      "position": "SuperAdmin",
       "group": "Workspace"
     }
   ]

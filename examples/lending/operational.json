@@ -1,173 +1,180 @@
 {
   "domain": {
     "name": "lending",
-    "path": "acme.finance.lending",
-    "description": "Consumer lending — loan origination, underwriting, servicing.",
-    "resources": [
-      {
-        "id": "139afa3b-1e6d-43f5-935f-513fa56c2b1e",
-        "type": "resource",
-        "version": "1",
-        "name": "Loan",
-        "description": "A financial loan issued to a Borrower with repayment terms.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "amount",
-            "type": "number",
-            "required": true
-          },
-          {
-            "name": "interest_rate",
-            "type": "number",
-            "required": true
-          },
-          {
-            "name": "borrower_id",
-            "type": "reference",
-            "resource": "Borrower",
-            "required": true
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "pending",
-              "approved",
-              "active",
-              "repaid",
-              "defaulted"
-            ]
-          },
-          {
-            "name": "due_date",
-            "type": "date"
-          }
-        ],
-        "actions": [
-          {
-            "name": "Apply",
-            "description": "Borrower submits a loan application.",
-            "type": "write"
-          },
-          {
-            "name": "Approve",
-            "description": "Underwriter approves a pending application.",
-            "type": "write"
-          },
-          {
-            "name": "Disburse",
-            "description": "Funds released to the borrower.",
-            "type": "destructive"
-          },
-          {
-            "name": "Repay",
-            "description": "Borrower makes a payment.",
-            "type": "write"
-          },
-          {
-            "name": "Default",
-            "description": "Loan flagged as overdue beyond grace period.",
-            "type": "write"
-          }
-        ]
-      }
-    ],
-    "persons": [
-      {
-        "id": "50217835-49a4-4296-9791-3ab2f6a6188b",
-        "type": "person",
-        "version": "1",
-        "name": "Borrower",
-        "description": "An external party who applies for and repays loans. Acts as both Person template (structure with credit score) and actor (performs Loan.Apply directly).",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "credit_score",
-            "type": "number"
-          }
-        ]
-      },
-      {
-        "id": "2bd1b393-e5f9-49ea-a08b-7c9b596caac9",
-        "type": "person",
-        "version": "1",
-        "name": "Employee",
-        "description": "Internal worker; eligible for Underwriter and LendingManager Roles."
-      }
-    ],
-    "groups": [
-      {
-        "id": "e29c1fd4-7f5a-429e-aba2-84330bb45384",
-        "type": "group",
-        "version": "1",
-        "name": "BankDepartment",
-        "description": "An internal department within the bank. Scopes Underwriter Memberships.",
-        "attributes": [
-          {
-            "name": "name",
-            "type": "string",
-            "required": true
-          }
-        ]
-      }
-    ],
-    "roles": [
-      {
-        "id": "740c26db-0f97-415a-b023-68a133886bbe",
-        "type": "role",
-        "version": "1",
-        "name": "Underwriter",
-        "description": "Internal Role responsible for approving loan applications.",
-        "scope": "BankDepartment"
-      },
-      {
-        "id": "8925eacd-91f5-42f6-8204-7d68aaad3eb0",
-        "type": "role",
-        "version": "1",
-        "name": "SeniorUnderwriter",
-        "description": "Senior position above Underwriter; inherits BankDepartment scope and adds promotion authority.",
-        "parent": "Underwriter",
-        "actions": [
-          {
-            "name": "Promote",
-            "type": "write",
-            "description": "Promotes a junior Underwriter to senior."
-          }
-        ]
-      },
-      {
-        "id": "09f8a782-5629-4259-aa85-30ca303e0c6b",
-        "type": "role",
-        "version": "1",
-        "name": "LendingManager",
-        "description": "Internal Role responsible for owning the loan-origination Process.",
-        "scope": "BankDepartment"
-      },
-      {
-        "id": "60142615-4175-43cb-90ae-8ffec7f89105",
-        "type": "role",
-        "version": "1",
-        "name": "NightlyDelinquencySweep",
-        "description": "System Role: scheduled job that flags overdue loans as defaulted.",
-        "system": true
-      }
-    ]
+    "description": "Consumer lending — loan origination, underwriting, servicing."
   },
+  "resources": [
+    {
+      "id": "139afa3b-1e6d-43f5-935f-513fa56c2b1e",
+      "type": "resource",
+      "version": "1",
+      "name": "Loan",
+      "description": "A financial loan issued to a Borrower with repayment terms.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "interest_rate",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "borrower_id",
+          "type": "reference",
+          "resource": "Borrower",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "pending",
+            "approved",
+            "active",
+            "repaid",
+            "defaulted"
+          ]
+        },
+        {
+          "name": "due_date",
+          "type": "date"
+        }
+      ],
+      "actions": [
+        {
+          "name": "Apply",
+          "description": "Borrower submits a loan application.",
+          "type": "write"
+        },
+        {
+          "name": "Approve",
+          "description": "Underwriter approves a pending application.",
+          "type": "write"
+        },
+        {
+          "name": "Disburse",
+          "description": "Funds released to the borrower.",
+          "type": "destructive"
+        },
+        {
+          "name": "Repay",
+          "description": "Borrower makes a payment.",
+          "type": "write"
+        },
+        {
+          "name": "Default",
+          "description": "Loan flagged as overdue beyond grace period.",
+          "type": "write"
+        }
+      ],
+      "domain": "lending"
+    }
+  ],
+  "persons": [
+    {
+      "id": "50217835-49a4-4296-9791-3ab2f6a6188b",
+      "type": "person",
+      "version": "1",
+      "name": "Borrower",
+      "description": "An external party who applies for and repays loans. Acts as both Person template (structure with credit score) and actor (performs Loan.Apply directly).",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "credit_score",
+          "type": "number"
+        }
+      ],
+      "domain": "lending"
+    },
+    {
+      "id": "2bd1b393-e5f9-49ea-a08b-7c9b596caac9",
+      "type": "person",
+      "version": "1",
+      "name": "Employee",
+      "description": "Internal worker; eligible for Underwriter and LendingManager Roles.",
+      "domain": "lending"
+    }
+  ],
+  "positions": [
+    {
+      "id": "740c26db-0f97-415a-b023-68a133886bbe",
+      "type": "position",
+      "version": "1",
+      "name": "Underwriter",
+      "description": "Internal Role responsible for approving loan applications.",
+      "scope": "BankDepartment",
+      "domain": "lending"
+    },
+    {
+      "id": "8925eacd-91f5-42f6-8204-7d68aaad3eb0",
+      "type": "position",
+      "version": "1",
+      "name": "SeniorUnderwriter",
+      "description": "Senior position above Underwriter; inherits BankDepartment scope and adds promotion authority.",
+      "parent": "Underwriter",
+      "actions": [
+        {
+          "name": "Promote",
+          "type": "write",
+          "description": "Promotes a junior Underwriter to senior."
+        }
+      ],
+      "domain": "lending"
+    },
+    {
+      "id": "09f8a782-5629-4259-aa85-30ca303e0c6b",
+      "type": "position",
+      "version": "1",
+      "name": "LendingManager",
+      "description": "Internal Role responsible for owning the loan-origination Process.",
+      "scope": "BankDepartment",
+      "domain": "lending"
+    },
+    {
+      "id": "60142615-4175-43cb-90ae-8ffec7f89105",
+      "type": "position",
+      "version": "1",
+      "name": "NightlyDelinquencySweep",
+      "description": "System Role: scheduled job that flags overdue loans as defaulted.",
+      "system": true,
+      "domain": "lending"
+    }
+  ],
+  "groups": [
+    {
+      "id": "e29c1fd4-7f5a-429e-aba2-84330bb45384",
+      "type": "group",
+      "version": "1",
+      "name": "BankDepartment",
+      "description": "An internal department within the bank. Scopes Underwriter Memberships.",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "domain": "lending"
+    }
+  ],
   "memberships": [
     {
       "id": "38f2671d-3490-4450-95b2-39ab02b3f1c2",
@@ -175,7 +182,7 @@
       "version": "1",
       "name": "EmployeeUnderwriter",
       "person": "Employee",
-      "role": "Underwriter",
+      "position": "Underwriter",
       "description": "Employees may hold the Underwriter role within a BankDepartment."
     },
     {
@@ -184,7 +191,7 @@
       "version": "1",
       "name": "EmployeeLendingManager",
       "person": "Employee",
-      "role": "LendingManager",
+      "position": "LendingManager",
       "description": "Employees may hold the Lending Manager role within a BankDepartment."
     }
   ],

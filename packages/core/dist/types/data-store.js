@@ -36,14 +36,14 @@ exports.defaultStabilityForType = defaultStabilityForType;
 /** Canonical ordered list of stability values. The single source of truth for the GraphQL enum. */
 exports.STABILITIES = ['experimental', 'beta', 'stable', 'deprecated'];
 /** The four foundational resource-type names, always seeded and always `stable`. */
-exports.FOUNDATIONAL_RESOURCE_TYPE_NAMES = ['Person', 'Role', 'Group', 'Resource'];
+exports.FOUNDATIONAL_RESOURCE_TYPE_NAMES = ['Person', 'Position', 'Group', 'Resource'];
 /** True iff `name` is one of the four foundational resource types. */
 function isFoundationalTypeName(name) {
     return exports.FOUNDATIONAL_RESOURCE_TYPE_NAMES.includes(name);
 }
 /**
  * The default `stability` for a registry type identified by `name`. Foundational
- * types (Person/Role/Group/Resource) default to `stable`; every other type
+ * types (Person/Position/Group/Resource) default to `stable`; every other type
  * defaults to `experimental`. Used both when seeding/creating a type without an
  * explicit stability and when reading a legacy record that predates the field.
  * `is_seed` cannot be used for this because tenant-seeded types are also seeds.

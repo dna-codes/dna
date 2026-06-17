@@ -21,11 +21,15 @@
  */
 
 /**
- * Permitted identifier pattern for Cypher node labels. Matches the DNA
- * Resource/Person/Role/Group `name` pattern (`^[A-Z][a-zA-Z0-9]*$`). This
- * is the only safe character set to interpolate into Cypher.
+ * Permitted identifier pattern for Cypher node labels. The sole job of this
+ * guard is injection safety: a label is interpolated into Cypher, so it must be
+ * a bare identifier (letter/underscore start, then letters/digits/underscores).
+ * It deliberately allows a lowercase first letter — Neo4j accepts such labels,
+ * and the in-memory adapter imposes no case rule, so the dna-agent packs
+ * (`person`, `process`, …) must seed identically into either backend. PascalCase
+ * remains the DNA noun-primitive *convention*, but it is not enforced here.
  */
-const SAFE_LABEL = /^[A-Z][a-zA-Z0-9]*$/
+const SAFE_LABEL = /^[A-Za-z_][A-Za-z0-9_]*$/
 
 /**
  * Throw if `label` is not a safe Cypher identifier. The adapter's public
@@ -35,7 +39,7 @@ const SAFE_LABEL = /^[A-Z][a-zA-Z0-9]*$/
 export function validateLabel(label: string): void {
   if (typeof label !== 'string' || !SAFE_LABEL.test(label)) {
     throw new Error(
-      `integration/neo4j: invalid typeName "${label}" — must match /^[A-Z][a-zA-Z0-9]*$/ (the DNA noun-primitive naming convention)`,
+      `integration/neo4j: invalid typeName "${label}" — must match /^[A-Za-z_][A-Za-z0-9_]*$/ (a safe Cypher label identifier)`,
     )
   }
 }
@@ -170,6 +174,15 @@ export const HAS_SEED_MARKER_CYPHER =
 
 export const WRITE_SEED_MARKER_CYPHER =
   'MERGE (m:SeedMarker) SET m.createdAt = $createdAt, m.dnaHash = $dnaHash RETURN m'
+
+// ── Full-graph clear ───────────────────────────────────────────────────────
+
+/**
+ * Delete every node (type-metadata nodes, instance nodes, the SeedMarker) and
+ * its relationships. Constraints/indexes are schema, not data, so they survive
+ * — a subsequent `migrate()` is idempotent. Used by the reset flow.
+ */
+export const CLEAR_GRAPH_CYPHER = 'MATCH (n) DETACH DELETE n'
 
 // ── Instance / Link CRUD (existing snippets, retained) ─────────────────────
 

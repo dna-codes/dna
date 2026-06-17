@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getResources = getResources;
 exports.getResource = getResource;
 function list(dna) {
-    return (dna.domain.resources ?? []);
+    return (dna.resources ?? []);
 }
 function getResources(dna) {
     return list(dna);

@@ -33,8 +33,8 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTasks = exports.getTask = exports.getTriggersForProcess = exports.getProcesses = exports.getProcess = exports.getOperationsForResource = exports.getOperations = exports.getOperation = exports.getMemberships = exports.getMembership = exports.getGroups = exports.getGroup = exports.getRoles = exports.getRole = exports.getPersons = exports.getPerson = exports.getResources = exports.getResource = exports.bookshopInput = exports.OPERATIONAL_PRIMITIVE_VERSIONS = exports.defaultStabilityForType = exports.isFoundationalTypeName = exports.FOUNDATIONAL_RESOURCE_TYPE_NAMES = exports.STABILITIES = exports.TypeInUseError = exports.DEFAULT_STYLES = exports.merge = exports.addRelationship = exports.addProcess = exports.addTask = exports.addRule = exports.addTrigger = exports.addOperation = exports.addMembership = exports.addGroup = exports.addRole = exports.addPerson = exports.addResource = exports.createOperationalDna = exports.project = exports.validateLensDefinition = exports.isSchemaResult = exports.evaluateLens = exports.DnaValidator = exports.layerDirs = exports.lenses = exports.documents = exports.schemas = exports.LENS_ROOT = exports.SCHEMA_ROOT = void 0;
-exports.getMembershipsForPerson = exports.getMembershipsForRole = exports.getActorsForOperation = exports.getRulesForOperation = exports.getRules = exports.getRule = exports.getTriggersForOperation = exports.getTriggers = exports.getTasksForOperation = void 0;
+exports.getGroups = exports.getGroup = exports.getPositions = exports.getPosition = exports.getPersons = exports.getPerson = exports.getResources = exports.getResource = exports.bookshopInput = exports.OPERATIONAL_PRIMITIVE_VERSIONS = exports.defaultStabilityForType = exports.isFoundationalTypeName = exports.FOUNDATIONAL_RESOURCE_TYPE_NAMES = exports.STABILITIES = exports.TypeInUseError = exports.DEFAULT_STYLES = exports.merge = exports.derivePath = exports.addRelationship = exports.addProcess = exports.addTask = exports.addRule = exports.addTrigger = exports.addOperation = exports.addMembership = exports.addGroup = exports.addPosition = exports.addPerson = exports.addResource = exports.createOperationalDna = exports.lintEmptySurfaces = exports.resolveStructuralAccess = exports.PERMISSION_TYPE_NAME = exports.applyPermissions = exports.permissionKey = exports.projectPermissions = exports.PRODUCT_LEVEL_TYPE_NAME = exports.applyProjection = exports.seedProductTypes = exports.project = exports.validateLensDefinition = exports.isSchemaResult = exports.evaluateLens = exports.DnaValidator = exports.layerDirs = exports.lenses = exports.documents = exports.schemas = exports.LENS_ROOT = exports.SCHEMA_ROOT = void 0;
+exports.getMembershipsForPerson = exports.getMembershipsForPosition = exports.getActorsForOperation = exports.getRulesForOperation = exports.getRules = exports.getRule = exports.getTriggersForOperation = exports.getTriggers = exports.getTasksForOperation = exports.getTasks = exports.getTask = exports.getTriggersForProcess = exports.getProcesses = exports.getProcess = exports.getOperationsForResource = exports.getOperations = exports.getOperation = exports.getMemberships = exports.getMembership = void 0;
 exports.allLenses = allLenses;
 exports.resolveSchemaFile = resolveSchemaFile;
 exports.allSchemas = allSchemas;
@@ -64,10 +64,10 @@ exports.schemas = {
         membership: load('operational/membership.json'),
         operation: load('operational/operation.json'),
         person: load('operational/person.json'),
+        position: load('operational/position.json'),
         process: load('operational/process.json'),
         relationship: load('operational/relationship.json'),
         resource: load('operational/resource.json'),
-        role: load('operational/role.json'),
         rule: load('operational/rule.json'),
         task: load('operational/task.json'),
         trigger: load('operational/trigger.json'),
@@ -77,6 +77,7 @@ exports.schemas = {
             action: load('product/core/action.json'),
             field: load('product/core/field.json'),
             operation: load('product/core/operation.json'),
+            permission: load('product/core/permission.json'),
             resource: load('product/core/resource.json'),
             role: load('product/core/role.json'),
             user: load('product/core/user.json'),
@@ -176,11 +177,27 @@ Object.defineProperty(exports, "validateLensDefinition", { enumerable: true, get
 // Business → product projection (pure; persistence is a follow-on)
 var project_1 = require("./projection/project");
 Object.defineProperty(exports, "project", { enumerable: true, get: function () { return project_1.project; } });
+// Projection persistence: runtime type registration + apply
+var apply_1 = require("./projection/apply");
+Object.defineProperty(exports, "seedProductTypes", { enumerable: true, get: function () { return apply_1.seedProductTypes; } });
+Object.defineProperty(exports, "applyProjection", { enumerable: true, get: function () { return apply_1.applyProjection; } });
+Object.defineProperty(exports, "PRODUCT_LEVEL_TYPE_NAME", { enumerable: true, get: function () { return apply_1.PRODUCT_LEVEL_TYPE_NAME; } });
+// Permission projection: org→app authorization causal chain (derive-first / author-fallback)
+var permissions_1 = require("./projection/permissions");
+Object.defineProperty(exports, "projectPermissions", { enumerable: true, get: function () { return permissions_1.projectPermissions; } });
+Object.defineProperty(exports, "permissionKey", { enumerable: true, get: function () { return permissions_1.permissionKey; } });
+var apply_2 = require("./projection/apply");
+Object.defineProperty(exports, "applyPermissions", { enumerable: true, get: function () { return apply_2.applyPermissions; } });
+Object.defineProperty(exports, "PERMISSION_TYPE_NAME", { enumerable: true, get: function () { return apply_2.PERMISSION_TYPE_NAME; } });
+// Coarse structural access — the product-UI governance gate doctrine (pure)
+var structural_access_1 = require("./access/structural-access");
+Object.defineProperty(exports, "resolveStructuralAccess", { enumerable: true, get: function () { return structural_access_1.resolveStructuralAccess; } });
+Object.defineProperty(exports, "lintEmptySurfaces", { enumerable: true, get: function () { return structural_access_1.lintEmptySurfaces; } });
 var builders_1 = require("./builders");
 Object.defineProperty(exports, "createOperationalDna", { enumerable: true, get: function () { return builders_1.createOperationalDna; } });
 Object.defineProperty(exports, "addResource", { enumerable: true, get: function () { return builders_1.addResource; } });
 Object.defineProperty(exports, "addPerson", { enumerable: true, get: function () { return builders_1.addPerson; } });
-Object.defineProperty(exports, "addRole", { enumerable: true, get: function () { return builders_1.addRole; } });
+Object.defineProperty(exports, "addPosition", { enumerable: true, get: function () { return builders_1.addPosition; } });
 Object.defineProperty(exports, "addGroup", { enumerable: true, get: function () { return builders_1.addGroup; } });
 Object.defineProperty(exports, "addMembership", { enumerable: true, get: function () { return builders_1.addMembership; } });
 Object.defineProperty(exports, "addOperation", { enumerable: true, get: function () { return builders_1.addOperation; } });
@@ -189,6 +206,8 @@ Object.defineProperty(exports, "addRule", { enumerable: true, get: function () {
 Object.defineProperty(exports, "addTask", { enumerable: true, get: function () { return builders_1.addTask; } });
 Object.defineProperty(exports, "addProcess", { enumerable: true, get: function () { return builders_1.addProcess; } });
 Object.defineProperty(exports, "addRelationship", { enumerable: true, get: function () { return builders_1.addRelationship; } });
+var path_1 = require("./domain/path");
+Object.defineProperty(exports, "derivePath", { enumerable: true, get: function () { return path_1.derivePath; } });
 var merge_1 = require("./merge");
 Object.defineProperty(exports, "merge", { enumerable: true, get: function () { return merge_1.merge; } });
 var adapters_1 = require("./types/adapters");
@@ -208,8 +227,8 @@ Object.defineProperty(exports, "getResource", { enumerable: true, get: function 
 Object.defineProperty(exports, "getResources", { enumerable: true, get: function () { return queries_1.getResources; } });
 Object.defineProperty(exports, "getPerson", { enumerable: true, get: function () { return queries_1.getPerson; } });
 Object.defineProperty(exports, "getPersons", { enumerable: true, get: function () { return queries_1.getPersons; } });
-Object.defineProperty(exports, "getRole", { enumerable: true, get: function () { return queries_1.getRole; } });
-Object.defineProperty(exports, "getRoles", { enumerable: true, get: function () { return queries_1.getRoles; } });
+Object.defineProperty(exports, "getPosition", { enumerable: true, get: function () { return queries_1.getPosition; } });
+Object.defineProperty(exports, "getPositions", { enumerable: true, get: function () { return queries_1.getPositions; } });
 Object.defineProperty(exports, "getGroup", { enumerable: true, get: function () { return queries_1.getGroup; } });
 Object.defineProperty(exports, "getGroups", { enumerable: true, get: function () { return queries_1.getGroups; } });
 Object.defineProperty(exports, "getMembership", { enumerable: true, get: function () { return queries_1.getMembership; } });
@@ -229,6 +248,6 @@ Object.defineProperty(exports, "getRule", { enumerable: true, get: function () {
 Object.defineProperty(exports, "getRules", { enumerable: true, get: function () { return queries_1.getRules; } });
 Object.defineProperty(exports, "getRulesForOperation", { enumerable: true, get: function () { return queries_1.getRulesForOperation; } });
 Object.defineProperty(exports, "getActorsForOperation", { enumerable: true, get: function () { return queries_1.getActorsForOperation; } });
-Object.defineProperty(exports, "getMembershipsForRole", { enumerable: true, get: function () { return queries_1.getMembershipsForRole; } });
+Object.defineProperty(exports, "getMembershipsForPosition", { enumerable: true, get: function () { return queries_1.getMembershipsForPosition; } });
 Object.defineProperty(exports, "getMembershipsForPerson", { enumerable: true, get: function () { return queries_1.getMembershipsForPerson; } });
 //# sourceMappingURL=index.js.map

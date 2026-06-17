@@ -54,10 +54,10 @@ describe('parse() — layered mode', () => {
       { name: 'add_person', args: { name: 'Borrower' } },
       { name: 'add_person', args: { name: 'Employee' } },
       { name: 'add_group', args: { name: 'BankDepartment' } },
-      { name: 'add_role', args: { name: 'Underwriter', scope: 'BankDepartment' } },
+      { name: 'add_position', args: { name: 'Underwriter', scope: 'BankDepartment' } },
       {
         name: 'add_membership',
-        args: { name: 'EmployeeUnderwriter', person: 'Employee', role: 'Underwriter' },
+        args: { name: 'EmployeeUnderwriter', person: 'Employee', position: 'Underwriter' },
       },
       {
         name: 'add_operation',
@@ -74,24 +74,24 @@ describe('parse() — layered mode', () => {
     })
     expect(result.operational).toBeDefined()
     expect(result.missingLayers).toEqual([])
-    const op = result.operational as { domain: { resources: unknown[] } }
-    expect(op.domain.resources).toHaveLength(1)
+    const op = result.operational as { resources: unknown[] }
+    expect(op.resources).toHaveLength(1)
   })
 
-  it('feeds back unknown_role and accepts the corrected sequence', async () => {
+  it('feeds back unknown_position and accepts the corrected sequence', async () => {
     const script: ScriptedCall[] = [
       { name: 'add_person', args: { name: 'Employee' } },
       // Bad call: role hasn't been declared yet
       {
         name: 'add_membership',
-        args: { name: 'EmployeeUnderwriter', person: 'Employee', role: 'Underwriter' },
+        args: { name: 'EmployeeUnderwriter', person: 'Employee', position: 'Underwriter' },
       },
       // Recovery
       { name: 'add_group', args: { name: 'BankDepartment' } },
-      { name: 'add_role', args: { name: 'Underwriter', scope: 'BankDepartment' } },
+      { name: 'add_position', args: { name: 'Underwriter', scope: 'BankDepartment' } },
       {
         name: 'add_membership',
-        args: { name: 'EmployeeUnderwriter', person: 'Employee', role: 'Underwriter' },
+        args: { name: 'EmployeeUnderwriter', person: 'Employee', position: 'Underwriter' },
       },
       { name: 'finalize', args: {} },
     ]
@@ -106,7 +106,7 @@ describe('parse() — layered mode', () => {
     const transcript = JSON.parse(result.raw) as { name: string; result: { ok: boolean; error?: string } }[]
     const failure = transcript.find((t) => t.result.ok === false)
     expect(failure).toBeDefined()
-    expect(failure!.result.error).toBe('unknown_role')
+    expect(failure!.result.error).toBe('unknown_position')
   })
 
   it('reports missingLayers when the loop ends without finalizing', async () => {

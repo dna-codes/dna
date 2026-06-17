@@ -4,15 +4,15 @@ exports.getActorsForOperation = getActorsForOperation;
 function rules(dna) {
     return (dna.rules ?? []);
 }
-function roles(dna) {
-    return (dna.domain.roles ?? []);
+function positions(dna) {
+    return (dna.positions ?? []);
 }
 function persons(dna) {
-    return (dna.domain.persons ?? []);
+    return (dna.persons ?? []);
 }
 function getActorsForOperation(dna, opName) {
     const accessRules = rules(dna).filter(r => r.operation === opName && r.rule_type === 'access');
-    const allRoles = roles(dna);
+    const allPositions = positions(dna);
     const allPersons = persons(dna);
     const result = [];
     const seen = new Set();
@@ -21,10 +21,10 @@ function getActorsForOperation(dna, opName) {
             const actorName = entry.role;
             if (!actorName || seen.has(actorName))
                 continue;
-            const role = allRoles.find(r => r.name === actorName);
-            if (role) {
+            const position = allPositions.find(r => r.name === actorName);
+            if (position) {
                 seen.add(actorName);
-                result.push(role);
+                result.push(position);
                 continue;
             }
             const person = allPersons.find(p => p.name === actorName);

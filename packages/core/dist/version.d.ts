@@ -9,7 +9,7 @@
 export declare const OPERATIONAL_PRIMITIVE_VERSIONS: {
     readonly resource: "1";
     readonly person: "1";
-    readonly role: "1";
+    readonly position: "1";
     readonly group: "1";
     readonly membership: "1";
     readonly operation: "1";

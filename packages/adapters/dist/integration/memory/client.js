@@ -169,10 +169,10 @@ function createClient(_dna) {
                 /* isSeed */ true);
                 report.resourceTypesCreated += 1;
             }
-            // 2. Tenant-domain ResourceTypes from dna.domain.*
-            const domain = dna.domain ?? {};
+            // 2. Tenant ResourceTypes from the document's top-level noun collections
+            //    (home-edge model — nouns no longer live under `dna.domain`).
             for (const { key, category } of NOUN_KEYS) {
-                const list = Array.isArray(domain[key]) ? domain[key] : [];
+                const list = Array.isArray(dna[key]) ? dna[key] : [];
                 for (const entry of list) {
                     if (typeof entry?.name !== 'string')
                         continue;

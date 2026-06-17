@@ -2,7 +2,7 @@ import type { OperationalDNA } from '../types/merge'
 import type { Group } from '../types/operational'
 
 function list(dna: OperationalDNA): Group[] {
-  return (dna.domain.groups ?? []) as Group[]
+  return (dna.groups ?? []) as Group[]
 }
 
 export function getGroups(dna: OperationalDNA): Group[] {

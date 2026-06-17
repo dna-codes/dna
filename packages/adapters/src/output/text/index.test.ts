@@ -3,11 +3,7 @@ import { DnaInput } from './types'
 
 const dna: DnaInput = {
   operational: {
-    domain: {
-      name: 'lending',
-      path: 'acme.finance.lending',
-      description: 'Consumer lending.',
-      resources: [
+    domain: { name: 'lending', path: 'acme.finance.lending', description: 'Consumer lending.' }, resources: [
         {
           name: 'Loan',
           description: 'A loan applied for by a borrower.',
@@ -20,7 +16,6 @@ const dna: DnaInput = {
         { name: 'Borrower' },
         { name: 'Underwriter' },
       ],
-    },
     operations: [
       { name: 'Loan.Apply', resource: 'Loan', action: 'Apply', description: 'Submit a loan application.', changes: [{ attribute: 'loan.status', set: 'pending' }] },
       { name: 'Loan.Approve', resource: 'Loan', action: 'Approve', changes: [{ attribute: 'loan.status', set: 'active' }] },

@@ -63,7 +63,7 @@ describe('@dna-codes/dna-output-mermaid', () => {
       const out = render(
         {
           operational: {
-            domain: { name: 'd', resources: [{ name: 'Empty' }] },
+            domain: { name: 'd' }, resources: [{ name: 'Empty' }],
           },
         },
         { diagrams: ['erd'] },

@@ -27,7 +27,7 @@ describe('ingest()', () => {
       const file = path.join(tmpDir, 'sop.md')
       fs.writeFileSync(file, '# SOP', 'utf-8')
       const adapter = makeAdapter(() => ({
-        domain: { name: 'd', resources: [{ name: 'Loan' }] },
+        domain: { name: 'd' }, resources: [{ name: 'Loan' }],
       }))
 
       const result = await ingest({
@@ -38,7 +38,7 @@ describe('ingest()', () => {
       })
 
       expect(result.errors).toEqual([])
-      expect(result.dna.domain.resources).toEqual([{ name: 'Loan' }])
+      expect(result.dna.resources).toEqual([{ name: 'Loan' }])
       expect(adapter).toHaveBeenCalledTimes(1)
     })
 
@@ -93,7 +93,7 @@ describe('ingest()', () => {
     })
 
     it('forwards to the matching adapter', async () => {
-      const text = makeAdapter(() => ({ domain: { name: 'd', resources: [{ name: 'A' }] } }))
+      const text = makeAdapter(() => ({ domain: { name: 'd' }, resources: [{ name: 'A' }] }))
       const result = await ingest({
         sources: ['x://1'],
         integrations: { x: fakeIntegration('text/markdown') },
@@ -117,7 +117,7 @@ describe('ingest()', () => {
         },
       }
       const adapter: InputAdapter = async (contents, _opts) => ({
-        domain: { name: 'd', resources: [{ name: typeof contents === 'string' ? contents.replace(/[^A-Za-z]/g, '') : 'X' }] },
+        domain: { name: 'd' }, resources: [{ name: typeof contents === 'string' ? contents.replace(/[^A-Za-z]/g, '') : 'X' }],
       })
 
       const result = await ingest({
@@ -128,7 +128,7 @@ describe('ingest()', () => {
       })
 
       expect(result.errors).toEqual([])
-      const names = (result.dna.domain.resources as Array<{ name: string }>).map((r) => r.name).sort()
+      const names = (result.dna.resources as Array<{ name: string }>).map((r) => r.name).sort()
       expect(names).toEqual(['fromxone', 'fromxtwo'])
     })
   })
@@ -151,8 +151,8 @@ describe('ingest()', () => {
       const adapter: InputAdapter = async (contents, _opts) => {
         // Return distinct DNA based on which source contributed.
         const hint = String(contents)
-        if (hint.includes('A')) return { domain: { name: 'd', resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }] } }
-        return { domain: { name: 'd', resources: [{ name: 'Loan', attributes: [{ name: 'status', type: 'enum' }] }] } }
+        if (hint.includes('A')) return { domain: { name: 'd' }, resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }] }
+        return { domain: { name: 'd' }, resources: [{ name: 'Loan', attributes: [{ name: 'status', type: 'enum' }] }] }
       }
 
       const result = await ingest({
@@ -170,7 +170,7 @@ describe('ingest()', () => {
       expect(result.errors).toEqual([])
       expect(result.conflicts).toEqual([])
 
-      const resources = result.dna.domain.resources as Array<Record<string, unknown>>
+      const resources = result.dna.resources as Array<Record<string, unknown>>
       expect(resources).toHaveLength(1)
       const attrs = (resources[0].attributes as Array<{ name: string }>).map((a) => a.name).sort()
       expect(attrs).toEqual(['amount', 'status'])
@@ -182,7 +182,7 @@ describe('ingest()', () => {
 
   describe('failure handling', () => {
     it('a failed fetch surfaces in errors[]; the run continues', async () => {
-      const adapter = makeAdapter(() => ({ domain: { name: 'd', resources: [{ name: 'X' }] } }))
+      const adapter = makeAdapter(() => ({ domain: { name: 'd' }, resources: [{ name: 'X' }] }))
       const integration: Integration = {
         async fetch(uri) {
           if (uri === 'x://broken') throw new Error('GoogleDriveAuth: token expired')
@@ -202,7 +202,7 @@ describe('ingest()', () => {
       expect(result.errors).toHaveLength(1)
       expect(result.errors[0]).toMatchObject({ source: 'x://broken', stage: 'fetch' })
       expect(result.errors[0].error).toMatch(/token expired/)
-      expect(result.dna.domain.resources).toEqual([{ name: 'X' }])
+      expect(result.dna.resources).toEqual([{ name: 'X' }])
     })
 
     it('a failed extract surfaces in errors[]; the run continues', async () => {
@@ -217,7 +217,7 @@ describe('ingest()', () => {
       }
       const adapter: InputAdapter = async (contents) => {
         if (String(contents) === 'x://broken') throw new Error('input: malformed JSON')
-        return { domain: { name: 'd', resources: [{ name: 'X' }] } }
+        return { domain: { name: 'd' }, resources: [{ name: 'X' }] }
       }
       const result = await ingest({
         sources: ['x://broken', 'x://ok'],
@@ -227,7 +227,7 @@ describe('ingest()', () => {
       })
       expect(result.errors).toHaveLength(1)
       expect(result.errors[0]).toMatchObject({ source: 'x://broken', stage: 'extract' })
-      expect(result.dna.domain.resources).toEqual([{ name: 'X' }])
+      expect(result.dna.resources).toEqual([{ name: 'X' }])
     })
   })
 

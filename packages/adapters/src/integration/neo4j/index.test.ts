@@ -217,3 +217,33 @@ describeNeo4j('integration/neo4j registry fixture round-trip', () => {
     }
   })
 })
+
+// Destructive: `clear()` wipes the entire database, so this runs in its own
+// block with its own client. Only against the throwaway live instance.
+describeNeo4j('integration/neo4j clear()', () => {
+  it('wipes the whole graph, drops the seed marker, and stays usable', async () => {
+    const client = createClient(envOptions(), lendingDna())
+    try {
+      await client.migrate()
+      await client.seedFromDna(lendingDna())
+      const loan = await client.instance.create('Loan', { amount: 1 })
+      expect((await client.resourceType.list()).length).toBeGreaterThan(0)
+      expect(await client.hasBeenSeeded()).toBe(true)
+
+      await client.clear()
+
+      expect(await client.resourceType.list()).toHaveLength(0)
+      expect(await client.relationshipType.list()).toHaveLength(0)
+      expect(await client.link.list()).toHaveLength(0)
+      expect(await client.instance.get('Loan', loan.id)).toBeNull()
+      expect(await client.hasBeenSeeded()).toBe(false)
+
+      // Re-migrate + reseed succeeds on the cleared store.
+      await client.migrate()
+      await client.seedFromDna(lendingDna())
+      expect((await client.resourceType.list()).length).toBeGreaterThan(0)
+    } finally {
+      await client.close()
+    }
+  })
+})

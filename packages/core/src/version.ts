@@ -9,7 +9,7 @@
 export const OPERATIONAL_PRIMITIVE_VERSIONS = {
   resource: '1',
   person: '1',
-  role: '1',
+  position: '1',
   group: '1',
   membership: '1',
   operation: '1',

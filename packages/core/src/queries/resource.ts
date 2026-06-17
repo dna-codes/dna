@@ -2,7 +2,7 @@ import type { OperationalDNA } from '../types/merge'
 import type { Resource } from '../types/operational'
 
 function list(dna: OperationalDNA): Resource[] {
-  return (dna.domain.resources ?? []) as Resource[]
+  return (dna.resources ?? []) as Resource[]
 }
 
 export function getResources(dna: OperationalDNA): Resource[] {

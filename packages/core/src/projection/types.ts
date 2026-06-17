@@ -10,6 +10,7 @@ export type ProductLevel =
   | 'module'
   | 'workflow'
   | 'page'
+  | 'layout'
   | 'section'
   | 'component'
   | 'namespace'
@@ -42,4 +43,40 @@ export interface ProductSubgraph {
 export interface ProjectOptions {
   /** Per business-node-id override of the product level (else the type default applies). */
   levelOverrides?: Record<string, ProductLevel>
+}
+
+// ── Permission projection (governance) ───────────────────────────────────────
+
+/**
+ * A reified product authorization derived from an operational Membership +
+ * access Rules. The product-layer parallel to a Membership. Identity is the
+ * `{principal, role, scope}` tuple, captured in `key`.
+ */
+export interface PermissionNode {
+  /** Stable identity: `${principal}::${role}::${scope}`. */
+  key: string
+  /** The product User this Permission is granted to (Cedar principal). */
+  principal: string
+  /** The product Role (capacity) exercised. */
+  role: string
+  /** The Resource slot — a namespaced entity reference. Empty string when unresolved. */
+  scope: string
+  /** True when the backing scope could not be resolved (e.g. a multi-scope Position with no disambiguating Group). No `grants` edge is emitted for a planned Permission. */
+  planned: boolean
+  /** The name of the operational Membership that backs this Permission, if any. */
+  backingMembership?: string
+}
+
+/** A `grants` edge: an operational Membership grants a product Permission. */
+export interface GrantEdge {
+  /** The operational Membership name. */
+  from: string
+  /** The Permission key it grants. */
+  to: string
+  via: 'grants'
+}
+
+export interface PermissionProjection {
+  permissions: PermissionNode[]
+  grants: GrantEdge[]
 }

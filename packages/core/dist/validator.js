@@ -9,18 +9,18 @@ const ajv_formats_1 = __importDefault(require("ajv-formats"));
 const index_1 = require("./index");
 const CHARACTERISTICS = {
     resource: new Set(['targetable']),
-    // Person is scopeable so Roles can be exercised per-individual (e.g.
+    // Person is scopeable so Positions can be exercised per-individual (e.g.
     // AttendingPhysician.scope = Patient); not in the canonical 5×5 table.
     person: new Set(['targetable', 'actorable', 'scopeable']),
     group: new Set(['targetable', 'scopeable']),
-    role: new Set(['targetable', 'actorable', 'memberable']),
+    position: new Set(['targetable', 'actorable', 'memberable']),
     process: new Set(['targetable', 'executable']),
 };
 const KIND_LABEL = {
     resource: 'Resource',
     person: 'Person',
     group: 'Group',
-    role: 'Role',
+    position: 'Position',
     process: 'Process',
 };
 function kindsWith(characteristic) {
@@ -121,63 +121,52 @@ class DnaValidator {
     }
     // ── Cross-layer validation ─────────────────────────────────────────────────
     collectPrimitives(op) {
-        const resources = [];
-        const persons = [];
-        const roles = [];
-        const groups = [];
-        const walk = (d) => {
-            for (const r of d.resources ?? [])
-                resources.push(r);
-            for (const p of d.persons ?? [])
-                persons.push(p);
-            for (const r of d.roles ?? [])
-                roles.push(r);
-            for (const g of d.groups ?? [])
-                groups.push(g);
-            for (const sub of d.domains ?? [])
-                walk(sub);
-        };
-        walk(op.domain);
+        // Nouns now live in top-level collections (home-edge model); the domain
+        // tree is no longer a container, so there is nothing to walk.
+        const resources = op.resources ?? [];
+        const persons = op.persons ?? [];
+        const positions = op.positions ?? [];
+        const groups = op.groups ?? [];
         const processes = op.processes ?? [];
         const byName = new Map();
         for (const r of resources)
             byName.set(r.name, { kind: 'resource', noun: r });
         for (const p of persons)
             byName.set(p.name, { kind: 'person', noun: p });
-        for (const r of roles)
-            byName.set(r.name, { kind: 'role', noun: r });
+        for (const r of positions)
+            byName.set(r.name, { kind: 'position', noun: r });
         for (const g of groups)
             byName.set(g.name, { kind: 'group', noun: g });
         for (const p of processes)
             byName.set(p.name, { kind: 'process', noun: p });
         const resourceNames = new Set(resources.map(r => r.name));
         const personNames = new Set(persons.map(p => p.name));
-        const roleNames = new Set(roles.map(r => r.name));
+        const positionNames = new Set(positions.map(r => r.name));
         const groupNames = new Set(groups.map(g => g.name));
         const processNames = new Set(processes.map(p => p.name));
         const namesByKind = {
             resource: resourceNames,
             person: personNames,
-            role: roleNames,
+            position: positionNames,
             group: groupNames,
             process: processNames,
         };
         return {
             resources,
             persons,
-            roles,
+            positions,
             groups,
             processes,
             byName,
             resourceNames,
             personNames,
-            roleNames,
+            positionNames,
             groupNames,
             processNames,
             allNounNames: new Set([
                 ...resourceNames,
                 ...personNames,
-                ...roleNames,
+                ...positionNames,
                 ...groupNames,
             ]),
             pool(characteristic) {
@@ -298,7 +287,7 @@ class DnaValidator {
                 }
             }
             // Rule.operation must reference a declared Operation
-            // Rule.allow[].role must reference an actorable primitive (Role or Person)
+            // Rule.allow[].role must reference an actorable primitive (Position or Person)
             for (const rule of op.rules ?? []) {
                 const ruleId = rule.name ?? rule.operation;
                 if (!operationNames.has(rule.operation)) {
@@ -357,16 +346,16 @@ class DnaValidator {
                     });
                 }
             }
-            // Role-specific integrity:
+            // Position-specific integrity:
             // - scope (string | string[]) → must resolve to a scopeable primitive.
-            // - parent → another Role; chain must be acyclic.
-            // - resource → a Resource (when system Role is backed by a Resource template).
+            // - parent → another Position; chain must be acyclic.
+            // - resource → a Resource (when system Position is backed by a Resource template).
             // - if both parent and own scope, child scope must be narrower-or-equal to parent's effective scope.
-            const roleByName = new Map(primitives.roles.map(r => [r.name, r]));
+            const positionByName = new Map(primitives.positions.map(r => [r.name, r]));
             const cyclesEmitted = new Set();
             const cycleMembers = new Set();
-            for (const role of primitives.roles) {
-                const cycle = findCycle(role.name, roleByName);
+            for (const role of primitives.positions) {
+                const cycle = findCycle(role.name, positionByName);
                 if (!cycle)
                     continue;
                 for (const m of cycle)
@@ -377,8 +366,8 @@ class DnaValidator {
                 cyclesEmitted.add(key);
                 errors.push({
                     layer: 'operational',
-                    path: `roles/${cycle[0]}/parent`,
-                    message: `Role parent chain forms a cycle: ${quoteList(cycle)} (in walk order: ${cycle.map(n => `"${n}"`).join(' → ')})`,
+                    path: `positions/${cycle[0]}/parent`,
+                    message: `Position parent chain forms a cycle: ${quoteList(cycle)} (in walk order: ${cycle.map(n => `"${n}"`).join(' → ')})`,
                 });
             }
             const effectiveScopeCache = new Map();
@@ -387,7 +376,7 @@ class DnaValidator {
                     return null;
                 if (effectiveScopeCache.has(name))
                     return effectiveScopeCache.get(name);
-                const r = roleByName.get(name);
+                const r = positionByName.get(name);
                 if (!r) {
                     effectiveScopeCache.set(name, null);
                     return null;
@@ -405,12 +394,12 @@ class DnaValidator {
                 effectiveScopeCache.set(name, []);
                 return [];
             };
-            for (const role of primitives.roles) {
-                if (role.parent && !primitives.roleNames.has(role.parent)) {
+            for (const role of primitives.positions) {
+                if (role.parent && !primitives.positionNames.has(role.parent)) {
                     errors.push({
                         layer: 'operational',
-                        path: `roles/${role.name}/parent`,
-                        message: `Role "${role.name}" parent "${role.parent}" is not a declared Role; ${availability('roles', primitives.roleNames)}`,
+                        path: `positions/${role.name}/parent`,
+                        message: `Position "${role.name}" parent "${role.parent}" is not a declared Position; ${availability('positions', primitives.positionNames)}`,
                     });
                 }
                 const scopes = role.scope === undefined ? [] : Array.isArray(role.scope) ? role.scope : [role.scope];
@@ -418,22 +407,22 @@ class DnaValidator {
                     if (!scopeablePool.has(s)) {
                         errors.push({
                             layer: 'operational',
-                            path: `roles/${role.name}/scope`,
-                            message: `Role "${role.name}" scope "${s}" is not a declared ${scopeableKinds}; ${availability('scopes', scopeablePool)}`,
+                            path: `positions/${role.name}/scope`,
+                            message: `Position "${role.name}" scope "${s}" is not a declared ${scopeableKinds}; ${availability('scopes', scopeablePool)}`,
                         });
                     }
                 }
                 if (role.resource && !primitives.resourceNames.has(role.resource)) {
                     errors.push({
                         layer: 'operational',
-                        path: `roles/${role.name}/resource`,
-                        message: `Role "${role.name}" resource "${role.resource}" is not a declared Resource; ${availability('resources', primitives.resourceNames)}`,
+                        path: `positions/${role.name}/resource`,
+                        message: `Position "${role.name}" resource "${role.resource}" is not a declared Resource; ${availability('resources', primitives.resourceNames)}`,
                     });
                 }
                 // Subset check: if both parent (resolved) and own scope present, every entry in the
                 // child's scope must be narrower-or-equal to some entry in the parent's effective scope.
                 if (role.parent &&
-                    primitives.roleNames.has(role.parent) &&
+                    primitives.positionNames.has(role.parent) &&
                     !cycleMembers.has(role.name) &&
                     role.scope !== undefined) {
                     const parentScope = effectiveScope(role.parent);
@@ -442,8 +431,8 @@ class DnaValidator {
                             if (!isNarrowerOrEqual(childEntry, parentScope, primitives)) {
                                 errors.push({
                                     layer: 'operational',
-                                    path: `roles/${role.name}/scope`,
-                                    message: `Role "${role.name}" scope "${childEntry}" is not narrower-or-equal to parent Role "${role.parent}" scope ${quoteList(parentScope)}${narrowingHint(childEntry, parentScope, primitives)}`,
+                                    path: `positions/${role.name}/scope`,
+                                    message: `Position "${role.name}" scope "${childEntry}" is not narrower-or-equal to parent Position "${role.parent}" scope ${quoteList(parentScope)}${narrowingHint(childEntry, parentScope, primitives)}`,
                                 });
                             }
                         }
@@ -456,66 +445,66 @@ class DnaValidator {
                 if (role.cardinality === 'one' && !roleHasScope) {
                     errors.push({
                         layer: 'operational',
-                        path: `roles/${role.name}/cardinality`,
-                        message: `Role "${role.name}" declares cardinality "one" but has no declared or inherited scope; per-scope-instance constraints require a scope`,
+                        path: `positions/${role.name}/cardinality`,
+                        message: `Position "${role.name}" declares cardinality "one" but has no declared or inherited scope; per-scope-instance constraints require a scope`,
                     });
                 }
                 if (role.cardinality !== undefined && role.system === true) {
                     errors.push({
                         layer: 'operational',
-                        path: `roles/${role.name}/cardinality`,
-                        message: `Role "${role.name}" is a system Role; cardinality does not apply (system Roles are not filled by Persons)`,
+                        path: `positions/${role.name}/cardinality`,
+                        message: `Position "${role.name}" is a system Position; cardinality does not apply (system Positions are not filled by Persons)`,
                     });
                 }
                 if (role.required === true && !roleHasScope) {
                     errors.push({
                         layer: 'operational',
-                        path: `roles/${role.name}/required`,
-                        message: `Role "${role.name}" declares required: true but has no declared or inherited scope; per-scope-instance constraints require a scope`,
+                        path: `positions/${role.name}/required`,
+                        message: `Position "${role.name}" declares required: true but has no declared or inherited scope; per-scope-instance constraints require a scope`,
                     });
                 }
                 if (role.required === true && role.system === true) {
                     errors.push({
                         layer: 'operational',
-                        path: `roles/${role.name}/required`,
-                        message: `Role "${role.name}" is a system Role; required does not apply (system Roles are not filled by Persons)`,
+                        path: `positions/${role.name}/required`,
+                        message: `Position "${role.name}" is a system Position; required does not apply (system Positions are not filled by Persons)`,
                     });
                 }
                 for (const e of role.excludes ?? []) {
                     if (e === role.name) {
                         errors.push({
                             layer: 'operational',
-                            path: `roles/${role.name}/excludes`,
-                            message: `Role "${role.name}" cannot exclude itself`,
+                            path: `positions/${role.name}/excludes`,
+                            message: `Position "${role.name}" cannot exclude itself`,
                         });
                     }
-                    else if (!primitives.roleNames.has(e)) {
+                    else if (!primitives.positionNames.has(e)) {
                         errors.push({
                             layer: 'operational',
-                            path: `roles/${role.name}/excludes`,
-                            message: `Role "${role.name}" excludes "${e}" which is not a declared Role; ${availability('roles', primitives.roleNames)}`,
+                            path: `positions/${role.name}/excludes`,
+                            message: `Position "${role.name}" excludes "${e}" which is not a declared Position; ${availability('positions', primitives.positionNames)}`,
                         });
                     }
                 }
                 if (role.excludes && role.excludes.length > 0 && role.system === true) {
                     errors.push({
                         layer: 'operational',
-                        path: `roles/${role.name}/excludes`,
-                        message: `Role "${role.name}" is a system Role; excludes does not apply (system Roles are not filled by Persons)`,
+                        path: `positions/${role.name}/excludes`,
+                        message: `Position "${role.name}" is a system Position; excludes does not apply (system Positions are not filled by Persons)`,
                     });
                 }
             }
-            // Cross-Role exclusion: same-scope check, symmetric, deduped by unordered pair.
+            // Cross-Position exclusion: same-scope check, symmetric, deduped by unordered pair.
             const exclusionPairs = new Set();
-            for (const role of primitives.roles) {
+            for (const role of primitives.positions) {
                 if (role.system === true)
                     continue;
                 for (const e of role.excludes ?? []) {
                     if (e === role.name)
                         continue;
-                    if (!primitives.roleNames.has(e))
+                    if (!primitives.positionNames.has(e))
                         continue;
-                    const other = roleByName.get(e);
+                    const other = positionByName.get(e);
                     if (other.system === true)
                         continue;
                     const [a, b] = [role.name, e].sort();
@@ -532,12 +521,12 @@ class DnaValidator {
                 if (intersect.length === 0) {
                     errors.push({
                         layer: 'operational',
-                        path: `roles/${a}/excludes`,
-                        message: `Role "${a}" excludes "${b}" but their effective scopes are disjoint (${a}: ${quoteList(scopeA)}; ${b}: ${quoteList(scopeB)}); exclusion requires a shared scope`,
+                        path: `positions/${a}/excludes`,
+                        message: `Position "${a}" excludes "${b}" but their effective scopes are disjoint (${a}: ${quoteList(scopeA)}; ${b}: ${quoteList(scopeB)}); exclusion requires a shared scope`,
                     });
                 }
             }
-            // Membership integrity: person/role/group references; group must match Role.scope when both present
+            // Membership integrity: person/position/group references; group must match Position.scope when both present
             for (const m of op.memberships ?? []) {
                 if (!primitives.personNames.has(m.person)) {
                     errors.push({
@@ -546,11 +535,11 @@ class DnaValidator {
                         message: `Membership "${m.name}" pins Person "${m.person}" which is not declared; ${availability('persons', primitives.personNames)}`,
                     });
                 }
-                if (!primitives.hasCharacteristic(m.role, 'memberable')) {
+                if (!primitives.hasCharacteristic(m.position, 'memberable')) {
                     errors.push({
                         layer: 'operational',
-                        path: `memberships/${m.name}/role`,
-                        message: `Membership "${m.name}" pins Role "${m.role}" which is not declared; ${availability('roles', primitives.roleNames)}`,
+                        path: `memberships/${m.name}/position`,
+                        message: `Membership "${m.name}" pins Position "${m.position}" which is not declared; ${availability('positions', primitives.positionNames)}`,
                     });
                 }
                 if (m.group && !scopeablePool.has(m.group)) {
@@ -560,25 +549,25 @@ class DnaValidator {
                         message: `Membership "${m.name}" group "${m.group}" is not a declared ${scopeableKinds}; ${availability('scopes', scopeablePool)}`,
                     });
                 }
-                if (m.group && primitives.roleNames.has(m.role)) {
-                    const role = primitives.roles.find(r => r.name === m.role);
+                if (m.group && primitives.positionNames.has(m.position)) {
+                    const role = primitives.positions.find(r => r.name === m.position);
                     const scopes = role.scope === undefined ? [] : Array.isArray(role.scope) ? role.scope : [role.scope];
                     if (scopes.length > 0 && !scopes.includes(m.group)) {
                         errors.push({
                             layer: 'operational',
                             path: `memberships/${m.name}/group`,
-                            message: `Membership "${m.name}" pins Role "${m.role}" in group "${m.group}", but Role "${m.role}" declares scope ${quoteList(scopes)}`,
+                            message: `Membership "${m.name}" pins Position "${m.position}" in group "${m.group}", but Position "${m.position}" declares scope ${quoteList(scopes)}`,
                         });
                     }
                 }
-                // Multi-scope ambiguity: Role with array scope requires Membership.group
-                if (!m.group && primitives.roleNames.has(m.role)) {
-                    const role = primitives.roles.find(r => r.name === m.role);
+                // Multi-scope ambiguity: Position with array scope requires Membership.group
+                if (!m.group && primitives.positionNames.has(m.position)) {
+                    const role = primitives.positions.find(r => r.name === m.position);
                     if (Array.isArray(role.scope) && role.scope.length > 1) {
                         errors.push({
                             layer: 'operational',
                             path: `memberships/${m.name}/group`,
-                            message: `Membership "${m.name}" pins multi-scope Role "${m.role}" (scopes: ${quoteList(role.scope)}) without a group; specify Membership.group to disambiguate`,
+                            message: `Membership "${m.name}" pins multi-scope Position "${m.position}" (scopes: ${quoteList(role.scope)}) without a group; specify Membership.group to disambiguate`,
                         });
                     }
                 }

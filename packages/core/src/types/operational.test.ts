@@ -7,7 +7,7 @@ import type {
   Resource,
   Person,
   Group,
-  Role,
+  Position,
   Membership,
   Operation,
   Trigger,
@@ -104,11 +104,11 @@ describe('Operational TS types ↔ JSON Schema contract', () => {
     }
   })
 
-  it('Role examples satisfy the TS type and the JSON schema', () => {
-    const examples = readExamples<Role>('operational/role.json')
+  it('Position examples satisfy the TS type and the JSON schema', () => {
+    const examples = readExamples<Position>('operational/position.json')
     for (const ex of examples) {
-      const _typed: Role = ex
-      const result = validator.validate(withBase('role', _typed as any), 'operational/role')
+      const _typed: Position = ex
+      const result = validator.validate(withBase('position', _typed as any), 'operational/position')
       expect(result.valid).toBe(true)
     }
   })

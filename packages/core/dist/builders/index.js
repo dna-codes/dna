@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addRelationship = exports.addProcess = exports.addTask = exports.addRule = exports.addTrigger = exports.addOperation = exports.addMembership = exports.addGroup = exports.addRole = exports.addPerson = exports.addResource = exports.createOperationalDna = void 0;
+exports.addRelationship = exports.addProcess = exports.addTask = exports.addRule = exports.addTrigger = exports.addOperation = exports.addMembership = exports.addGroup = exports.addPosition = exports.addPerson = exports.addResource = exports.createOperationalDna = void 0;
 var create_1 = require("./create");
 Object.defineProperty(exports, "createOperationalDna", { enumerable: true, get: function () { return create_1.createOperationalDna; } });
 var resource_1 = require("./resource");
 Object.defineProperty(exports, "addResource", { enumerable: true, get: function () { return resource_1.addResource; } });
 var person_1 = require("./person");
 Object.defineProperty(exports, "addPerson", { enumerable: true, get: function () { return person_1.addPerson; } });
-var role_1 = require("./role");
-Object.defineProperty(exports, "addRole", { enumerable: true, get: function () { return role_1.addRole; } });
+var position_1 = require("./position");
+Object.defineProperty(exports, "addPosition", { enumerable: true, get: function () { return position_1.addPosition; } });
 var group_1 = require("./group");
 Object.defineProperty(exports, "addGroup", { enumerable: true, get: function () { return group_1.addGroup; } });
 var membership_1 = require("./membership");

@@ -11,6 +11,6 @@
  * integrations that remain pure I/O.
  */
 export { createClient } from './client';
-export type { Neo4jClientOptions } from './types';
+export type { Neo4jClientOptions, Neo4jStore } from './types';
 export { runCli } from './cli';
 //# sourceMappingURL=index.d.ts.map

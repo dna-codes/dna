@@ -2,71 +2,39 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational/domain",
   "title": "Domain",
-  "description": "A Domain is a bounded-context wrapper that organizes related noun primitives (Resources, Persons, Roles, Groups) into a logical boundary. Domains can be multiple levels deep — e.g. organization → domain → subdomain — with primitives at the leaves.",
+  "description": "A Domain is a thin, identity-bearing node that names a bounded context (an organization, a functional area, a subdomain). It does NOT contain primitives: membership is expressed by each primitive naming its home Domain via its `domain` reference (the authored form of the primary `belongs_to` edge). The domain hierarchy is expressed by each non-root Domain naming its `parent`; the single rootless Domain is the organization / tenant. The dot-separated `path` is a derived cache of the `parent` chain, never the authoritative source of placement.",
   "type": "object",
   "required": ["name"],
   "additionalProperties": false,
   "properties": {
     "name": {
       "type": "string",
-      "description": "The lowercase identifier for this domain segment.",
-      "examples": ["acme", "billing", "invoicing", "identity", "auth"]
+      "description": "The lowercase identifier for this domain. Unique within a document (domains are a flat set, so the name alone resolves a home reference).",
+      "examples": ["acme", "finance", "lending", "identity", "auth"]
     },
     "description": {
       "type": "string",
       "description": "A human-readable explanation of what this domain represents."
     },
+    "owner": {
+      "type": "string",
+      "description": "Optional owner of this domain — the Position or Person accountable for it. Part of what gives a Domain identity independent of its members (the identity test).",
+      "examples": ["Underwriter", "HeadOfFinance"]
+    },
+    "parent": {
+      "type": "string",
+      "description": "The name of this domain's parent Domain. Omitted for exactly one Domain — the organization / tenant root. The parent chain (not `path`) is the authoritative hierarchy.",
+      "examples": ["acme", "finance"]
+    },
     "path": {
       "type": "string",
-      "description": "The fully qualified dot-separated path to this domain from the root.",
-      "examples": ["acme", "acme.billing", "acme.billing.invoicing", "acme.identity.auth"]
-    },
-    "domains": {
-      "type": "array",
-      "description": "Child domains nested within this domain.",
-      "items": { "$ref": "https://dna.codes/schemas/operational/domain" }
-    },
-    "resources": {
-      "type": "array",
-      "description": "The Resources (entity templates) that live directly within this domain.",
-      "items": { "$ref": "https://dna.codes/schemas/operational/resource" }
-    },
-    "persons": {
-      "type": "array",
-      "description": "The Person templates (kinds of individuals) that live directly within this domain.",
-      "items": { "$ref": "https://dna.codes/schemas/operational/person" }
-    },
-    "roles": {
-      "type": "array",
-      "description": "The Role templates (positions/capacities) that live directly within this domain.",
-      "items": { "$ref": "https://dna.codes/schemas/operational/role" }
-    },
-    "groups": {
-      "type": "array",
-      "description": "The Group templates (work-units / containers) that live directly within this domain.",
-      "items": { "$ref": "https://dna.codes/schemas/operational/group" }
+      "description": "DERIVED CACHE — the fully qualified dot-separated path computed from the `parent` chain, kept for naming and fast prefix filtering. Never authoritative; regenerated on re-home. Optional and may be omitted from authored documents.",
+      "examples": ["acme", "acme.finance", "acme.finance.lending"]
     }
   },
   "examples": [
-    {
-      "name": "acme",
-      "path": "acme",
-      "domains": [
-        {
-          "name": "finance",
-          "path": "acme.finance",
-          "domains": [
-            {
-              "name": "lending",
-              "path": "acme.finance.lending",
-              "resources": [{ "name": "Loan" }],
-              "persons":   [{ "name": "Borrower" }, { "name": "Employee" }],
-              "groups":    [{ "name": "BankDepartment" }],
-              "roles":     [{ "name": "Underwriter", "scope": "BankDepartment" }]
-            }
-          ]
-        }
-      ]
-    }
+    { "name": "acme", "description": "The organization / tenant root." },
+    { "name": "finance", "parent": "acme" },
+    { "name": "lending", "parent": "finance", "owner": "Underwriter", "path": "acme.finance.lending" }
   ]
 }

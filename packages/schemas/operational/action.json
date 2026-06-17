@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational/action",
   "title": "Action",
-  "description": "An Action is a verb a noun primitive (Resource, Person, Role, or Group) supports. Actions are declared as entries in the noun's `actions[]` catalog using this uniform sub-schema. The Action entry is the catalog declaration; an Operation (top-level) is what binds a (noun, action-name) pair and carries orchestration metadata (Rules, state changes via `Operation.changes`).\n\nThere is no top-level Action collection. Actions are not reused across nouns — Loan.Approve and Document.Approve are independent declarations even when they share an English verb.",
+  "description": "An Action is a verb a noun primitive (Resource, Person, Position, or Group) supports. Actions are declared as entries in the noun's `actions[]` catalog using this uniform sub-schema. The Action entry is the catalog declaration; an Operation (top-level) is what binds a (noun, action-name) pair and carries orchestration metadata (Rules, state changes via `Operation.changes`).\n\nThere is no top-level Action collection. Actions are not reused across nouns — Loan.Approve and Document.Approve are independent declarations even when they share an English verb.",
   "type": "object",
   "required": ["name"],
   "additionalProperties": false,
@@ -32,6 +32,6 @@
     { "name": "Approve", "description": "Underwriter sign-off on a pending loan.", "type": "write" },
     { "name": "Disburse", "description": "Release funds to the borrower.", "type": "destructive", "idempotent": false },
     { "name": "GetAdmitted", "description": "Patient is admitted to a hospital.", "type": "write" },
-    { "name": "Retire", "description": "Deactivate a Role definition (org-admin lifecycle).", "type": "destructive" }
+    { "name": "Retire", "description": "Deactivate a Position definition (org-admin lifecycle).", "type": "destructive" }
   ]
 }

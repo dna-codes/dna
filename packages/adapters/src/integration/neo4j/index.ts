@@ -12,5 +12,5 @@
  */
 
 export { createClient } from './client'
-export type { Neo4jClientOptions } from './types'
+export type { Neo4jClientOptions, Neo4jStore } from './types'
 export { runCli } from './cli'

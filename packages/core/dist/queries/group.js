@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getGroups = getGroups;
 exports.getGroup = getGroup;
 function list(dna) {
-    return (dna.domain.groups ?? []);
+    return (dna.groups ?? []);
 }
 function getGroups(dna) {
     return list(dna);

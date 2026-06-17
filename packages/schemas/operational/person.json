@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational/person",
   "title": "Person",
-  "description": "A Person is an individual template — the kind of human the organization deals with. Examples: Employee, Customer, Patient, Borrower, Contractor, Partner, Associate. A Person is a type, not a specific named individual; instance-level data (Joe, Jane, Dr. Adams) lives in Product/Technical layers.\n\nPerson is one of four noun primitives (alongside Resource, Role, Group). All four share the noun base shape: name, optional attributes[], optional actions[], optional parent. Person carries no people-specific fields beyond the shared base — its identity as a Person comes from being declared in the Domain's persons[] collection.",
+  "description": "A Person is an individual template — the kind of human the organization deals with. Examples: Employee, Customer, Patient, Borrower, Contractor, Partner, Associate. A Person is a type, not a specific named individual; instance-level data (Joe, Jane, Dr. Adams) lives in Product/Technical layers.\n\nPerson is one of four noun primitives (alongside Resource, Position, Group). All four share the noun base shape: name, optional attributes[], optional actions[], optional parent. Person carries no people-specific fields beyond the shared base — its identity as a Person comes from being declared in the Domain's persons[] collection.",
   "type": "object",
   "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "required": ["name"],
@@ -21,7 +21,7 @@
     },
     "domain": {
       "type": "string",
-      "description": "The dot-separated domain path this Person template belongs to."
+      "description": "The home Domain this Person belongs to, referenced by Domain `name` (the authored form of the primary `belongs_to` edge). Names a Domain in the document's `domain` root or flat `domains[]`."
     },
     "attributes": {
       "type": "array",
@@ -30,7 +30,7 @@
     },
     "actions": {
       "type": "array",
-      "description": "Verbs this Person template supports — the catalog of lifecycle actions on the Person itself (Patient.GetAdmitted, Customer.Onboard, Employee.Hire). Distinct from actions a Person performs in a Role context (those are Operations targeted at other nouns, assigned via Tasks).",
+      "description": "Verbs this Person template supports — the catalog of lifecycle actions on the Person itself (Patient.GetAdmitted, Customer.Onboard, Employee.Hire). Distinct from actions a Person performs in a Position context (those are Operations targeted at other nouns, assigned via Tasks).",
       "items": { "$ref": "https://dna.codes/schemas/operational/action" }
     },
     "parent": {

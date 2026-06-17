@@ -3,7 +3,7 @@ export type { CreateOperationalDnaOptions } from './create'
 
 export { addResource } from './resource'
 export { addPerson } from './person'
-export { addRole } from './role'
+export { addPosition } from './position'
 export { addGroup } from './group'
 export { addMembership } from './membership'
 export { addOperation } from './operation'

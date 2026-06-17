@@ -6,7 +6,7 @@
   "nodes": [
     { "type": "Person" },
     { "type": "Group" },
-    { "type": "Role" },
+    { "type": "Position" },
     { "type": "Membership" },
     { "type": "Domain" },
     { "type": "Resource" },

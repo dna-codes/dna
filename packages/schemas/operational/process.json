@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational/process",
   "title": "Process",
-  "description": "A Process is a Standard Operating Procedure: a named, owned, ordered DAG of Steps that accomplishes a business goal. Each Step references exactly one Task. The DAG begins at the Step named by `startStep` (Amazon-States-Language `StartAt` convention).\n\nProcesses are purely descriptive in this version — they document the human playbook behind a set of Operation executions. A Process's `operator` is the Resource (acting as a Role) responsible for owning and supervising the workflow; the actual work is performed by whichever Actor each Task names. Runtime orchestration semantics (state tracking, timers, SLAs) are deferred to the planned workflow-cell.\n\nStep-level gating uses `conditions` — a list of Rule names that must all evaluate true for the Step to execute. This composes existing condition Rules rather than re-declaring condition logic at the Step level.",
+  "description": "A Process is a Standard Operating Procedure: a named, owned, ordered DAG of Steps that accomplishes a business goal. Each Step references exactly one Task. The DAG begins at the Step named by `startStep` (Amazon-States-Language `StartAt` convention).\n\nProcesses are purely descriptive in this version — they document the human playbook behind a set of Operation executions. A Process's `operator` is the Resource (acting as a Position) responsible for owning and supervising the workflow; the actual work is performed by whichever Actor each Task names. Runtime orchestration semantics (state tracking, timers, SLAs) are deferred to the planned workflow-cell.\n\nStep-level gating uses `conditions` — a list of Rule names that must all evaluate true for the Step to execute. This composes existing condition Rules rather than re-declaring condition logic at the Step level.",
   "type": "object",
   "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "required": ["name", "operator", "startStep", "steps"],
@@ -26,7 +26,7 @@
     },
     "operator": {
       "type": "string",
-      "description": "The Resource (acting as a Role) responsible for owning and supervising this process.",
+      "description": "The Resource (acting as a Position) responsible for owning and supervising this process.",
       "pattern": "^[A-Z][a-zA-Z0-9]*$",
       "examples": ["LendingManager", "CaseManager"]
     },

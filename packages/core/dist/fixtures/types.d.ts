@@ -14,6 +14,11 @@ export interface DnaInput {
 }
 export interface OperationalDna {
     domain: OperationalDomain;
+    domains?: OperationalDomain[];
+    resources?: Resource[];
+    persons?: Person[];
+    positions?: Position[];
+    groups?: Group[];
     memberships?: Membership[];
     operations?: Operation[];
     rules?: Rule[];
@@ -24,13 +29,11 @@ export interface OperationalDna {
 }
 export interface OperationalDomain {
     name: string;
-    path?: string;
     description?: string;
-    resources?: Resource[];
-    persons?: Person[];
-    roles?: Role[];
-    groups?: Group[];
-    domains?: OperationalDomain[];
+    owner?: string;
+    parent?: string;
+    /** Derived cache of the parent chain; never authoritative. */
+    path?: string;
 }
 /**
  * Universal base fields stamped on every Operational primitive. Optional
@@ -67,7 +70,7 @@ export interface Group extends BaseFields {
     actions?: Action[];
     parent?: string;
 }
-export interface Role extends BaseFields {
+export interface Position extends BaseFields {
     name: string;
     description?: string;
     domain?: string;
@@ -83,7 +86,7 @@ export interface Membership extends BaseFields {
     description?: string;
     domain?: string;
     person: string;
-    role: string;
+    position: string;
     group?: string;
 }
 export interface Attribute {

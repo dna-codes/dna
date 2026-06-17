@@ -13,6 +13,8 @@ export interface DnaInput {
 
 export interface OperationalDna {
   domain: OperationalDomain
+  domains?: OperationalDomain[]
+  resources?: Resource[]
   relationships?: Relationship[]
   tasks?: Task[]
   processes?: Process[]
@@ -21,8 +23,6 @@ export interface OperationalDna {
 export interface OperationalDomain {
   name: string
   path?: string
-  resources?: Resource[]
-  domains?: OperationalDomain[]
 }
 
 export interface Resource {

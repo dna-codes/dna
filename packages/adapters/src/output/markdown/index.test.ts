@@ -5,7 +5,7 @@ describe('@dna-codes/dna-output-markdown', () => {
   describe('render() — document scaffolding', () => {
     it('renders every default section', () => {
       const md = render(bookshopInput)
-      expect(md).toContain('# shop.books')
+      expect(md).toContain('# shop')
       expect(md).toContain('## Summary')
       expect(md).toContain('## Domain Model')
       expect(md).toContain('## Operations')
@@ -25,7 +25,7 @@ describe('@dna-codes/dna-output-markdown', () => {
     it('supports a custom title override', () => {
       const md = render(bookshopInput, { title: 'Bookshop Handbook' })
       expect(md).toContain('# Bookshop Handbook')
-      expect(md).not.toContain('# shop.books')
+      expect(md).not.toContain('# shop')
     })
 
     it('falls back to domain.name when path is missing', () => {
@@ -43,7 +43,7 @@ describe('@dna-codes/dna-output-markdown', () => {
         sections: ['summary'],
         headingLevel: 2,
       })
-      expect(md).toContain('## shop.books')
+      expect(md).toContain('## shop')
       expect(md).toContain('### Summary')
     })
 
@@ -87,7 +87,7 @@ describe('@dna-codes/dna-output-markdown', () => {
     it('leaves canonical labels untouched when no rename is provided', () => {
       const md = render(bookshopInput, { sections: ['summary'] })
       expect(md).toContain('- Persons: 1')
-      expect(md).toContain('- Roles: 1')
+      expect(md).toContain('- Positions: 1')
       expect(md).toContain('**Top-level resources:**')
     })
   })

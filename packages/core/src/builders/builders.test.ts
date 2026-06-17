@@ -6,7 +6,7 @@ import {
   addProcess,
   addRelationship,
   addResource,
-  addRole,
+  addPosition,
   addRule,
   addTask,
   addTrigger,
@@ -63,14 +63,14 @@ describe('addResource — noun composition matrix', () => {
 
   it('adds a Resource to an empty DNA', () => {
     const r = addResource(empty(), { name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] })
-    expect(r.dna.domain.resources).toMatchObject([{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }])
+    expect(r.dna.resources).toMatchObject([{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }])
     expect(r.conflicts).toEqual([])
   })
 
   it('adds two distinct Resources without composition', () => {
     let r = addResource(empty(), { name: 'Loan' })
     r = addResource(r.dna, { name: 'Account' })
-    const names = (r.dna.domain.resources as Array<{ name: string }>).map((x) => x.name).sort()
+    const names = (r.dna.resources as Array<{ name: string }>).map((x) => x.name).sort()
     expect(names).toEqual(['Account', 'Loan'])
     expect(r.conflicts).toEqual([])
   })
@@ -81,8 +81,8 @@ describe('addResource — noun composition matrix', () => {
     const pinned = '00000000-0000-4000-8000-000000000001'
     let r = addResource(empty(), { id: pinned, name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] })
     r = addResource(r.dna, { id: pinned, name: 'Loan', attributes: [{ name: 'status', type: 'enum', values: ['pending', 'active'] }] })
-    expect(r.dna.domain.resources).toHaveLength(1)
-    const attrs = ((r.dna.domain.resources as Array<{ attributes: Array<{ name: string }> }>)[0].attributes).map((a) => a.name).sort()
+    expect(r.dna.resources).toHaveLength(1)
+    const attrs = ((r.dna.resources as Array<{ attributes: Array<{ name: string }> }>)[0].attributes).map((a) => a.name).sort()
     expect(attrs).toEqual(['amount', 'status'])
     expect(r.conflicts).toEqual([])
   })
@@ -112,7 +112,7 @@ describe('activity builders compose correctly', () => {
     let r = createOperationalDna({ domain: { name: 'd' } })
     r = addResource(r, { name: 'Loan', actions: [{ name: 'Approve', type: 'write' }] }).dna
     r = addPerson(r, { name: 'Borrower' }).dna
-    r = addRole(r, { name: 'Underwriter' }).dna
+    r = addPosition(r, { name: 'Underwriter' }).dna
     r = addGroup(r, { name: 'BankDepartment' }).dna
     return r
   }
@@ -153,8 +153,8 @@ describe('activity builders compose correctly', () => {
   })
 
   it('addMembership lands the Membership at the top level', () => {
-    const r = addMembership(seeded(), { name: 'BorrowerUnderwriter', person: 'Borrower', role: 'Underwriter' })
-    expect(r.dna.memberships).toMatchObject([{ name: 'BorrowerUnderwriter', person: 'Borrower', role: 'Underwriter' }])
+    const r = addMembership(seeded(), { name: 'BorrowerUnderwriter', person: 'Borrower', position: 'Underwriter' })
+    expect(r.dna.memberships).toMatchObject([{ name: 'BorrowerUnderwriter', person: 'Borrower', position: 'Underwriter' }])
   })
 
   it('addRelationship lands the Relationship at the top level', () => {
@@ -215,11 +215,11 @@ describe('malformed input — every class of schema violation surfaces', () => {
     ).toThrow(/required property 'action'/)
   })
 
-  it('missing required field (Membership.role) throws', () => {
+  it('missing required field (Membership.position) throws', () => {
     expect(() =>
-      // @ts-expect-error role is required
+      // @ts-expect-error position is required
       addMembership(empty(), { name: 'M', person: 'Borrower' }),
-    ).toThrow(/required property 'role'/)
+    ).toThrow(/required property 'position'/)
   })
 
   it('missing required field (Process.steps) throws', () => {
@@ -338,8 +338,8 @@ describe('end-to-end schema validation of builder-composed DNA', () => {
     r = addPerson(r, { name: 'Borrower' }).dna
     r = addPerson(r, { name: 'Employee' }).dna
     r = addGroup(r, { name: 'BankDepartment' }).dna
-    r = addRole(r, { name: 'Underwriter', scope: 'BankDepartment' }).dna
-    r = addMembership(r, { name: 'EmployeeUnderwriter', person: 'Employee', role: 'Underwriter' }).dna
+    r = addPosition(r, { name: 'Underwriter', scope: 'BankDepartment' }).dna
+    r = addMembership(r, { name: 'EmployeeUnderwriter', person: 'Employee', position: 'Underwriter' }).dna
     r = addOperation(r, { name: 'Loan.Apply', target: 'Loan', action: 'Apply' }).dna
     r = addOperation(r, { name: 'Loan.Approve', target: 'Loan', action: 'Approve' }).dna
     r = addTrigger(r, { name: 'LoanApplyUser', operation: 'Loan.Apply', source: 'user' }).dna
@@ -374,7 +374,7 @@ describe('builders stamp the base contract', () => {
 
   it('addResource stamps id (UUID v4), type, and version when caller omits them', () => {
     const r = addResource(createOperationalDna({ domain: { name: 'd' } }), { name: 'Loan' })
-    const stamped = (r.dna.domain.resources as Array<{ id: string; type: string; version: string; name: string }>)[0]
+    const stamped = (r.dna.resources as Array<{ id: string; type: string; version: string; name: string }>)[0]
     expect(stamped.id).toMatch(UUID_V4)
     expect(stamped.type).toBe('resource')
     expect(stamped.version).toBe('1')
@@ -407,13 +407,13 @@ describe('builders stamp the base contract', () => {
   it('caller-supplied id is preserved', () => {
     const myId = 'a1234567-1111-4abc-8def-0123456789ab'
     const r = addResource(createOperationalDna({ domain: { name: 'd' } }), { id: myId, name: 'Loan' })
-    const stamped = (r.dna.domain.resources as Array<{ id: string }>)[0]
+    const stamped = (r.dna.resources as Array<{ id: string }>)[0]
     expect(stamped.id).toBe(myId)
   })
 
   it('caller-supplied version is preserved', () => {
     const r = addResource(createOperationalDna({ domain: { name: 'd' } }), { name: 'Loan', version: '2' })
-    const stamped = (r.dna.domain.resources as Array<{ version: string }>)[0]
+    const stamped = (r.dna.resources as Array<{ version: string }>)[0]
     expect(stamped.version).toBe('2')
   })
 })

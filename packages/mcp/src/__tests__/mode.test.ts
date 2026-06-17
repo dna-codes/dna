@@ -13,7 +13,7 @@ import type { PatchOp } from '../types.js'
 async function seedStore(store: DnaDataStore) {
   await store.migrate()
   await store.resourceType.create({ name: 'company', category: 'group', attribute_schema: [], stability: 'stable' })
-  await store.resourceType.create({ name: 'position', category: 'role', attribute_schema: [], stability: 'stable' })
+  await store.resourceType.create({ name: 'position', category: 'position', attribute_schema: [], stability: 'stable' })
 }
 
 const addResourceType: PatchOp = { op: 'add_resource_type', name: 'Squad', category: 'group' }

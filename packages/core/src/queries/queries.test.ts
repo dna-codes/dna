@@ -5,7 +5,7 @@ import { bookshopInput } from '../fixtures/bookshop'
 import {
   getResource, getResources,
   getPerson, getPersons,
-  getRole, getRoles,
+  getPosition, getPositions,
   getGroup, getGroups,
   getMembership, getMemberships,
   getOperation, getOperations, getOperationsForResource,
@@ -14,7 +14,7 @@ import {
   getTriggers, getTriggersForOperation,
   getRule, getRules, getRulesForOperation,
   getActorsForOperation,
-  getMembershipsForRole, getMembershipsForPerson,
+  getMembershipsForPosition, getMembershipsForPerson,
 } from './index'
 
 const EXAMPLES_ROOT = path.resolve(__dirname, '../../../../examples')
@@ -36,7 +36,7 @@ const emptyDna: OperationalDNA = { domain: { name: 'empty' } }
 describe('empty DNA — all list getters return []', () => {
   it('getResources', () => expect(getResources(emptyDna)).toEqual([]))
   it('getPersons', () => expect(getPersons(emptyDna)).toEqual([]))
-  it('getRoles', () => expect(getRoles(emptyDna)).toEqual([]))
+  it('getPositions', () => expect(getPositions(emptyDna)).toEqual([]))
   it('getGroups', () => expect(getGroups(emptyDna)).toEqual([]))
   it('getMemberships', () => expect(getMemberships(emptyDna)).toEqual([]))
   it('getOperations', () => expect(getOperations(emptyDna)).toEqual([]))
@@ -49,7 +49,7 @@ describe('empty DNA — all list getters return []', () => {
 describe('empty DNA — all single getters return null', () => {
   it('getResource', () => expect(getResource(emptyDna, 'X')).toBeNull())
   it('getPerson', () => expect(getPerson(emptyDna, 'X')).toBeNull())
-  it('getRole', () => expect(getRole(emptyDna, 'X')).toBeNull())
+  it('getPosition', () => expect(getPosition(emptyDna, 'X')).toBeNull())
   it('getGroup', () => expect(getGroup(emptyDna, 'X')).toBeNull())
   it('getMembership', () => expect(getMembership(emptyDna, 'X')).toBeNull())
   it('getOperation', () => expect(getOperation(emptyDna, 'X')).toBeNull())
@@ -65,7 +65,7 @@ describe('empty DNA — cross-ref resolvers return []', () => {
   it('getTriggersForOperation', () => expect(getTriggersForOperation(emptyDna, 'X')).toEqual([]))
   it('getRulesForOperation', () => expect(getRulesForOperation(emptyDna, 'X')).toEqual([]))
   it('getActorsForOperation', () => expect(getActorsForOperation(emptyDna, 'X')).toEqual([]))
-  it('getMembershipsForRole', () => expect(getMembershipsForRole(emptyDna, 'X')).toEqual([]))
+  it('getMembershipsForPosition', () => expect(getMembershipsForPosition(emptyDna, 'X')).toEqual([]))
   it('getMembershipsForPerson', () => expect(getMembershipsForPerson(emptyDna, 'X')).toEqual([]))
 })
 
@@ -95,15 +95,15 @@ describe('getPersons — bookshop', () => {
   })
 })
 
-describe('getRoles — bookshop', () => {
+describe('getPositions — bookshop', () => {
   it('returns all roles', () => {
-    expect(getRoles(bookshop).map(r => r.name)).toEqual(['Editor'])
+    expect(getPositions(bookshop).map(r => r.name)).toEqual(['Editor'])
   })
   it('found — returns value', () => {
-    expect(getRole(bookshop, 'Editor')).toMatchObject({ name: 'Editor', scope: 'Shop' })
+    expect(getPosition(bookshop, 'Editor')).toMatchObject({ name: 'Editor', scope: 'Shop' })
   })
   it('not found — returns null', () => {
-    expect(getRole(bookshop, 'Missing')).toBeNull()
+    expect(getPosition(bookshop, 'Missing')).toBeNull()
   })
 })
 
@@ -124,7 +124,7 @@ describe('getMemberships — bookshop', () => {
     expect(getMemberships(bookshop).map(m => m.name)).toEqual(['EmployeeEditor'])
   })
   it('found — returns value', () => {
-    expect(getMembership(bookshop, 'EmployeeEditor')).toMatchObject({ person: 'Employee', role: 'Editor' })
+    expect(getMembership(bookshop, 'EmployeeEditor')).toMatchObject({ person: 'Employee', position: 'Editor' })
   })
   it('not found — returns null', () => {
     expect(getMembership(bookshop, 'Missing')).toBeNull()
@@ -246,14 +246,14 @@ describe('getTasksForOperation — bookshop', () => {
   })
 })
 
-describe('getMembershipsForRole — lending', () => {
+describe('getMembershipsForPosition — lending', () => {
   it('returns memberships for a role', () => {
-    const ms = getMembershipsForRole(lending, 'Underwriter')
+    const ms = getMembershipsForPosition(lending, 'Underwriter')
     expect(ms.length).toBeGreaterThan(0)
-    ms.forEach(m => expect(m.role).toBe('Underwriter'))
+    ms.forEach(m => expect(m.position).toBe('Underwriter'))
   })
   it('empty match returns []', () => {
-    expect(getMembershipsForRole(lending, 'MissingRole')).toEqual([])
+    expect(getMembershipsForPosition(lending, 'MissingRole')).toEqual([])
   })
 })
 
@@ -286,7 +286,9 @@ describe('getActorsForOperation — lending', () => {
 
   it('dangling reference is silently omitted', () => {
     const dnaWithDangling: OperationalDNA = {
-      domain: { name: 'test', roles: [], persons: [] },
+      domain: { name: 'test' },
+      positions: [],
+      persons: [],
       rules: [{ operation: 'Thing.Do', rule_type: 'access', allow: [{ role: 'GhostRole' }] }],
     }
     expect(getActorsForOperation(dnaWithDangling, 'Thing.Do')).toEqual([])
@@ -317,7 +319,7 @@ describe('return type semantics', () => {
   it('single getters return null (not undefined) when not found', () => {
     expect(getResource(emptyDna, 'X')).toBeNull()
     expect(getPerson(emptyDna, 'X')).toBeNull()
-    expect(getRole(emptyDna, 'X')).toBeNull()
+    expect(getPosition(emptyDna, 'X')).toBeNull()
     expect(getGroup(emptyDna, 'X')).toBeNull()
     expect(getMembership(emptyDna, 'X')).toBeNull()
     expect(getOperation(emptyDna, 'X')).toBeNull()
@@ -329,7 +331,7 @@ describe('return type semantics', () => {
   it('list getters return arrays (not null/undefined) when empty', () => {
     expect(Array.isArray(getResources(emptyDna))).toBe(true)
     expect(Array.isArray(getPersons(emptyDna))).toBe(true)
-    expect(Array.isArray(getRoles(emptyDna))).toBe(true)
+    expect(Array.isArray(getPositions(emptyDna))).toBe(true)
     expect(Array.isArray(getGroups(emptyDna))).toBe(true)
     expect(Array.isArray(getMemberships(emptyDna))).toBe(true)
     expect(Array.isArray(getOperations(emptyDna))).toBe(true)

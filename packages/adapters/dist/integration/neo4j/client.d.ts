@@ -14,7 +14,7 @@
  * Cypher snippets live in `./cypher.ts` and are unit-testable in
  * isolation. The client composes them with the driver.
  */
-import type { DnaDataStore, OperationalDNA } from '@dna-codes/dna-core';
-import type { Neo4jClientOptions } from './types';
-export declare function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): DnaDataStore;
+import type { OperationalDNA } from '@dna-codes/dna-core';
+import type { Neo4jClientOptions, Neo4jStore } from './types';
+export declare function createClient(opts: Neo4jClientOptions, _dna?: OperationalDNA): Neo4jStore;
 //# sourceMappingURL=client.d.ts.map

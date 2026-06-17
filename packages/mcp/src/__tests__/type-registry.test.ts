@@ -12,7 +12,7 @@ async function seedTypes(store: DnaDataStore) {
   await store.migrate()
   await store.resourceType.create({ name: 'company', category: 'group', attribute_schema: [], stability: 'stable' })
   await store.resourceType.create({
-    name: 'position', category: 'role',
+    name: 'position', category: 'position',
     attribute_schema: [{ name: 'title', type: 'string', required: true }],
     stability: 'experimental', description: 'A role in the org',
   })
@@ -39,7 +39,7 @@ describe('buildTypeRegistryGraph', () => {
     const vm = await buildTypeRegistryGraph(store)
     const position = vm.resourceTypes.find(r => r.name === 'position')!
 
-    expect(position.category).toBe('role')
+    expect(position.category).toBe('position')
     expect(position.stability).toBe('experimental')
     expect(position.description).toBe('A role in the org')
     expect(position.attributes).toEqual([{ name: 'title', type: 'string', required: true }])

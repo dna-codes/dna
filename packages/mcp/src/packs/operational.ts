@@ -2,7 +2,7 @@ import type { ResourceTypeInput, RelationshipTypeInput } from '@dna-codes/dna-co
 
 export const resourceTypes: ResourceTypeInput[] = [
   { name: 'person',     category: 'person',   description: 'A human individual in the organization.',                         attribute_schema: [], stability: 'stable' },
-  { name: 'position',   category: 'role',     description: 'A role or seat in the org structure, independent of who holds it.', attribute_schema: [], stability: 'stable' },
+  { name: 'position',   category: 'position',     description: 'A role or seat in the org structure, independent of who holds it.', attribute_schema: [], stability: 'stable' },
   { name: 'department', category: 'group',    description: 'A functional division or team within the company.',                attribute_schema: [], stability: 'stable' },
   { name: 'company',    category: 'group',    description: 'The top-level organization.',                                      attribute_schema: [], stability: 'stable' },
   { name: 'process',    category: 'resource', description: 'A named workflow or end-to-end business process.',                 attribute_schema: [], stability: 'stable' },

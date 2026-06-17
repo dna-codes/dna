@@ -1,11 +1,11 @@
 import { DnaInput } from '../types'
-import { collectResources, mermaidId } from '../util'
+import { mermaidId } from '../util'
 
 export function renderErd(dna: DnaInput): string | null {
   const op = dna.operational
   if (!op) return null
 
-  const resources = collectResources(op.domain)
+  const resources = op.resources ?? []
   if (!resources.length) return null
 
   const lines: string[] = ['erDiagram']

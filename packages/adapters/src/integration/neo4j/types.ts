@@ -7,6 +7,18 @@
  * documented for `integration/memory`. See `AGENTS.md`.
  */
 
+import type { DnaDataStore } from '@dna-codes/dna-core'
+
+/**
+ * The Neo4j store: the full `DnaDataStore` plus a `clear()` that wipes the
+ * entire graph (used by the MCP server's reset flow). `createClient` returns
+ * this; callers that only need the contract can keep typing it as `DnaDataStore`.
+ */
+export interface Neo4jStore extends DnaDataStore {
+  /** Delete every node and relationship. Constraints survive; re-`migrate()` is idempotent. */
+  clear(): Promise<void>
+}
+
 export interface Neo4jClientOptions {
   /** Bolt URI — e.g. `bolt://localhost:7687` or `neo4j+s://<host>:7687`. */
   uri: string

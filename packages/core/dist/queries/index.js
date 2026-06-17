@@ -1,15 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMembershipsForPerson = exports.getMembershipsForRole = exports.getActorsForOperation = exports.getRulesForOperation = exports.getRules = exports.getRule = exports.getTriggersForOperation = exports.getTriggers = exports.getTasksForOperation = exports.getTasks = exports.getTask = exports.getTriggersForProcess = exports.getProcesses = exports.getProcess = exports.getOperationsForResource = exports.getOperations = exports.getOperation = exports.getMemberships = exports.getMembership = exports.getGroups = exports.getGroup = exports.getRoles = exports.getRole = exports.getPersons = exports.getPerson = exports.getResources = exports.getResource = void 0;
+exports.getMembershipsForPerson = exports.getMembershipsForPosition = exports.getActorsForOperation = exports.getRulesForOperation = exports.getRules = exports.getRule = exports.getTriggersForOperation = exports.getTriggers = exports.getTasksForOperation = exports.getTasks = exports.getTask = exports.getTriggersForProcess = exports.getProcesses = exports.getProcess = exports.getOperationsForResource = exports.getOperations = exports.getOperation = exports.getMemberships = exports.getMembership = exports.getGroups = exports.getGroup = exports.getPositions = exports.getPosition = exports.getPersons = exports.getPerson = exports.getResources = exports.getResource = void 0;
 var resource_1 = require("./resource");
 Object.defineProperty(exports, "getResource", { enumerable: true, get: function () { return resource_1.getResource; } });
 Object.defineProperty(exports, "getResources", { enumerable: true, get: function () { return resource_1.getResources; } });
 var person_1 = require("./person");
 Object.defineProperty(exports, "getPerson", { enumerable: true, get: function () { return person_1.getPerson; } });
 Object.defineProperty(exports, "getPersons", { enumerable: true, get: function () { return person_1.getPersons; } });
-var role_1 = require("./role");
-Object.defineProperty(exports, "getRole", { enumerable: true, get: function () { return role_1.getRole; } });
-Object.defineProperty(exports, "getRoles", { enumerable: true, get: function () { return role_1.getRoles; } });
+var position_1 = require("./position");
+Object.defineProperty(exports, "getPosition", { enumerable: true, get: function () { return position_1.getPosition; } });
+Object.defineProperty(exports, "getPositions", { enumerable: true, get: function () { return position_1.getPositions; } });
 var group_1 = require("./group");
 Object.defineProperty(exports, "getGroup", { enumerable: true, get: function () { return group_1.getGroup; } });
 Object.defineProperty(exports, "getGroups", { enumerable: true, get: function () { return group_1.getGroups; } });
@@ -38,6 +38,6 @@ Object.defineProperty(exports, "getRulesForOperation", { enumerable: true, get: 
 var actor_1 = require("./actor");
 Object.defineProperty(exports, "getActorsForOperation", { enumerable: true, get: function () { return actor_1.getActorsForOperation; } });
 var membership_resolve_1 = require("./membership-resolve");
-Object.defineProperty(exports, "getMembershipsForRole", { enumerable: true, get: function () { return membership_resolve_1.getMembershipsForRole; } });
+Object.defineProperty(exports, "getMembershipsForPosition", { enumerable: true, get: function () { return membership_resolve_1.getMembershipsForPosition; } });
 Object.defineProperty(exports, "getMembershipsForPerson", { enumerable: true, get: function () { return membership_resolve_1.getMembershipsForPerson; } });
 //# sourceMappingURL=index.js.map

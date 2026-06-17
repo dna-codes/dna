@@ -14,8 +14,8 @@ describe('merge()', () => {
   describe('purity & determinism', () => {
     it('returns deeply-equal output for the same input across calls', () => {
       const dnas: OperationalDNA[] = [
-        { domain: { name: 'acme', resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }] } },
-        { domain: { name: 'acme', resources: [{ name: 'Loan', attributes: [{ name: 'status', type: 'enum' }] }] } },
+        { domain: { name: 'acme' }, resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }] },
+        { domain: { name: 'acme' }, resources: [{ name: 'Loan', attributes: [{ name: 'status', type: 'enum' }] }] },
       ]
       const a = merge(dnas)
       const b = merge(dnas)
@@ -34,17 +34,17 @@ describe('merge()', () => {
     it('two chunks describing Loan unify into one Resource with both attributes', () => {
       const result = merge([
         chunk(
-          { domain: { name: 'acme', resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }] } },
+          { domain: { name: 'acme' }, resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }] },
           'gdrive://a',
           T1,
         ),
         chunk(
-          { domain: { name: 'acme', resources: [{ name: 'Loan', attributes: [{ name: 'status', type: 'enum' }] }] } },
+          { domain: { name: 'acme' }, resources: [{ name: 'Loan', attributes: [{ name: 'status', type: 'enum' }] }] },
           'gdrive://b',
           T2,
         ),
       ])
-      const resources = (result.dna.domain.resources ?? []) as Array<Record<string, unknown>>
+      const resources = (result.dna.resources ?? []) as Array<Record<string, unknown>>
       expect(resources).toHaveLength(1)
       expect(resources[0].name).toBe('Loan')
       const attrs = resources[0].attributes as Array<{ name: string }>
@@ -54,26 +54,24 @@ describe('merge()', () => {
 
     it('same-named entries in different types do not unify', () => {
       const result = merge([
-        { domain: { name: 'd', resources: [{ name: 'Account' }] } },
-        { domain: { name: 'd', persons: [{ name: 'Account' }] } },
+        { domain: { name: 'd' }, resources: [{ name: 'Account' }] },
+        { domain: { name: 'd' }, persons: [{ name: 'Account' }] },
       ])
-      expect((result.dna.domain.resources as unknown[])).toEqual([{ name: 'Account' }])
-      expect((result.dna.domain.persons as unknown[])).toEqual([{ name: 'Account' }])
+      expect((result.dna.resources as unknown[])).toEqual([{ name: 'Account' }])
+      expect((result.dna.persons as unknown[])).toEqual([{ name: 'Account' }])
     })
 
     it('flattens nested sub-domains into the top-level merged domain', () => {
       const dna: OperationalDNA = {
-        domain: {
-          name: 'acme',
+        domain: { name: 'acme',
           domains: [
-            { name: 'finance', resources: [{ name: 'Loan' }] },
-            { name: 'identity', persons: [{ name: 'Employee' }] },
-          ],
-        },
+            { name: 'finance',  },
+            { name: 'identity',  },
+          ] }, resources: [{ name: 'Loan' }], persons: [{ name: 'Employee' }],
       }
       const result = merge([dna])
-      expect(result.dna.domain.resources).toEqual([{ name: 'Loan' }])
-      expect(result.dna.domain.persons).toEqual([{ name: 'Employee' }])
+      expect(result.dna.resources).toEqual([{ name: 'Loan' }])
+      expect(result.dna.persons).toEqual([{ name: 'Employee' }])
     })
   })
 
@@ -81,17 +79,17 @@ describe('merge()', () => {
     it('attributes union by name with recursive merge of attributes already shared', () => {
       const result = merge([
         chunk(
-          { domain: { name: 'd', resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }] } },
+          { domain: { name: 'd' }, resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }] },
           'a',
           T1,
         ),
         chunk(
-          { domain: { name: 'd', resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number', required: true }] }] } },
+          { domain: { name: 'd' }, resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number', required: true }] }] },
           'b',
           T2,
         ),
       ])
-      const resources = result.dna.domain.resources as Array<Record<string, unknown>>
+      const resources = result.dna.resources as Array<Record<string, unknown>>
       const attrs = resources[0].attributes as Array<Record<string, unknown>>
       expect(attrs).toEqual([{ name: 'amount', type: 'number', required: true }])
       expect(result.conflicts).toHaveLength(0)
@@ -100,22 +98,22 @@ describe('merge()', () => {
 
   describe('scalar conflict + recommendation policy', () => {
     it('multi-source agreement does not produce a conflict', () => {
-      const dna: OperationalDNA = { domain: { name: 'd', resources: [{ name: 'Loan', parent: 'FinancialProduct' }] } }
+      const dna: OperationalDNA = { domain: { name: 'd' }, resources: [{ name: 'Loan', parent: 'FinancialProduct' }] }
       const result = merge([
         chunk(dna, 'a', T1),
         chunk(dna, 'b', T2),
         chunk(dna, 'c', T3),
       ])
-      const resources = result.dna.domain.resources as Array<Record<string, unknown>>
+      const resources = result.dna.resources as Array<Record<string, unknown>>
       expect(resources[0].parent).toBe('FinancialProduct')
       expect(result.conflicts).toHaveLength(0)
     })
 
     it('single-source value does not produce a conflict', () => {
       const result = merge([
-        chunk({ domain: { name: 'd', resources: [{ name: 'Loan', description: 'Consumer loan' }] } }, 'a', T1),
+        chunk({ domain: { name: 'd' }, resources: [{ name: 'Loan', description: 'Consumer loan' }] }, 'a', T1),
       ])
-      const resources = result.dna.domain.resources as Array<Record<string, unknown>>
+      const resources = result.dna.resources as Array<Record<string, unknown>>
       expect(resources[0].description).toBe('Consumer loan')
       expect(result.conflicts).toHaveLength(0)
     })
@@ -123,17 +121,17 @@ describe('merge()', () => {
     it('conflicting required flags produce a conflict; recency tie-break wins', () => {
       const result = merge([
         chunk(
-          { domain: { name: 'd', resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number', required: true }] }] } },
+          { domain: { name: 'd' }, resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number', required: true }] }] },
           'gdrive://abc',
           T1,
         ),
         chunk(
-          { domain: { name: 'd', resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number', required: false }] }] } },
+          { domain: { name: 'd' }, resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number', required: false }] }] },
           'gdrive://def',
           T2,
         ),
       ])
-      const resources = result.dna.domain.resources as Array<Record<string, unknown>>
+      const resources = result.dna.resources as Array<Record<string, unknown>>
       const attrs = resources[0].attributes as Array<Record<string, unknown>>
       expect(attrs[0].required).toBe(false)
       expect(result.conflicts).toHaveLength(1)
@@ -146,11 +144,11 @@ describe('merge()', () => {
 
     it('most-sources beats recency', () => {
       const result = merge([
-        chunk({ domain: { name: 'd', resources: [{ name: 'Loan', description: 'short' }] } }, 'a', T1),
-        chunk({ domain: { name: 'd', resources: [{ name: 'Loan', description: 'short' }] } }, 'b', T1),
-        chunk({ domain: { name: 'd', resources: [{ name: 'Loan', description: 'lots and lots of detail' }] } }, 'c', T3),
+        chunk({ domain: { name: 'd' }, resources: [{ name: 'Loan', description: 'short' }] }, 'a', T1),
+        chunk({ domain: { name: 'd' }, resources: [{ name: 'Loan', description: 'short' }] }, 'b', T1),
+        chunk({ domain: { name: 'd' }, resources: [{ name: 'Loan', description: 'lots and lots of detail' }] }, 'c', T3),
       ])
-      const resources = result.dna.domain.resources as Array<Record<string, unknown>>
+      const resources = result.dna.resources as Array<Record<string, unknown>>
       expect(resources[0].description).toBe('short')
       const c = result.conflicts.find((x) => x.path.endsWith('description'))!
       expect(c.recommendation.reason).toMatch(/most-sources/)
@@ -160,7 +158,7 @@ describe('merge()', () => {
   describe('cross-reference resolution', () => {
     it('Operation.target resolves against merged Resources without warning', () => {
       const result = merge([
-        { domain: { name: 'd', resources: [{ name: 'Loan' }] } },
+        { domain: { name: 'd' }, resources: [{ name: 'Loan' }] },
         { domain: { name: 'd' }, operations: [{ name: 'Loan.Approve', target: 'Loan', action: 'Approve' }] },
       ])
       expect(result.conflicts.filter((c) => c.kind === 'unresolved-reference')).toHaveLength(0)
@@ -202,8 +200,8 @@ describe('merge()', () => {
   describe('provenance', () => {
     it('lists all contributing sources for a shared primitive', () => {
       const result = merge([
-        chunk({ domain: { name: 'd', resources: [{ name: 'Loan' }] } }, 'file:///a.md', T1),
-        chunk({ domain: { name: 'd', resources: [{ name: 'Loan' }] } }, 'gdrive://b', T2),
+        chunk({ domain: { name: 'd' }, resources: [{ name: 'Loan' }] }, 'file:///a.md', T1),
+        chunk({ domain: { name: 'd' }, resources: [{ name: 'Loan' }] }, 'gdrive://b', T2),
       ])
       const entries = result.provenance['resources.Loan']
       expect(entries).toBeDefined()
@@ -214,12 +212,12 @@ describe('merge()', () => {
     it('per-attribute provenance is granular', () => {
       const result = merge([
         chunk(
-          { domain: { name: 'd', resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }] } },
+          { domain: { name: 'd' }, resources: [{ name: 'Loan', attributes: [{ name: 'amount', type: 'number' }] }] },
           'a',
           T1,
         ),
         chunk(
-          { domain: { name: 'd', resources: [{ name: 'Loan', attributes: [{ name: 'status', type: 'enum' }] }] } },
+          { domain: { name: 'd' }, resources: [{ name: 'Loan', attributes: [{ name: 'status', type: 'enum' }] }] },
           'b',
           T2,
         ),
@@ -232,7 +230,7 @@ describe('merge()', () => {
 
     it('does not embed provenance fields inside the merged DNA tree', () => {
       const result = merge([
-        chunk({ domain: { name: 'd', resources: [{ name: 'Loan' }] } }, 'a', T1),
+        chunk({ domain: { name: 'd' }, resources: [{ name: 'Loan' }] }, 'a', T1),
       ])
       const json = JSON.stringify(result.dna)
       expect(json.includes('_provenance')).toBe(false)
@@ -253,35 +251,29 @@ describe('merge()', () => {
         id: '22222222-2222-4222-8222-222222222222', type, version: '1', ...p,
       })
       const a: OperationalDNA = {
-        domain: {
-          name: 'acme',
-          path: 'acme',
-          resources: [
-            baseR({
-              name: 'Loan',
-              attributes: [
-                { name: 'amount', type: 'number', required: true },
-                { name: 'status', type: 'enum', values: ['pending', 'active'] },
-              ],
-              actions: [{ name: 'Approve', type: 'write' }],
-            }),
-          ],
-          persons: [stamp('person', { name: 'Employee' })],
-          roles: [stamp('role', { name: 'Underwriter' })],
-        },
+        domain: { name: 'acme', path: 'acme' },
+        positions: [stamp('position', { name: 'Underwriter' })],
+        resources: [
+          baseR({
+            name: 'Loan',
+            attributes: [
+              { name: 'amount', type: 'number', required: true },
+              { name: 'status', type: 'enum', values: ['pending', 'active'] },
+            ],
+            actions: [{ name: 'Approve', type: 'write' }],
+          }),
+        ],
+        persons: [stamp('person', { name: 'Employee' })],
         operations: [stamp('operation', { name: 'Loan.Approve', target: 'Loan', action: 'Approve' })],
       }
       const b: OperationalDNA = {
-        domain: {
-          name: 'acme',
-          path: 'acme',
-          resources: [
+        domain: { name: 'acme',
+          path: 'acme' }, resources: [
             baseR({
               name: 'Loan',
               attributes: [{ name: 'borrower', type: 'reference' }],
             }),
           ],
-        },
       }
       const result = merge([chunk(a, 'a', T1), chunk(b, 'b', T2)])
       const validator = new DnaValidator()

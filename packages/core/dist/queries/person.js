@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPersons = getPersons;
 exports.getPerson = getPerson;
 function list(dna) {
-    return (dna.domain.persons ?? []);
+    return (dna.persons ?? []);
 }
 function getPersons(dna) {
     return list(dna);

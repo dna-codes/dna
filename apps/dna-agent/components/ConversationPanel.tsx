@@ -50,16 +50,60 @@ function welcomeFor(pack: string, mode: SessionMode): Message {
   return { id: 'welcome', role: 'assistant', content: w.content + MODE_WELCOME[mode] }
 }
 
+/** Join a list naturally: "a, b and c". */
+function humanList(items: string[]): string {
+  if (items.length <= 1) return items.join('')
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
+}
+
+/**
+ * A concise welcome derived from the *current graph* — what's actually loaded
+ * (the company, its structure, and any product app). Returns null for an empty
+ * graph so the static pack welcome stands.
+ */
+async function graphWelcome(mode: SessionMode): Promise<string | null> {
+  try {
+    const res = await fetch('/api/graph')
+    if (!res.ok) return null
+    const { nodes } = (await res.json()) as { nodes: { type: string; name: string }[] }
+    if (!nodes || nodes.length === 0) return null
+    const count: Record<string, number> = {}
+    for (const n of nodes) count[n.type] = (count[n.type] ?? 0) + 1
+    const c = (t: string) => count[t] ?? 0
+    const company = nodes.find((n) => n.type === 'company')?.name
+    const app = nodes.find((n) => n.type === 'App')?.name
+
+    const parts: string[] = []
+    if (c('department')) parts.push(`${c('department')} departments`)
+    if (c('position')) parts.push(`${c('position')} roles`)
+    if (c('process')) parts.push(`${c('process')} processes`)
+    if (c('order')) parts.push(`${c('order')} orders`)
+    if (parts.length === 0) return null
+
+    const subject = company ? `**${company}**` : 'your graph'
+    let s = `Hi — I'm your DNA Agent, working with ${subject} — ${humanList(parts)}`
+    if (app) s += `, plus the **${app}** product app`
+    s += '. '
+    s += mode === 'build'
+      ? 'Ask about the type model, or tell me how to evolve it.'
+      : 'Ask about the org, processes, or the app — or tell me what to change.'
+    return s
+  } catch {
+    return null
+  }
+}
+
 interface ConversationPanelProps {
   pack: string
   mode: SessionMode
+  refreshSignal: number
   onGraphPatched: () => void
   onReset: () => void
   onSaveLens?: (name: string, widget: WidgetPayload) => void
   onActivateLens?: (lensId: string) => void
 }
 
-export function ConversationPanel({ pack, mode, onGraphPatched, onReset, onSaveLens, onActivateLens }: ConversationPanelProps) {
+export function ConversationPanel({ pack, mode, refreshSignal, onGraphPatched, onReset, onSaveLens, onActivateLens }: ConversationPanelProps) {
   const [messages, setMessages] = useState<Message[]>(() => [welcomeFor(pack, mode)])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
@@ -70,6 +114,19 @@ export function ConversationPanel({ pack, mode, onGraphPatched, onReset, onSaveL
   useEffect(() => {
     setMessages([welcomeFor(pack, mode)])
   }, [pack, mode])
+
+  // Enhance the opening message with a concise summary of the current graph
+  // (e.g. after loading an example). Only while the conversation hasn't started.
+  useEffect(() => {
+    let cancelled = false
+    graphWelcome(mode).then((content) => {
+      if (cancelled || !content) return
+      setMessages(prev => (prev.length === 1 && prev[0].id === 'welcome'
+        ? [{ id: 'welcome', role: 'assistant', content }]
+        : prev))
+    })
+    return () => { cancelled = true }
+  }, [pack, mode, refreshSignal])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })

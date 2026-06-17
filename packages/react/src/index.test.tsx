@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, screen, waitFor, act } from '@testing-library/react'
-import { DnaProvider, Operation, useOperation } from './index'
-import type { AuditEvent } from './index'
+import { DnaProvider, Operation, Surface, useOperation } from './index'
+import type { AuditEvent, StructuralAccess } from './index'
 
 // Minimal lending DNA fixture
 const dna = {
@@ -121,6 +121,89 @@ describe('@dna-codes/dna-react', () => {
       expect(screen.getByText('loading...')).toBeInTheDocument()
       await act(async () => { resolve(['Underwriter']) })
       await waitFor(() => expect(screen.getByText('approve button')).toBeInTheDocument())
+    })
+  })
+
+  describe('<Surface> — coarse structural gate', () => {
+    // App "Lending" contains Module "Origination". Underwriter can_access the App.
+    const access: StructuralAccess = {
+      grants:   [{ subject: 'Underwriter', surface: 'app:lending' }],
+      contains: [{ parent: 'app:lending', child: 'mod:origination' }],
+    }
+
+    it('renders a surface the user can_access', () => {
+      render(
+        <DnaProvider dna={dna} userId="alice" roles={['Underwriter']} access={access}>
+          <Surface id="app:lending"><span>lending app</span></Surface>
+        </DnaProvider>
+      )
+      expect(screen.getByText('lending app')).toBeInTheDocument()
+    })
+
+    it('hides a surface the user cannot can_access', () => {
+      render(
+        <DnaProvider dna={dna} userId="bob" roles={['Borrower']} access={access}>
+          <Surface id="app:lending" fallback={<span>no surface</span>}>
+            <span>lending app</span>
+          </Surface>
+        </DnaProvider>
+      )
+      expect(screen.queryByText('lending app')).not.toBeInTheDocument()
+      expect(screen.getByText('no surface')).toBeInTheDocument()
+    })
+
+    it('cascades access down contains to a contained module', () => {
+      render(
+        <DnaProvider dna={dna} userId="alice" roles={['Underwriter']} access={access}>
+          <Surface id="mod:origination"><span>origination module</span></Surface>
+        </DnaProvider>
+      )
+      expect(screen.getByText('origination module')).toBeInTheDocument()
+    })
+
+    it('treats every surface as reachable when no access snapshot is given', () => {
+      render(
+        <DnaProvider dna={dna} userId="bob" roles={['Borrower']}>
+          <Surface id="app:lending"><span>lending app</span></Surface>
+        </DnaProvider>
+      )
+      expect(screen.getByText('lending app')).toBeInTheDocument()
+    })
+
+    it('composes coarse + fine: reachable surface, but ungranted operation disabled', () => {
+      // Borrower can_access the app, but lacks Loan.Approve (Underwriter-only).
+      const borrowerAccess: StructuralAccess = {
+        grants:   [{ subject: 'Borrower', surface: 'app:lending' }],
+        contains: [],
+      }
+      render(
+        <DnaProvider dna={dna} userId="bob" roles={['Borrower']} access={borrowerAccess}>
+          <Surface id="app:lending" fallback={<span>no surface</span>}>
+            <span>lending app</span>
+            <Operation name="Loan.Approve" fallback={<span>approve disabled</span>}>
+              <span>approve button</span>
+            </Operation>
+          </Surface>
+        </DnaProvider>
+      )
+      // Coarse gate open → surface renders.
+      expect(screen.getByText('lending app')).toBeInTheDocument()
+      // Fine gate closed → the control is not shown.
+      expect(screen.queryByText('approve button')).not.toBeInTheDocument()
+      expect(screen.getByText('approve disabled')).toBeInTheDocument()
+    })
+
+    it('composes coarse + fine: unreachable surface hides everything within', () => {
+      render(
+        <DnaProvider dna={dna} userId="alice" roles={['Underwriter']} access={{ grants: [], contains: [] }}>
+          <Surface id="app:lending" fallback={<span>no surface</span>}>
+            <Operation name="Loan.Approve"><span>approve button</span></Operation>
+          </Surface>
+        </DnaProvider>
+      )
+      // Even though Underwriter could perform Loan.Approve, the surface is hidden.
+      expect(screen.queryByText('approve button')).not.toBeInTheDocument()
+      expect(screen.getByText('no surface')).toBeInTheDocument()
     })
   })
 

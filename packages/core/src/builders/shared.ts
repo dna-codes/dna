@@ -47,9 +47,7 @@ export interface BuilderResult {
   conflicts: Conflict[]
 }
 
-const NOUN_COLLECTIONS = new Set(['resources', 'persons', 'roles', 'groups'] as const)
-
-type NounCollection = 'resources' | 'persons' | 'roles' | 'groups'
+type NounCollection = 'resources' | 'persons' | 'positions' | 'groups'
 type ActivityCollection =
   | 'memberships'
   | 'operations'
@@ -81,7 +79,7 @@ export type BuilderCollection = NounCollection | ActivityCollection
 const COLLECTION_TO_TYPE: Record<BuilderCollection, OperationalPrimitiveType> = {
   resources: 'resource',
   persons: 'person',
-  roles: 'role',
+  positions: 'position',
   groups: 'group',
   memberships: 'membership',
   operations: 'operation',
@@ -114,15 +112,14 @@ export function composeInto(
     }
   }
 
+  // Every primitive — nouns included — now lives in a top-level collection;
+  // the wrapper only carries the domain name so `merge()` doesn't surface a
+  // spurious conflict on it.
   const domainName = dna.domain.name
-  const wrapper: OperationalDNA = NOUN_COLLECTIONS.has(collection as NounCollection)
-    ? {
-        domain: { name: domainName, [collection]: [stamped] },
-      }
-    : {
-        domain: { name: domainName },
-        [collection]: [stamped],
-      }
+  const wrapper: OperationalDNA = {
+    domain: { name: domainName },
+    [collection]: [stamped],
+  }
 
   const result = merge([dna, wrapper])
   return { dna: result.dna, conflicts: result.conflicts }

@@ -15,7 +15,7 @@ import type {
 const TOP_LEVEL_COLLECTIONS = [
   'resources',
   'persons',
-  'roles',
+  'positions',
   'groups',
   'memberships',
   'operations',
@@ -26,7 +26,15 @@ const TOP_LEVEL_COLLECTIONS = [
   'processes',
 ] as const
 
-const NOUN_COLLECTIONS = ['resources', 'persons', 'roles', 'groups'] as const
+const NOUN_COLLECTIONS = ['resources', 'persons', 'positions', 'groups'] as const
+
+/**
+ * Every collection merged at the document top level, by name identity. Nouns,
+ * activities, and the flat `domains[]` (descendant Domain nodes) all live here
+ * after the home-edge migration. `domains` is last so its provenance paths sort
+ * after the primitives'.
+ */
+const MERGED_COLLECTIONS = [...TOP_LEVEL_COLLECTIONS, 'domains'] as const
 
 interface Occurrence {
   value: unknown
@@ -83,54 +91,14 @@ export function merge(input: OperationalDNA[] | MergeChunk[]): MergeResult {
   }
   if (typeof mergedDomain.name !== 'string') mergedDomain.name = ''
 
-  // ── 2. Collect every noun across every chunk's domain tree. ──────────────
-  const nounOccs: Record<(typeof NOUN_COLLECTIONS)[number], Map<string, Occurrence[]>> = {
-    resources: new Map(),
-    persons: new Map(),
-    roles: new Map(),
-    groups: new Map(),
-  }
-  for (const chunk of chunks) {
-    walkDomains(chunk.dna.domain, (domain) => {
-      for (const collection of NOUN_COLLECTIONS) {
-        const items = (domain as Record<string, unknown>)[collection]
-        if (!Array.isArray(items)) continue
-        for (const item of items) {
-          const name = nameOf(item)
-          if (!name) continue
-          const map = nounOccs[collection]
-          if (!map.has(name)) map.set(name, [])
-          map.get(name)!.push({ value: item, source: chunk.source })
-        }
-      }
-    })
-  }
-
-  for (const collection of NOUN_COLLECTIONS) {
-    const map = nounOccs[collection]
-    if (map.size === 0) continue
-    const merged: unknown[] = []
-    for (const [name, occs] of map) {
-      const path = `${collection}.${name}`
-      merged.push(mergeObjectField(occs, path, conflicts, provenance))
-    }
-    mergedDomain[collection] = merged
-  }
-
-  // ── 3. Merge top-level activity collections. ─────────────────────────────
-  const activityCollections: ReadonlyArray<(typeof TOP_LEVEL_COLLECTIONS)[number]> = [
-    'memberships',
-    'operations',
-    'triggers',
-    'rules',
-    'relationships',
-    'tasks',
-    'processes',
-  ]
-
+  // ── 2. Merge every top-level collection by name. ─────────────────────────
+  // Nouns (resources/persons/roles/groups) now live at the document top level
+  // alongside the activities — each names its home Domain via `domain` — so
+  // they merge identically. `domains` (descendant thin Domain nodes) merges by
+  // name too. Identity-by-name is global across all input chunks.
   const mergedDna: OperationalDNA = { domain: mergedDomain as OperationalDNA['domain'] }
 
-  for (const collection of activityCollections) {
+  for (const collection of MERGED_COLLECTIONS) {
     const groups = new Map<string, Occurrence[]>()
     const order: string[] = []
     for (const chunk of chunks) {
@@ -187,26 +155,6 @@ function normalizeChunks(input: OperationalDNA[] | MergeChunk[]): NormalizedChun
 
 function syntheticSource(i: number): Source {
   return { uri: `chunk://${i}`, loadedAt: '' }
-}
-
-function walkDomains(
-  domain: OperationalDNA['domain'] | undefined,
-  visit: (d: OperationalDNA['domain']) => void
-): void {
-  if (!domain) return
-  visit(domain)
-  const children = (domain as Record<string, unknown>).domains
-  if (Array.isArray(children)) {
-    for (const child of children) walkDomains(child as OperationalDNA['domain'], visit)
-  }
-}
-
-function nameOf(item: unknown): string | null {
-  if (item && typeof item === 'object' && 'name' in item) {
-    const n = (item as Record<string, unknown>).name
-    return typeof n === 'string' ? n : null
-  }
-  return null
 }
 
 function identityFor(collection: string, item: unknown): string | null {
@@ -478,11 +426,10 @@ function sourceKey(s: Source): string {
 // ── Cross-reference resolution ────────────────────────────────────────────
 
 function resolveCrossReferences(dna: OperationalDNA, conflicts: Conflict[]): void {
-  const domain = dna.domain
-  const resourceNames = collectNames(domain.resources)
-  const personNames = collectNames(domain.persons)
-  const roleNames = collectNames(domain.roles)
-  const groupNames = collectNames(domain.groups)
+  const resourceNames = collectNames(dna.resources)
+  const personNames = collectNames(dna.persons)
+  const roleNames = collectNames(dna.roles)
+  const groupNames = collectNames(dna.groups)
   const processNames = new Set<string>(collectNames(dna.processes))
   const operationNames = new Set<string>(collectNames(dna.operations))
   const taskNames = new Set<string>(collectNames(dna.tasks))

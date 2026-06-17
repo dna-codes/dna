@@ -72,41 +72,39 @@ dna/                         ← this repo
 
 Layers are one-way downstream: Operational → Product → Technical. Upper layers never depend on lower ones. Cross-layer references (e.g. a Product Resource pointing at an Operational Resource) are plain strings validated by `@dna-codes/dna-core` rather than JSON Schema `$ref`s.
 
-Operational DNA is **organizational modeling** — the **nouns** an organization deals with (people, places, things) and the **verbs** that bind them. It's modeled around the **Actor > Action > Subject** triad: Roles act, Subjects (any noun primitive) receive actions. Operational primitives fall into three categories — **People** (Person, Role, Group, Membership), **Structures** (Resource, Attribute, Relationship), and **Activities** (Operation, Task, Step, Process, Trigger, Rule). An **Operation** is always a `Target.Action` pair where Target is any noun primitive.
+Operational DNA is **organizational modeling** — the **nouns** an organization deals with (people, places, things) and the **verbs** that bind them. It's modeled around the **Actor > Action > Subject** triad: Positions act, Subjects (any noun primitive) receive actions. Operational primitives fall into three categories — **People** (Person, Position, Group, Membership), **Structures** (Resource, Attribute, Relationship), and **Activities** (Operation, Task, Step, Process, Trigger, Rule). An **Operation** is always a `Target.Action` pair where Target is any noun primitive.
 
 Here's a minimal Operational DNA document in a lending context:
 
 ```json
 {
-  "domain": {
-    "name": "lending",
-    "path": "acme.finance.lending",
-    "resources": [
-      {
-        "name": "Loan",
-        "attributes": [
-          { "name": "amount", "type": "number", "required": true },
-          { "name": "status", "type": "enum", "values": ["pending", "active", "repaid"] }
-        ],
-        "actions": [
-          { "name": "Apply",   "type": "write" },
-          { "name": "Approve", "type": "write" }
-        ]
-      }
-    ],
-    "persons": [
-      { "name": "Borrower" },
-      { "name": "Employee" }
-    ],
-    "groups": [
-      { "name": "BankDepartment" }
-    ],
-    "roles": [
-      { "name": "Underwriter", "scope": "BankDepartment" }
-    ]
-  },
+  "domain": { "name": "lending", "path": "acme.finance.lending" },
+  "resources": [
+    {
+      "name": "Loan",
+      "domain": "lending",
+      "attributes": [
+        { "name": "amount", "type": "number", "required": true },
+        { "name": "status", "type": "enum", "values": ["pending", "active", "repaid"] }
+      ],
+      "actions": [
+        { "name": "Apply",   "type": "write" },
+        { "name": "Approve", "type": "write" }
+      ]
+    }
+  ],
+  "persons": [
+    { "name": "Borrower", "domain": "lending" },
+    { "name": "Employee", "domain": "lending" }
+  ],
+  "groups": [
+    { "name": "BankDepartment", "domain": "lending" }
+  ],
+  "positions": [
+    { "name": "Underwriter", "domain": "lending", "scope": "BankDepartment" }
+  ],
   "memberships": [
-    { "name": "EmployeeUnderwriter", "person": "Employee", "role": "Underwriter" }
+    { "name": "EmployeeUnderwriter", "person": "Employee", "position": "Underwriter" }
   ],
   "operations": [
     { "target": "Loan", "action": "Apply",   "name": "Loan.Apply",   "changes": [{ "attribute": "status", "set": "pending" }] },
@@ -130,13 +128,13 @@ Canonical end-to-end DNA documents demonstrating the model across different busi
 
 | Example | Demonstrates |
 |---|---|
-| [`examples/lending`](./examples/lending) | Operations, Tasks, Process; Operation-level + Process-level Triggers; system Role (scheduled job); scoped Role; Person-as-actor (Borrower) + Role-as-actor (Underwriter); Memberships |
-| [`examples/mass-tort`](./examples/mass-tort) | Case as Group; multiple Person→Role Memberships (Partner→LeadCounsel/CoCounsel); multiple Processes; Process triggered by Operation completion |
-| [`examples/marketplace`](./examples/marketplace) | Same Person template eligible for two peer Roles via Memberships (Member→Host AND Member→Guest); two Groups (Listing, Booking); global (unscoped) Role; Step.else routing |
-| [`examples/healthcare`](./examples/healthcare) | Patient as Person template (structure + lifecycle); per-Person Role.scope (AttendingPhysician.scope = Patient); mixed scope targets (Person + Group); multi-predicate condition Rule |
-| [`examples/manufacturing`](./examples/manufacturing) | Multiple system Roles (CNC, press, paint robot, scheduler) with `system: true` and `resource:` link; parallel fan-out + fan-in via Step.depends_on; schedule-source Trigger on a system Operation |
-| [`examples/education`](./examples/education) | Course (Resource catalog) vs CourseOffering (Group); two Person templates eligible for distinct Roles (Faculty→Instructor, UniversityMember→Student); three scope tiers; calendar-aligned schedule Triggers |
-| [`examples/registry`](./examples/registry) | Type-driven platform meta-pattern; TypeDefinition / Instance / Link triad; `category` enum dispatching condition Rules (`TypeIsNotRole`, `TypeIsPublished`); system Role on a Resource template (`ValidationEngine`); Process-level Trigger off a config-primitive lifecycle Operation (`InstanceBootstrap` after `TypeDefinition.Publish`) |
+| [`examples/lending`](./examples/lending) | Operations, Tasks, Process; Operation-level + Process-level Triggers; system Position (scheduled job); scoped Position; Person-as-actor (Borrower) + Position-as-actor (Underwriter); Memberships |
+| [`examples/mass-tort`](./examples/mass-tort) | Case as Group; multiple Person→Position Memberships (Partner→LeadCounsel/CoCounsel); multiple Processes; Process triggered by Operation completion |
+| [`examples/marketplace`](./examples/marketplace) | Same Person template eligible for two peer Positions via Memberships (Member→Host AND Member→Guest); two Groups (Listing, Booking); global (unscoped) Position; Step.else routing |
+| [`examples/healthcare`](./examples/healthcare) | Patient as Person template (structure + lifecycle); per-Person Position.scope (AttendingPhysician.scope = Patient); mixed scope targets (Person + Group); multi-predicate condition Rule |
+| [`examples/manufacturing`](./examples/manufacturing) | Multiple system Positions (CNC, press, paint robot, scheduler) with `system: true` and `resource:` link; parallel fan-out + fan-in via Step.depends_on; schedule-source Trigger on a system Operation |
+| [`examples/education`](./examples/education) | Course (Resource catalog) vs CourseOffering (Group); two Person templates eligible for distinct Positions (Faculty→Instructor, UniversityMember→Student); three scope tiers; calendar-aligned schedule Triggers |
+| [`examples/registry`](./examples/registry) | Type-driven platform meta-pattern; TypeDefinition / Instance / Link triad; `category` enum dispatching condition Rules (`TypeIsNotRole`, `TypeIsPublished`); system Position on a Resource template (`ValidationEngine`); Process-level Trigger off a config-primitive lifecycle Operation (`InstanceBootstrap` after `TypeDefinition.Publish`) |
 
 ## Framework comparisons
 
@@ -150,7 +148,7 @@ A conceptual reference for DNA's metamodel lives in [`docs/concepts/`](./docs/co
 
 Operational DNA captures organizational modeling — what an organization *is* and what it *does*, independent of UI, API, or deployment technology. Three categories of primitives:
 
-- **People** — Person, Role, Group, Membership
+- **People** — Person, Position, Group, Membership
 - **Structures** — Resource, Attribute, Relationship
 - **Activities** — Operation, Task, Step, Process, Trigger, Rule
 
@@ -158,9 +156,9 @@ Operational DNA captures organizational modeling — what an organization *is* a
 
 **People primitives:**
 - **Person** — an individual template (`Customer`, `Employee`, `Patient`, `Borrower`). The kind of human the org deals with — not a specific named individual (instance-level data lives in Product/Technical layers). Has attributes and optional actions.
-- **Role** — a position/capacity template (`Underwriter`, `Doctor`, `LeadCounsel`, `SuperAdmin`). May declare `scope` (the Group or Person the Role is exercised within), optional `system: true` for non-human actors, optional `resource:` link when a system Role is backed by a Resource template, optional `actions[]` for org-admin lifecycle (e.g. `Underwriter.Activate`), and optional per-scope-instance constraints `cardinality` (`one`/`many`), `required` (presence), and `excludes` (mutual-exclusion with other Roles on the same scope instance).
-- **Group** — a work-unit / container template (`BankDepartment`, `Hospital`, `Case`, `Workspace`, `Family`). Has attributes and lifecycle; primarily exists to scope Roles.
-- **Membership** — a template-level eligibility statement: "Persons of type X may hold Roles of type Y, optionally in Groups of type Z." Captures organizational RBAC at the type level — *not* per-instance bindings.
+- **Position** — the organizational position a Person fills (`Underwriter`, `Doctor`, `LeadCounsel`, `SuperAdmin`, `Head of P&T`). May declare `scope` (the Group or Person the Position is exercised within), optional `system: true` for non-human actors, optional `resource:` link when a system Position is backed by a Resource template, optional `actions[]` for org-admin lifecycle (e.g. `Underwriter.Activate`), and optional per-scope-instance constraints `cardinality` (`one`/`many`), `required` (presence), and `excludes` (mutual-exclusion with other Positions on the same scope instance). *(Renamed from `Role`: "Role" now names the product-layer RBAC projection — see the Product Layer.)*
+- **Group** — a work-unit / container template (`BankDepartment`, `Hospital`, `Case`, `Workspace`, `Family`). Has attributes and lifecycle; primarily exists to scope Positions.
+- **Membership** — a template-level eligibility statement: "Persons of type X may hold Positions of type Y, optionally in Groups of type Z." The `Person + Position + Group` junction. Captures organizational RBAC at the type level — *not* per-instance bindings.
 
 **Structure primitives:**
 - **Resource** — a structure template the org manages (`Loan`, `Invoice`, `Account`, `Document`). Has attributes, actions, and optional parent.
@@ -179,18 +177,33 @@ Operational DNA captures organizational modeling — what an organization *is* a
 **Memberships are template-level, not instances:**
 
 ```json
-{ "name": "EmployeeUnderwriter", "person": "Employee", "role": "Underwriter" }
-{ "name": "PartnerLeadCounsel",  "person": "Partner",  "role": "LeadCounsel" }
-{ "name": "EmployeeAdmin",       "person": "Employee", "role": "SuperAdmin", "group": "Workspace" }
+{ "name": "EmployeeUnderwriter", "person": "Employee", "position": "Underwriter" }
+{ "name": "PartnerLeadCounsel",  "person": "Partner",  "position": "LeadCounsel" }
+{ "name": "EmployeeAdmin",       "person": "Employee", "position": "SuperAdmin", "group": "Workspace" }
 ```
 
-These say *what kinds of people can hold what kinds of roles in what kinds of groups* — not "Joe is the Underwriter of Eastern Branch." Specific person × role × group bindings (auth records, identity tokens) belong at the Product/Technical layer.
+These say *what kinds of people can hold what kinds of positions in what kinds of groups* — not "Joe is the Underwriter of Eastern Branch." Specific person × position × group bindings (auth records, identity tokens) belong at the Product/Technical layer.
 
 ## Product Layer
 
 Product DNA describes what gets built. It is split into three sub-layers that can be authored independently.
 
-**Core** (`product.core.json`) — materializes Operational concepts into product primitives: `Resource`, `Action`, `Operation`, `Field`, `User`, `Role`. Product `Resource` and `Action` are surface projections of their Operational counterparts — the same vocabulary is reused intentionally. The People primitives now project too: **`User`** is the product-layer projection of Operational `Person` *and* the identity/login subject for auth, and **`Role`** is the projection of Operational `Role` *and* the RBAC role read by product/api auth middleware and product/ui permission guards. `User.identity` (which field authenticates the subject) is a configured product fact; `Role.permissions[]` is a derived rollup of the Operational access Rules that name the role — not an authored ACL. (Group and Membership projection remains open — see `ROADMAP.md`.)
+**Core** (`product.core.json`) — materializes Operational concepts into product primitives: `Resource`, `Action`, `Operation`, `Field`, `User`, `Role`, `Permission`. Product `Resource` and `Action` are surface projections of their Operational counterparts — the same vocabulary is reused intentionally. The People primitives project across an exact parallel:
+
+| Operational | Product | |
+|---|---|---|
+| Person | **User** | the identity/login subject for auth |
+| Position | **Role** | the RBAC role read by api auth middleware + ui permission guards |
+| Group | *(scope reference)* | the authorization boundary — a namespaced entity reference, not a new type |
+| Membership | **Permission** | the reified authorization, bridged by `Membership --grants--> Permission` |
+
+- **`User`** projects Operational `Person`. `User.identity` (which field authenticates the subject) is a configured product fact.
+- **`Role`** projects Operational `Position` (via its `position` mapping). It no longer carries an inline `scope` or a `permissions[]` rollup — per-scope authorization is the `Permission` junction.
+- **`Permission`** is the reified authorization on the **Actor › Action › Resource** model (as in AWS Cedar): `principal` (a User) + `role` (the capacity) + `scope` (the Resource slot). It is a *node* — not a bare edge — precisely so the `grants` relationship has something to point at. `Permission.scope` is **not** a separate type: it is a single Cedar-style `::`-delimited qualified entity reference of arbitrary nesting depth (e.g. `Alloc8::Groups::P&T::Subteam::Platform`) resolving to an entity that already exists (the projected operational `Group`, or any `Resource`) — mirroring how operational `Position.scope` references a `Group`.
+
+**The `grants` bridge.** `grants` is a `relationship_type` from operational `Membership` → product `Permission`. It makes the org→app authorization causal chain a queryable subgraph — *"Kyle can approve P&T allocations **because** he holds the Head position in the P&T group."* Neither an IdP (which knows Kyle has access) nor a policy engine (which knows Kyle can approve) can answer the *why*; the `grants` edge can.
+
+**Derive-first / author-fallback.** `projectPermissions()` (pure, in `@dna-codes/dna-core`) derives a `Permission` (and its `grants` edge) from each operational `Membership` whose `Position` an access `Rule` empowers, resolving `scope` from the Membership's `group` (or the Position's scope). A multi-scope Position with no disambiguating Group yields a `planned` Permission with **no** `grants` edge — never an invented one. `applyPermissions(store)` upserts each Permission by its `{principal, role, scope}` identity, so a derived Permission **reconciles onto** a matching hand-authored one (e.g. a service account with no backing Membership) rather than duplicating it; `grants` edges are preserved across re-apply like the other governance edges.
 
 Every primitive in every layer may carry an optional `stability` maturity marker (`experimental` / `beta` / `stable` / `deprecated`), declared once in the shared `meta/stability` schema and composed via `allOf`; e.g. Product Core `Field` declares `experimental`. This is orthogonal to schema version and aligns with the registry's `stability` lifecycle — see [Stability lifecycle](./docs/concepts/resource-types.md#stability-lifecycle).
 
@@ -202,6 +215,16 @@ Every primitive in every layer may carry an optional `stability` maturity marker
 - **Behavioral primitive:** `UIOperation` — the product-layer equivalent of Operational's `Operation`. Each carries a `trigger` (a Component plus a user event) and an ordered list of `effects` (`navigate`, `api-call`, `state-change`, `render`). This lets DNA describe *what happens* on interaction, not just *what exists* — making the UI fully graph-queryable (e.g. "what breaks if `LoanDetailPage` is removed?"). Relationships: `contains`, `renders`, `triggers`, `navigates_to`, `calls`, `requires`, `updates`.
 
 See [docs/concepts/product-ui.md](./docs/concepts/product-ui.md) for the full resources-and-relationships model and example queries. All new fields are additive — existing `product.ui.json` documents remain valid.
+
+**Business → product projection (`@dna-codes/dna-core`).** The product graph can be *derived* from the operational graph rather than authored by hand. `project(businessSubgraph)` is the pure, store-free step: it walks an evaluated business subgraph by node type (`Domain → App`, `Process → Module`, `Task → Page`, `Operation → Component`, plus a per-Domain `Namespace` and per-Operation `Endpoint`) and returns a `ProductSubgraph` of nodes with stable identity keys and a `planned` flag wherever the forward backing is missing. Two helpers persist that output:
+
+- `seedProductTypes(store)` registers the product UI/API **resource types** (`App`, `Module`, `Workflow`, `Page`, `Section`, `Component`, `Element`, plus `Namespace`/`Endpoint`, and `Permission`), the structural **relationship types** (`contains`, `realized_as`, `exposes`), and the **governance** relationship types (`can_access`, `assigned_to`, `grants`) in a `DnaDataStore`, derived from the registered `product/*` schemas. Idempotent — skips types that already exist by name.
+- `projectPermissions(operational)` (pure) + `applyPermissions(projection, store)` are the governance analogue of the structural pair above: they derive `Permission` nodes and `Membership --grants--> Permission` edges from operational Memberships + access Rules (see the Product Layer's derive-first/author-fallback note), upserting Permissions by `{principal, role, scope}` identity.
+- `applyProjection(subgraph, store)` upserts each node as an instance keyed by its stable `_projectionKey` (present key → leave, new key → create, never duplicate) and reconciles the structural links. It only ever touches structural edges: authored **governance** edges (`can_access`/`assigned_to`) are preserved across re-apply, and a previously-applied node whose business backing has vanished is **soft-deleted** (marked `_orphaned`) rather than removed when it still carries governance edges, so those edges stay reviewable.
+
+The canonical projection source is the core `seedFromDna` operational graph (which carries `Domain`/`Process`/`Task`/`Operation` node types); bridging the flatter dna-agent pack vocabulary (`process`/`step`) into the projection is a deferred follow-on.
+
+**Product-UI governance — two-grain access (`product-ui-governance`).** Once App/Module/Page are real nodes, they get access control independent of operation-level rules, in two composed grains. The **coarse** grain is the authored `can_access` edge (`Role`|`User` → `App`|`Module`|`Workflow`|`Page`): it decides whether a *whole surface* is reachable, cascading down `contains` (a grant on an App reaches its Modules/Pages unless a more specific grant narrows it). `assigned_to` (`User` → `App`) records which app a user is *homed* in. Both are the authored governance edge class — never derived, preserved by the projection. The **fine** grain is the existing operation-level access `Rules`, which gate individual controls within a visible surface. `resolveStructuralAccess()` (pure) is the canonical coarse resolver in `@dna-codes/dna-core`; in React, `<Surface id>` is the coarse gate and `<Operation name>` remains the fine gate — both must pass for a gated action to be performable. `lintEmptySurfaces()` flags a role granted a surface whose operations it can never perform.
 
 ## Technical Layer
 
@@ -359,7 +382,7 @@ Six SDK packages — the DNA language layer:
 |---|---|
 | [`@dna-codes/dna-schemas`](./packages/schemas) | Canonical JSON Schema (Draft 2020-12) definitions for all three layers — language-agnostic, zero deps |
 | [`@dna-codes/dna-core`](./packages/core) | TypeScript bindings + per-layer and cross-layer validator; wraps `@dna-codes/dna-schemas`. Ships the core lens definitions (`lenses/`) and exports `lenses` / `allLenses()`. Also home to shared adapter contracts and the `DnaDataStore` runtime-data contract |
-| [`@dna-codes/dna-react`](./packages/react) | React bindings — `DnaProvider`, `<Operation>` gate, and `useOperation` hook for authorization, audit capture, and feature flag integration driven by operational DNA |
+| [`@dna-codes/dna-react`](./packages/react) | React bindings — `DnaProvider`, `<Surface>` (coarse) + `<Operation>` (fine) gates, and `useOperation` hook for authorization, audit capture, and feature flag integration driven by operational DNA |
 | [`@dna-codes/dna-ingest`](./packages/ingest) | Multi-source DNA orchestrator. Fans `[source URI] → integration → input → partial DNA` per source, merges via `dna-core.merge()`, reports conflicts + provenance + non-fatal errors. Imports zero adapters — caller injects them. Defines the `Integration` and `InputAdapter` ports. |
 | [`@dna-codes/dna-adapters`](./packages/adapters) | Unified adapter package — every input parser, output renderer, and integration client lives as a subpath. One version line, one publish per release. |
 | [`@dna-codes/dna-api`](./packages/api) | Registry-native GraphQL API server. Seeds `ResourceType` / `RelationshipType` records from a DNA on first boot; admins author the type system at runtime through the API. Schema regenerates and hot-swaps on type mutations. Backed by `integration/neo4j` with versioned history. Each type carries a `stability` lifecycle marker (`experimental` / `beta` / `stable` / `deprecated`), orthogonal to its schema version — see [Stability lifecycle](./docs/concepts/resource-types.md#stability-lifecycle). |

@@ -1,239 +1,250 @@
 {
   "domain": {
     "name": "marshall",
-    "path": "mfj.masstort.marshall",
-    "description": "Mass-tort case management for the Marshall Fire Justice docket. Each Case Group scopes the legal team's Roles; Claimants file claims and receive settlements through the Process.",
-    "resources": [
-      {
-        "id": "2a2f127c-833d-4489-b155-8ebfa963bc57",
-        "type": "resource",
-        "version": "1",
-        "name": "Filing",
-        "description": "A document filed with the court for a specific Case.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "case_id",
-            "type": "reference",
-            "resource": "Case",
-            "required": true
-          },
-          {
-            "name": "kind",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "complaint",
-              "motion",
-              "response",
-              "settlement"
-            ]
-          },
-          {
-            "name": "filed_at",
-            "type": "datetime"
-          }
-        ],
-        "actions": [
-          {
-            "name": "Submit",
-            "description": "Submit a filing to the court.",
-            "type": "write"
-          },
-          {
-            "name": "Serve",
-            "description": "Serve a filing on opposing counsel.",
-            "type": "write"
-          }
-        ]
-      },
-      {
-        "id": "aa5cdfa6-b844-4eb6-ab60-fbcebec13d03",
-        "type": "resource",
-        "version": "1",
-        "name": "Settlement",
-        "description": "A negotiated resolution amount for one or more Claimants in a Case.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "case_id",
-            "type": "reference",
-            "resource": "Case",
-            "required": true
-          },
-          {
-            "name": "amount",
-            "type": "number",
-            "required": true
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "proposed",
-              "accepted",
-              "disbursed"
-            ]
-          }
-        ],
-        "actions": [
-          {
-            "name": "Propose",
-            "type": "write"
-          },
-          {
-            "name": "Accept",
-            "type": "write"
-          },
-          {
-            "name": "Disburse",
-            "type": "destructive"
-          }
-        ]
-      }
-    ],
-    "persons": [
-      {
-        "id": "1645232d-9b96-42da-a96b-05dc9c743123",
-        "type": "person",
-        "version": "1",
-        "name": "Claimant",
-        "description": "A person harmed by the underlying event who has joined a Case. External actor — files claims directly.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "case_id",
-            "type": "reference",
-            "resource": "Case",
-            "required": true
-          }
-        ]
-      },
-      {
-        "id": "8d318a93-e304-4c2c-b0f9-605029608822",
-        "type": "person",
-        "version": "1",
-        "name": "Partner",
-        "description": "Senior attorney; eligible for the LeadCounsel Role on Cases."
-      },
-      {
-        "id": "f195bc5b-a41d-4add-bf9d-5dab63dd4cb3",
-        "type": "person",
-        "version": "1",
-        "name": "Associate",
-        "description": "Junior attorney; eligible for the CoCounsel Role on Cases."
-      },
-      {
-        "id": "7e5b27c5-5088-4634-af0f-54cfdfd91ba3",
-        "type": "person",
-        "version": "1",
-        "name": "Paraprofessional",
-        "description": "Paralegal staff; eligible for the Paralegal Role on Cases."
-      },
-      {
-        "id": "748dfc1d-32d0-46db-9b54-d2e6d92fe805",
-        "type": "person",
-        "version": "1",
-        "name": "JudicialOfficer",
-        "description": "Member of the judiciary; eligible for the Judge Role on Cases."
-      }
-    ],
-    "groups": [
-      {
-        "id": "58da4297-c007-4afb-bbe9-e6fde7639ef8",
-        "type": "group",
-        "version": "1",
-        "name": "Case",
-        "description": "A single mass-tort case — the Group that scopes the legal team's Roles (LeadCounsel of Case #42).",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "docket_number",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "intake",
-              "discovery",
-              "settlement",
-              "closed"
-            ]
-          },
-          {
-            "name": "filed_at",
-            "type": "date"
-          }
-        ]
-      }
-    ],
-    "roles": [
-      {
-        "id": "e81d7b5d-ffed-4b95-9e0d-1e3c5fe406c3",
-        "type": "role",
-        "version": "1",
-        "name": "LeadCounsel",
-        "description": "Lead attorney owning a Case.",
-        "scope": "Case",
-        "cardinality": "one",
-        "required": true,
-        "excludes": [
-          "CoCounsel"
-        ]
-      },
-      {
-        "id": "6f2e087d-0c4d-4ebc-99ea-1a6f8c6e8d2d",
-        "type": "role",
-        "version": "1",
-        "name": "CoCounsel",
-        "description": "Partner attorney supporting Lead Counsel on a Case.",
-        "scope": "Case"
-      },
-      {
-        "id": "5369ee09-abb2-47d6-a6ed-5dbe3736dee7",
-        "type": "role",
-        "version": "1",
-        "name": "Paralegal",
-        "description": "Paralegal assigned to a Case.",
-        "scope": "Case"
-      },
-      {
-        "id": "13fb18cc-68fc-4af3-9b3f-77150406f5d2",
-        "type": "role",
-        "version": "1",
-        "name": "Judge",
-        "description": "Judge presiding over a Case.",
-        "scope": "Case",
-        "cardinality": "one",
-        "required": true
-      }
-    ]
+    "description": "Mass-tort case management for the Marshall Fire Justice docket. Each Case Group scopes the legal team's Roles; Claimants file claims and receive settlements through the Process."
   },
+  "resources": [
+    {
+      "id": "2a2f127c-833d-4489-b155-8ebfa963bc57",
+      "type": "resource",
+      "version": "1",
+      "name": "Filing",
+      "description": "A document filed with the court for a specific Case.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "case_id",
+          "type": "reference",
+          "resource": "Case",
+          "required": true
+        },
+        {
+          "name": "kind",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "complaint",
+            "motion",
+            "response",
+            "settlement"
+          ]
+        },
+        {
+          "name": "filed_at",
+          "type": "datetime"
+        }
+      ],
+      "actions": [
+        {
+          "name": "Submit",
+          "description": "Submit a filing to the court.",
+          "type": "write"
+        },
+        {
+          "name": "Serve",
+          "description": "Serve a filing on opposing counsel.",
+          "type": "write"
+        }
+      ],
+      "domain": "marshall"
+    },
+    {
+      "id": "aa5cdfa6-b844-4eb6-ab60-fbcebec13d03",
+      "type": "resource",
+      "version": "1",
+      "name": "Settlement",
+      "description": "A negotiated resolution amount for one or more Claimants in a Case.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "case_id",
+          "type": "reference",
+          "resource": "Case",
+          "required": true
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "proposed",
+            "accepted",
+            "disbursed"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "name": "Propose",
+          "type": "write"
+        },
+        {
+          "name": "Accept",
+          "type": "write"
+        },
+        {
+          "name": "Disburse",
+          "type": "destructive"
+        }
+      ],
+      "domain": "marshall"
+    }
+  ],
+  "persons": [
+    {
+      "id": "1645232d-9b96-42da-a96b-05dc9c743123",
+      "type": "person",
+      "version": "1",
+      "name": "Claimant",
+      "description": "A person harmed by the underlying event who has joined a Case. External actor — files claims directly.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "case_id",
+          "type": "reference",
+          "resource": "Case",
+          "required": true
+        }
+      ],
+      "domain": "marshall"
+    },
+    {
+      "id": "8d318a93-e304-4c2c-b0f9-605029608822",
+      "type": "person",
+      "version": "1",
+      "name": "Partner",
+      "description": "Senior attorney; eligible for the LeadCounsel Role on Cases.",
+      "domain": "marshall"
+    },
+    {
+      "id": "f195bc5b-a41d-4add-bf9d-5dab63dd4cb3",
+      "type": "person",
+      "version": "1",
+      "name": "Associate",
+      "description": "Junior attorney; eligible for the CoCounsel Role on Cases.",
+      "domain": "marshall"
+    },
+    {
+      "id": "7e5b27c5-5088-4634-af0f-54cfdfd91ba3",
+      "type": "person",
+      "version": "1",
+      "name": "Paraprofessional",
+      "description": "Paralegal staff; eligible for the Paralegal Role on Cases.",
+      "domain": "marshall"
+    },
+    {
+      "id": "748dfc1d-32d0-46db-9b54-d2e6d92fe805",
+      "type": "person",
+      "version": "1",
+      "name": "JudicialOfficer",
+      "description": "Member of the judiciary; eligible for the Judge Role on Cases.",
+      "domain": "marshall"
+    }
+  ],
+  "positions": [
+    {
+      "id": "e81d7b5d-ffed-4b95-9e0d-1e3c5fe406c3",
+      "type": "position",
+      "version": "1",
+      "name": "LeadCounsel",
+      "description": "Lead attorney owning a Case.",
+      "scope": "Case",
+      "cardinality": "one",
+      "required": true,
+      "excludes": [
+        "CoCounsel"
+      ],
+      "domain": "marshall"
+    },
+    {
+      "id": "6f2e087d-0c4d-4ebc-99ea-1a6f8c6e8d2d",
+      "type": "position",
+      "version": "1",
+      "name": "CoCounsel",
+      "description": "Partner attorney supporting Lead Counsel on a Case.",
+      "scope": "Case",
+      "domain": "marshall"
+    },
+    {
+      "id": "5369ee09-abb2-47d6-a6ed-5dbe3736dee7",
+      "type": "position",
+      "version": "1",
+      "name": "Paralegal",
+      "description": "Paralegal assigned to a Case.",
+      "scope": "Case",
+      "domain": "marshall"
+    },
+    {
+      "id": "13fb18cc-68fc-4af3-9b3f-77150406f5d2",
+      "type": "position",
+      "version": "1",
+      "name": "Judge",
+      "description": "Judge presiding over a Case.",
+      "scope": "Case",
+      "cardinality": "one",
+      "required": true,
+      "domain": "marshall"
+    }
+  ],
+  "groups": [
+    {
+      "id": "58da4297-c007-4afb-bbe9-e6fde7639ef8",
+      "type": "group",
+      "version": "1",
+      "name": "Case",
+      "description": "A single mass-tort case — the Group that scopes the legal team's Roles (LeadCounsel of Case #42).",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "docket_number",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "intake",
+            "discovery",
+            "settlement",
+            "closed"
+          ]
+        },
+        {
+          "name": "filed_at",
+          "type": "date"
+        }
+      ],
+      "domain": "marshall"
+    }
+  ],
   "memberships": [
     {
       "id": "7ea44b8f-49c1-4200-9015-a712e037dd37",
@@ -241,7 +252,7 @@
       "version": "1",
       "name": "PartnerLeadCounsel",
       "person": "Partner",
-      "role": "LeadCounsel"
+      "position": "LeadCounsel"
     },
     {
       "id": "83e77225-29df-40fa-acb2-868ad6979497",
@@ -249,7 +260,7 @@
       "version": "1",
       "name": "PartnerCoCounsel",
       "person": "Partner",
-      "role": "CoCounsel"
+      "position": "CoCounsel"
     },
     {
       "id": "2a4db7bc-96bc-4d8e-89c2-2aa293a3d592",
@@ -257,7 +268,7 @@
       "version": "1",
       "name": "AssociateCoCounsel",
       "person": "Associate",
-      "role": "CoCounsel"
+      "position": "CoCounsel"
     },
     {
       "id": "d8743126-5331-45c8-8aaa-ce709c019468",
@@ -265,7 +276,7 @@
       "version": "1",
       "name": "ParaprofessionalParalegal",
       "person": "Paraprofessional",
-      "role": "Paralegal"
+      "position": "Paralegal"
     },
     {
       "id": "37e8774b-bc75-442b-8d97-0daa83beb6a4",
@@ -273,7 +284,7 @@
       "version": "1",
       "name": "JudicialOfficerJudge",
       "person": "JudicialOfficer",
-      "role": "Judge"
+      "position": "Judge"
     }
   ],
   "operations": [

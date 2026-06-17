@@ -68,16 +68,22 @@ function stampOperationalBase<T extends Record<string, any>>(doc: T): T {
     const out: any = { ...d }
     if (d.resources) out.resources = stampList('resource', d.resources)
     if (d.persons) out.persons = stampList('person', d.persons)
-    if (d.roles) out.roles = stampList('role', d.roles)
+    if (d.positions) out.positions = stampList('position', d.positions)
     if (d.groups) out.groups = stampList('group', d.groups)
     if (Array.isArray(d.domains)) out.domains = d.domains.map(walkDomain)
     return out
   }
   const out: any = { ...doc }
   if ((doc as any).domain) out.domain = walkDomain((doc as any).domain)
-  // Some layers (product/core) keep resources at the top level
+  // Home-edge model: nouns live in top-level collections.
   if ((doc as any).resources && !((doc as any).domain?.resources))
     out.resources = stampList('resource', (doc as any).resources)
+  if ((doc as any).persons && !((doc as any).domain?.persons))
+    out.persons = stampList('person', (doc as any).persons)
+  if ((doc as any).positions && !((doc as any).domain?.positions))
+    out.positions = stampList('position', (doc as any).positions)
+  if ((doc as any).groups && !((doc as any).domain?.groups))
+    out.groups = stampList('group', (doc as any).groups)
   if ((doc as any).memberships) out.memberships = stampList('membership', (doc as any).memberships)
   if ((doc as any).operations) out.operations = stampList('operation', (doc as any).operations)
   if ((doc as any).triggers) out.triggers = stampList('trigger', (doc as any).triggers)
@@ -92,10 +98,7 @@ function stampOperationalBase<T extends Record<string, any>>(doc: T): T {
 // wired end-to-end so the baseline "passes for valid DNA" case holds; each
 // test spreads and overrides what it needs to exercise a specific error path.
 const operationalFixture = {
-  domain: {
-    name: 'lending',
-    path: 'acme.finance.lending',
-    resources: [
+  domain: { name: 'lending', path: 'acme.finance.lending' }, resources: [
       {
         name: 'Loan',
         attributes: [
@@ -110,22 +113,18 @@ const operationalFixture = {
           { name: 'List', type: 'read' },
         ],
       },
-    ],
-    persons: [
+    ], persons: [
       { name: 'Borrower', attributes: [{ name: 'id', type: 'string', required: true }] },
       { name: 'Employee' },
-    ],
-    groups: [
+    ], groups: [
       { name: 'BankDepartment', attributes: [{ name: 'region', type: 'string' }] },
-    ],
-    roles: [
+    ], positions: [
       { name: 'Underwriter', scope: 'BankDepartment' },
       { name: 'LendingManager', scope: 'BankDepartment' },
     ],
-  },
   memberships: [
-    { name: 'EmployeeUnderwriter', person: 'Employee', role: 'Underwriter' },
-    { name: 'EmployeeLendingManager', person: 'Employee', role: 'LendingManager' },
+    { name: 'EmployeeUnderwriter', person: 'Employee', position: 'Underwriter' },
+    { name: 'EmployeeLendingManager', person: 'Employee', position: 'LendingManager' },
   ],
   operations: [
     { target: 'Loan', action: 'Apply', name: 'Loan.Apply' },
@@ -317,39 +316,39 @@ describe('DnaValidator — operational/group', () => {
   })
 })
 
-describe('DnaValidator — operational/role', () => {
-  it('validates a Role with single scope', () => {
+describe('DnaValidator — operational/position', () => {
+  it('validates a Position with single scope', () => {
     const result = validator.validate({
       name: 'Underwriter',
       scope: 'BankDepartment',
-    }, 'operational/role')
+    }, 'operational/position')
     expect(result.valid).toBe(true)
   })
 
-  it('validates a Role with multi-scope (array)', () => {
+  it('validates a Position with multi-scope (array)', () => {
     const result = validator.validate({
       name: 'SuperAdmin',
       scope: ['Workspace', 'Tenant'],
-    }, 'operational/role')
+    }, 'operational/position')
     expect(result.valid).toBe(true)
   })
 
-  it('validates a system Role with resource link', () => {
+  it('validates a system Position with resource link', () => {
     const result = validator.validate({
       name: 'NightlyDelinquencySweep',
       system: true,
       resource: 'ScheduledJob',
-    }, 'operational/role')
+    }, 'operational/position')
     expect(result.valid).toBe(true)
   })
 
-  it('validates a global Role (no scope)', () => {
-    const result = validator.validate({ name: 'SystemAuditor' }, 'operational/role')
+  it('validates a global Position (no scope)', () => {
+    const result = validator.validate({ name: 'SystemAuditor' }, 'operational/position')
     expect(result.valid).toBe(true)
   })
 
-  it('rejects a Role missing name', () => {
-    const result = validator.validate({ scope: 'BankDepartment' }, 'operational/role')
+  it('rejects a Position missing name', () => {
+    const result = validator.validate({ scope: 'BankDepartment' }, 'operational/position')
     expect(result.valid).toBe(false)
   })
 })
@@ -359,7 +358,7 @@ describe('DnaValidator — operational/membership', () => {
     const result = validator.validate({
       name: 'EmployeeUnderwriter',
       person: 'Employee',
-      role: 'Underwriter',
+      position: 'Underwriter',
     }, 'operational/membership')
     expect(result.valid).toBe(true)
   })
@@ -368,7 +367,7 @@ describe('DnaValidator — operational/membership', () => {
     const result = validator.validate({
       name: 'EmployeeAdminWorkspace',
       person: 'Employee',
-      role: 'SuperAdmin',
+      position: 'SuperAdmin',
       group: 'Workspace',
     }, 'operational/membership')
     expect(result.valid).toBe(true)
@@ -382,7 +381,7 @@ describe('DnaValidator — operational/membership', () => {
     expect(result.valid).toBe(false)
   })
 
-  it('rejects a Membership missing role', () => {
+  it('rejects a Membership missing position', () => {
     const result = validator.validate({
       name: 'X',
       person: 'Employee',
@@ -686,12 +685,10 @@ describe('DnaValidator — product/core/role', () => {
     expect(result.errors).toHaveLength(0)
   })
 
-  it('validates a Role with scope and permissions', () => {
+  it('validates a Role with a position mapping', () => {
     const result = validator.validate({
       name: 'Underwriter',
-      role: 'Underwriter',
-      scope: 'BankDepartment',
-      permissions: ['Loan.Approve'],
+      position: 'Underwriter',
     }, 'product/core/role')
     expect(result.valid).toBe(true)
     expect(result.errors).toHaveLength(0)
@@ -1076,7 +1073,7 @@ describe('DnaValidator — availableSchemas', () => {
     const schemas = validator.availableSchemas()
     expect(schemas).toContain('operational/resource')
     expect(schemas).toContain('operational/person')
-    expect(schemas).toContain('operational/role')
+    expect(schemas).toContain('operational/position')
     expect(schemas).toContain('operational/group')
     expect(schemas).toContain('operational/membership')
     expect(schemas).toContain('operational/action')
@@ -1094,6 +1091,7 @@ describe('DnaValidator — availableSchemas', () => {
     expect(schemas).toContain('product/core/field')
     expect(schemas).toContain('product/core/user')
     expect(schemas).toContain('product/core/role')
+    expect(schemas).toContain('product/core/permission')
     expect(schemas).toContain('meta/stability')
     expect(schemas).toContain('product/api/endpoint')
     expect(schemas).toContain('product/api/namespace')
@@ -1442,10 +1440,7 @@ describe('DnaValidator — cross-layer validation', () => {
   it('detects Role.scope referencing a missing Group', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [...operational.domain.roles, { name: 'GhostRole', scope: 'PhantomGroup' }],
-      },
+      domain: { ...operational.domain }, positions: [...operational.positions, { name: 'GhostRole', scope: 'PhantomGroup' }],
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
@@ -1455,13 +1450,10 @@ describe('DnaValidator — cross-layer validation', () => {
   it('detects Role.parent referencing a missing Role', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'JuniorUnderwriter', parent: 'PhantomParent', scope: 'BankDepartment' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
@@ -1471,10 +1463,7 @@ describe('DnaValidator — cross-layer validation', () => {
   it('detects Role.resource referencing a missing Resource', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [...operational.domain.roles, { name: 'Sweep', system: true, resource: 'PhantomJob' }],
-      },
+      domain: { ...operational.domain }, positions: [...operational.positions, { name: 'Sweep', system: true, resource: 'PhantomJob' }],
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
@@ -1484,13 +1473,10 @@ describe('DnaValidator — cross-layer validation', () => {
   it('accepts Person.resource referencing a declared Resource', () => {
     const goodOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        persons: [
-          ...operational.domain.persons,
+      domain: { ...operational.domain }, persons: [
+          ...operational.persons,
           { name: 'LoanHolder', resource: 'Loan' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: goodOp })
     expect(result.valid).toBe(true)
@@ -1500,13 +1486,10 @@ describe('DnaValidator — cross-layer validation', () => {
   it('detects Person.resource referencing a missing Resource', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        persons: [
-          ...operational.domain.persons,
+      domain: { ...operational.domain }, persons: [
+          ...operational.persons,
           { name: 'Customer', resource: 'PhantomResource' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
@@ -1520,7 +1503,7 @@ describe('DnaValidator — cross-layer validation', () => {
       ...operational,
       memberships: [
         ...operational.memberships,
-        { name: 'BadMembership', person: 'GhostPerson', role: 'GhostRole', group: 'GhostGroup' },
+        { name: 'BadMembership', person: 'GhostPerson', position: 'GhostRole', group: 'GhostGroup' },
       ],
     }
     const result = validator.validateCrossLayer({ operational: badOp })
@@ -1533,13 +1516,10 @@ describe('DnaValidator — cross-layer validation', () => {
   it('detects Membership.group not matching Role.scope', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        groups: [...operational.domain.groups, { name: 'Family' }],
-      },
+      domain: { ...operational.domain }, groups: [...operational.groups, { name: 'Family' }],
       memberships: [
         ...operational.memberships,
-        { name: 'BadFit', person: 'Employee', role: 'Underwriter', group: 'Family' },
+        { name: 'BadFit', person: 'Employee', position: 'Underwriter', group: 'Family' },
       ],
     }
     const result = validator.validateCrossLayer({ operational: badOp })
@@ -1550,21 +1530,17 @@ describe('DnaValidator — cross-layer validation', () => {
   it('detects multi-scope Role Membership without group disambiguation', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        groups: [
-          ...operational.domain.groups,
+      domain: { ...operational.domain }, groups: [
+          ...operational.groups,
           { name: 'Workspace' },
           { name: 'Tenant' },
-        ],
-        roles: [
-          ...operational.domain.roles,
+        ], positions: [
+          ...operational.positions,
           { name: 'SuperAdmin', scope: ['Workspace', 'Tenant'] },
         ],
-      },
       memberships: [
         ...operational.memberships,
-        { name: 'AmbiguousAdmin', person: 'Employee', role: 'SuperAdmin' },
+        { name: 'AmbiguousAdmin', person: 'Employee', position: 'SuperAdmin' },
       ],
     }
     const result = validator.validateCrossLayer({ operational: badOp })
@@ -1633,18 +1609,14 @@ describe('DnaValidator — cross-layer validation', () => {
   it('inherits scope from parent Role through a multi-step chain', () => {
     const goodOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'SeniorUnderwriter', parent: 'Underwriter' },
           { name: 'PrincipalUnderwriter', parent: 'SeniorUnderwriter' },
         ],
-        // Membership against the inherited-scope child must be valid
-      },
       memberships: [
         ...operational.memberships,
-        { name: 'EmployeePrincipal', person: 'Employee', role: 'PrincipalUnderwriter', group: 'BankDepartment' },
+        { name: 'EmployeePrincipal', person: 'Employee', position: 'PrincipalUnderwriter', group: 'BankDepartment' },
       ],
     }
     const result = validator.validateCrossLayer({ operational: goodOp })
@@ -1655,14 +1627,11 @@ describe('DnaValidator — cross-layer validation', () => {
   it('detects a 2-Role cycle in Role.parent', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'RoleA', parent: 'RoleB' },
           { name: 'RoleB', parent: 'RoleA' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
@@ -1675,15 +1644,12 @@ describe('DnaValidator — cross-layer validation', () => {
   it('detects a 3-Role cycle in Role.parent and lists members in walk order', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'A', parent: 'B' },
           { name: 'B', parent: 'C' },
           { name: 'C', parent: 'A' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
@@ -1695,18 +1661,14 @@ describe('DnaValidator — cross-layer validation', () => {
   it('rejects child Role scope that is unrelated to parent scope', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        groups: [...operational.domain.groups, { name: 'Tenant' }],
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, groups: [...operational.groups, { name: 'Tenant' }], positions: [
+          ...operational.positions,
           { name: 'TenantAdmin', parent: 'Underwriter', scope: 'Tenant' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
-    const subsetErr = result.errors.find(e => e.path === 'roles/TenantAdmin/scope' && e.message.includes('narrower-or-equal'))
+    const subsetErr = result.errors.find(e => e.path === 'positions/TenantAdmin/scope' && e.message.includes('narrower-or-equal'))
     expect(subsetErr).toBeDefined()
     expect(subsetErr!.message).toContain('"Tenant"')
     expect(subsetErr!.message).toContain('"BankDepartment"')
@@ -1715,24 +1677,20 @@ describe('DnaValidator — cross-layer validation', () => {
   it('rejects child Role array scope that is wider than parent', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        groups: [
-          ...operational.domain.groups,
+      domain: { ...operational.domain }, groups: [
+          ...operational.groups,
           { name: 'Workspace' },
           { name: 'Tenant' },
           { name: 'Region' },
-        ],
-        roles: [
-          ...operational.domain.roles,
+        ], positions: [
+          ...operational.positions,
           { name: 'Parent', scope: ['Workspace', 'Tenant'] },
           { name: 'Child', parent: 'Parent', scope: ['Workspace', 'Tenant', 'Region'] },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
-    const subsetErrs = result.errors.filter(e => e.path === 'roles/Child/scope' && e.message.includes('narrower-or-equal'))
+    const subsetErrs = result.errors.filter(e => e.path === 'positions/Child/scope' && e.message.includes('narrower-or-equal'))
     expect(subsetErrs).toHaveLength(1)
     expect(subsetErrs[0].message).toContain('"Region"')
   })
@@ -1740,17 +1698,13 @@ describe('DnaValidator — cross-layer validation', () => {
   it('accepts child Group scope that is a sub-Group of parent Group via Group.parent', () => {
     const goodOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        groups: [
-          ...operational.domain.groups,
+      domain: { ...operational.domain }, groups: [
+          ...operational.groups,
           { name: 'RetailBranch', parent: 'BankDepartment' },
-        ],
-        roles: [
-          ...operational.domain.roles,
+        ], positions: [
+          ...operational.positions,
           { name: 'BranchUnderwriter', parent: 'Underwriter', scope: 'RetailBranch' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: goodOp })
     expect(result.valid).toBe(true)
@@ -1760,17 +1714,14 @@ describe('DnaValidator — cross-layer validation', () => {
   it('rejects Person scope under a Group-scoped parent with a clear message', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'PerBorrowerHandler', parent: 'Underwriter', scope: 'Borrower' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
-    const subsetErr = result.errors.find(e => e.path === 'roles/PerBorrowerHandler/scope' && e.message.includes('narrower-or-equal'))
+    const subsetErr = result.errors.find(e => e.path === 'positions/PerBorrowerHandler/scope' && e.message.includes('narrower-or-equal'))
     expect(subsetErr).toBeDefined()
     expect(subsetErr!.message).toContain('Person scope')
   })
@@ -1778,15 +1729,11 @@ describe('DnaValidator — cross-layer validation', () => {
   it('suppresses subset error on Roles inside a cycle', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        groups: [...operational.domain.groups, { name: 'Tenant' }],
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, groups: [...operational.groups, { name: 'Tenant' }], positions: [
+          ...operational.positions,
           { name: 'CycA', parent: 'CycB', scope: 'Tenant' },
           { name: 'CycB', parent: 'CycA', scope: 'BankDepartment' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
@@ -1799,13 +1746,10 @@ describe('DnaValidator — cross-layer validation', () => {
   it('accepts cardinality "one" on a scoped Role', () => {
     const goodOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'ChiefUnderwriter', scope: 'BankDepartment', cardinality: 'one' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: goodOp })
     expect(result.valid).toBe(true)
@@ -1815,13 +1759,10 @@ describe('DnaValidator — cross-layer validation', () => {
   it('accepts cardinality "one" on a Role inheriting scope through parent', () => {
     const goodOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'SeniorUnderwriter', parent: 'Underwriter', cardinality: 'one' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: goodOp })
     expect(result.valid).toBe(true)
@@ -1831,13 +1772,10 @@ describe('DnaValidator — cross-layer validation', () => {
   it('accepts required + cardinality "one" on a scoped Role', () => {
     const goodOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'HeadUnderwriter', scope: 'BankDepartment', cardinality: 'one', required: true },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: goodOp })
     expect(result.valid).toBe(true)
@@ -1847,16 +1785,11 @@ describe('DnaValidator — cross-layer validation', () => {
   it('accepts same-scope excludes between two Roles (and one-sided declaration is enough)', () => {
     const goodOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        persons: [...operational.domain.persons, { name: 'Doctor' }],
-        groups: [...operational.domain.groups, { name: 'Patient' }],
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, persons: [...operational.persons, { name: 'Doctor' }], groups: [...operational.groups, { name: 'Patient' }], positions: [
+          ...operational.positions,
           { name: 'AttendingPhysician', scope: 'Patient', excludes: ['ConsultingSpecialist'] },
           { name: 'ConsultingSpecialist', scope: 'Patient' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: goodOp })
     expect(result.valid).toBe(true)
@@ -1866,17 +1799,14 @@ describe('DnaValidator — cross-layer validation', () => {
   it('rejects cardinality "one" on a global Role', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'GlobalAdmin', cardinality: 'one' },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
-    const err = result.errors.find(e => e.path === 'roles/GlobalAdmin/cardinality')
+    const err = result.errors.find(e => e.path === 'positions/GlobalAdmin/cardinality')
     expect(err).toBeDefined()
     expect(err!.message).toContain('declared or inherited scope')
   })
@@ -1884,17 +1814,14 @@ describe('DnaValidator — cross-layer validation', () => {
   it('rejects required: true on a global Role', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'GlobalAuditor', required: true },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
-    const err = result.errors.find(e => e.path === 'roles/GlobalAuditor/required')
+    const err = result.errors.find(e => e.path === 'positions/GlobalAuditor/required')
     expect(err).toBeDefined()
     expect(err!.message).toContain('declared or inherited scope')
   })
@@ -1902,10 +1829,8 @@ describe('DnaValidator — cross-layer validation', () => {
   it('rejects cardinality, required, and excludes on a system Role (one error per field)', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           {
             name: 'NightlySweep',
             system: true,
@@ -1914,29 +1839,25 @@ describe('DnaValidator — cross-layer validation', () => {
             excludes: ['Underwriter'],
           },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
-    expect(result.errors.find(e => e.path === 'roles/NightlySweep/cardinality')).toBeDefined()
-    expect(result.errors.find(e => e.path === 'roles/NightlySweep/required')).toBeDefined()
-    expect(result.errors.find(e => e.path === 'roles/NightlySweep/excludes')).toBeDefined()
+    expect(result.errors.find(e => e.path === 'positions/NightlySweep/cardinality')).toBeDefined()
+    expect(result.errors.find(e => e.path === 'positions/NightlySweep/required')).toBeDefined()
+    expect(result.errors.find(e => e.path === 'positions/NightlySweep/excludes')).toBeDefined()
   })
 
   it('rejects excludes referencing an unknown Role and lists available Roles', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'Foo', scope: 'BankDepartment', excludes: ['NotARole'] },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
-    const err = result.errors.find(e => e.path === 'roles/Foo/excludes')
+    const err = result.errors.find(e => e.path === 'positions/Foo/excludes')
     expect(err).toBeDefined()
     expect(err!.message).toContain('"NotARole"')
     expect(err!.message).toContain('Underwriter')
@@ -1945,17 +1866,14 @@ describe('DnaValidator — cross-layer validation', () => {
   it('rejects self-exclusion', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, positions: [
+          ...operational.positions,
           { name: 'SelfRef', scope: 'BankDepartment', excludes: ['SelfRef'] },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
-    const err = result.errors.find(e => e.path === 'roles/SelfRef/excludes')
+    const err = result.errors.find(e => e.path === 'positions/SelfRef/excludes')
     expect(err).toBeDefined()
     expect(err!.message).toContain('cannot exclude itself')
   })
@@ -1963,14 +1881,10 @@ describe('DnaValidator — cross-layer validation', () => {
   it('rejects cross-scope excludes with one error naming both scopes', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        groups: [...operational.domain.groups, { name: 'Tenant' }],
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, groups: [...operational.groups, { name: 'Tenant' }], positions: [
+          ...operational.positions,
           { name: 'TenantAdmin', scope: 'Tenant', excludes: ['Underwriter'] },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)
@@ -1979,21 +1893,17 @@ describe('DnaValidator — cross-layer validation', () => {
     expect(errs[0].message).toContain('"Tenant"')
     expect(errs[0].message).toContain('"BankDepartment"')
     // Path is keyed off the lexicographically-smaller name (TenantAdmin > Underwriter).
-    expect(errs[0].path).toBe('roles/TenantAdmin/excludes')
+    expect(errs[0].path).toBe('positions/TenantAdmin/excludes')
   })
 
   it('emits exactly one error when both sides declare a cross-scope exclusion (symmetric dedup)', () => {
     const badOp = {
       ...operational,
-      domain: {
-        ...operational.domain,
-        groups: [...operational.domain.groups, { name: 'Tenant' }],
-        roles: [
-          ...operational.domain.roles,
+      domain: { ...operational.domain }, groups: [...operational.groups, { name: 'Tenant' }], positions: [
+          ...operational.positions,
           { name: 'TenantAdmin', scope: 'Tenant', excludes: ['DeptAdmin'] },
           { name: 'DeptAdmin', scope: 'BankDepartment', excludes: ['TenantAdmin'] },
         ],
-      },
     }
     const result = validator.validateCrossLayer({ operational: badOp })
     expect(result.valid).toBe(false)

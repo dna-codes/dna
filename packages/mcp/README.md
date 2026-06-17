@@ -86,15 +86,33 @@ const server = createMcpServer({
 ## Local development
 
 ```bash
-# In-memory store (no Neo4j required)
+# In-memory store (no Neo4j required) — data resets on every restart
 DNA_MCP_PORT=3300 node dist/bin.js
 
-# Neo4j store
+# Neo4j store — the graph PERSISTS across restarts
 NEO4J_URI=bolt://localhost:7687 \
 NEO4J_USERNAME=neo4j \
-NEO4J_PASSWORD=password \
+NEO4J_PASSWORD=devpassword \
 DNA_MCP_PORT=3300 node dist/bin.js
 ```
+
+### Store selection & persistence
+
+The store is chosen by env: set `NEO4J_URI` + `NEO4J_USERNAME` + `NEO4J_PASSWORD` to use **Neo4j** (persistent — the graph survives restarts); otherwise the server uses a pure **in-memory** store (zero-config, resets on restart). On first boot against an *empty* Neo4j database the server seeds the configured pack; if the database already holds a graph it is kept as-is. On every boot (and reset) the server also calls `seedProductTypes` (idempotent) so the product UI/API types (`App`/`Module`/`Workflow`/`Page`/`Layout`/`Section`/`Component`/…) and the structural/governance relationship types (`contains`/`realized_as`/`exposes`/`can_access`/`assigned_to`) are always registered — authored product-UI graphs can be created without per-seed type registration.
+
+### App Preview: materialized vs derived
+
+The `product-app-preview` lens has two render paths, picked automatically. When the store holds materialized product instances (an `App` connected by `contains`), it renders that **authored** tree (`App → Module → Workflow → Page → Section → Component`), surfacing each Component's UI `type`, each Page's `layout`, and per-component record tables from a Component's `resource` binding. When nothing is materialized it **falls back** to the pure `project()` derivation (`App → Module → Page`), preserving the prior behavior. Either way `can_access` governance is overlaid (keyed by `_projectionKey` when present, else instance id).
+
+A turnkey local Neo4j is already defined in `packages/api/docker-compose.yml` (`neo4j:5.24-community`, user `neo4j` / password `devpassword`, persistent `/data` volume, Bolt on `7687`). Bring it up and point the server at it:
+
+```bash
+docker compose -f packages/api/docker-compose.yml up -d neo4j
+NEO4J_URI=bolt://localhost:7687 NEO4J_USERNAME=neo4j NEO4J_PASSWORD=devpassword \
+  DNA_MCP_PORT=3300 node dist/bin.js
+```
+
+**Reset is destructive.** `POST /reset` (and the dna-agent's "reset") clears the *entire* store and reseeds the pack. With Neo4j this runs `MATCH (n) DETACH DELETE n` against the database (constraints survive) and keeps serving from Neo4j — it does not fall back to in-memory. Normal restarts keep your data; only reset wipes it.
 
 ## Running tests
 

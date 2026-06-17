@@ -41,7 +41,7 @@ export function pascalToCamel(name: string): string {
 }
 
 /**
- * Naive pluralization with overrides. The DNA's `dna.domain.persons[]`
+ * Naive pluralization with overrides. The DNA's top-level `dna.persons[]`
  * collection name implies `Person` → `persons` (not `peoples`); the same
  * convention applies to GraphQL list-query naming.
  */

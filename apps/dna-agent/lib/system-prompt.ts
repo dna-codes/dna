@@ -1,5 +1,10 @@
-import { renderPackForPrompt, PACKS, DEFAULT_PACK } from '@dna-codes/dna-mcp'
-import type { PackName, SessionMode } from '@dna-codes/dna-mcp'
+// Import the pack helpers from the server-free `/packs` subpath, NOT the package
+// root: the root index value-re-exports `createMcpServer` (→ the MCP server →
+// @dna-codes/dna-core's fs-based schema loader), which throws at module-eval when
+// bundled into the Next.js server (Turbopack). `/packs` is pure prompt data.
+import { renderPackForPrompt, PACKS, DEFAULT_PACK } from '@dna-codes/dna-mcp/packs'
+import type { PackName } from '@dna-codes/dna-mcp/packs'
+import type { SessionMode } from '@dna-codes/dna-mcp'
 
 function resolvePackName(packName: string): PackName {
   return (packName in PACKS ? packName : DEFAULT_PACK) as PackName
@@ -55,7 +60,6 @@ If the user then says "make it real" / "do it for real", that is an instance-pop
 In Build mode the lenses render the **type registry** (the grammar), not instances. Switch the right-panel tab with **activate_lens({ lensId })** using these IDs:
 - \`graph-explorer\` — the schema graph (resource types as nodes, relationship types as edges). Keywords: "schema", "graph", "how types connect"
 - \`org-chart\` — the structural type spine (belongs_to / reports_to between types). Keywords: "structure", "hierarchy", "what contains what"
-- \`reporting-chains\` — the reports_to relationship types. Keywords: "reporting", "reports to"
 - \`job-descriptions\` — a definition card per type (attributes, stability, relationships). Keywords: "definition", "spec", "attributes", "what does this type have"
 
 Route to one of these when the user asks to see the grammar a certain way, or after you create/mature a type. Do not route to instance/operational lenses in this mode.`
@@ -177,17 +181,15 @@ Switch the right-panel lens tab by calling **activate_lens({ lensId })**. Use th
 
 ${resolvedPack === 'operational' ? `**Operational lens IDs:**
 - \`org-chart\` — "org chart", "hierarchy", "reporting structure", "who reports to whom"
-- \`people-positions\` — "people", "positions", "headcount", "who fills", "staff"
-- \`reporting-chains\` — "reporting chain", "direct reports", "management chain"
-- \`span-of-control\` — "span of control", "manager ratio", "how many reports"
+- \`process-flow\` — "process", "process flow", "steps", "tasks", "workflow", "how a process flows"
 - \`job-descriptions\` — "job description", "JD", "open role", "role definition", "responsibilities"
+- \`product-app-preview\` — "app preview", "product app", "the app", "UI", "screens", "what app does this imply", "who can access"
 - \`graph-explorer\` — "graph", "raw data", "explorer", "all nodes"` : ''}${resolvedPack === 'crm' ? `**CRM lens IDs:**
 - \`pipeline\` — "pipeline", "deals", "opportunities", "open deals", "closed deals"
 - \`accounts\` — "accounts", "companies", "customers", "clients", "account list"
 - \`graph-explorer\` — "graph", "raw data", "explorer", "all nodes"` : ''}${resolvedPack === 'hr' ? `**HR lens IDs:**
 - \`org-chart\` — "org chart", "hierarchy", "structure", "reporting"
 - \`roster\` — "roster", "employees", "team", "staff list", "headcount"
-- \`reporting-chains\` — "reporting chain", "direct reports", "management chain"
 - \`open-positions\` — "open positions", "job postings", "hiring", "vacancies", "recruiting"
 - \`graph-explorer\` — "graph", "raw data", "explorer", "all nodes"` : ''}
 

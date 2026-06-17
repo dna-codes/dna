@@ -32,12 +32,12 @@ describe('LayeredConstructor — no-LLM direct usage', () => {
     expect(ctor.handle({ name: 'add_person', args: { name: 'Employee' } })).toMatchObject({ ok: true })
     expect(ctor.handle({ name: 'add_group', args: { name: 'BankDepartment' } })).toMatchObject({ ok: true })
     expect(
-      ctor.handle({ name: 'add_role', args: { name: 'Underwriter', scope: 'BankDepartment' } }),
+      ctor.handle({ name: 'add_position', args: { name: 'Underwriter', scope: 'BankDepartment' } }),
     ).toMatchObject({ ok: true })
     expect(
       ctor.handle({
         name: 'add_membership',
-        args: { name: 'EmployeeUnderwriter', person: 'Employee', role: 'Underwriter' },
+        args: { name: 'EmployeeUnderwriter', person: 'Employee', position: 'Underwriter' },
       }),
     ).toMatchObject({ ok: true })
     expect(
@@ -94,19 +94,19 @@ describe('LayeredConstructor — no-LLM direct usage', () => {
 
     const bad = ctor.handle({
       name: 'add_membership',
-      args: { name: 'EmployeeUnderwriter', person: 'Employee', role: 'Underwriter' },
+      args: { name: 'EmployeeUnderwriter', person: 'Employee', position: 'Underwriter' },
     })
     expect(bad.ok).toBe(false)
     if (bad.ok) throw new Error('expected failure')
-    expect(bad.error).toBe('unknown_role')
+    expect(bad.error).toBe('unknown_position')
     expect(bad.available).toEqual([])
 
     ctor.handle({ name: 'add_group', args: { name: 'BankDepartment' } })
-    ctor.handle({ name: 'add_role', args: { name: 'Underwriter', scope: 'BankDepartment' } })
+    ctor.handle({ name: 'add_position', args: { name: 'Underwriter', scope: 'BankDepartment' } })
 
     const good = ctor.handle({
       name: 'add_membership',
-      args: { name: 'EmployeeUnderwriter', person: 'Employee', role: 'Underwriter' },
+      args: { name: 'EmployeeUnderwriter', person: 'Employee', position: 'Underwriter' },
     })
     expect(good).toMatchObject({ ok: true, primitive: 'membership' })
   })
@@ -144,7 +144,7 @@ describe('LayeredConstructor — no-LLM direct usage', () => {
 
     const { document, conflicts } = ctor.result()
     expect(conflicts).toEqual([])
-    const resources = (document as { domain: { resources: Array<{ name: string; attributes: Array<{ name: string }> }> } }).domain.resources
+    const resources = (document as { resources: Array<{ name: string; attributes: Array<{ name: string }> }> }).resources
     expect(resources).toHaveLength(1)
     expect(resources[0].attributes.map((a) => a.name).sort()).toEqual(['email', 'phone'])
   })

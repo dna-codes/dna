@@ -9,6 +9,8 @@ export interface DnaInput {
 
 export interface OperationalDna {
   domain: OperationalDomain
+  domains?: OperationalDomain[]
+  resources?: Resource[]
   operations?: Operation[]
   rules?: Rule[]
   triggers?: Trigger[]
@@ -21,8 +23,6 @@ export interface OperationalDomain {
   name: string
   path?: string
   description?: string
-  resources?: Resource[]
-  domains?: OperationalDomain[]
 }
 
 export interface Resource {

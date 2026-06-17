@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import type { AuditEvent, DnaContextValue, DnaProviderProps } from './types'
+import type { AuditEvent, DnaContextValue, DnaProviderProps, StructuralAccess } from './types'
 
 const DnaContext = createContext<DnaContextValue | null>(null)
 
@@ -28,6 +28,27 @@ function checkPermitted(
   )
 }
 
+// Inlined to keep the browser bundle free of @dna-codes/dna-core's Node.js
+// entry point (fs/path). Mirrors `resolveStructuralAccess` in dna-core: a
+// surface with its own `can_access` grants is decided by those grants; one with
+// none inherits its nearest `contains` ancestor's decision; default is deny.
+function checkReachable(access: StructuralAccess, surfaceId: string, subjects: string[]): boolean {
+  const subjectSet = new Set(subjects)
+  const parentOf = (id: string): string | undefined =>
+    access.contains.find(e => e.child === id)?.parent
+  const grantsOn = (id: string) => access.grants.filter(g => g.surface === id)
+
+  const seen = new Set<string>()
+  let cur: string | undefined = surfaceId
+  while (cur !== undefined && !seen.has(cur)) {
+    seen.add(cur)
+    const here = grantsOn(cur)
+    if (here.length > 0) return here.some(g => subjectSet.has(g.subject))
+    cur = parentOf(cur)
+  }
+  return false
+}
+
 export function DnaProvider({
   dna,
   userId,
@@ -35,6 +56,7 @@ export function DnaProvider({
   roles: rolesProp,
   resolveRoles,
   store,
+  access,
   onAudit,
   flags,
 }: DnaProviderProps) {
@@ -100,6 +122,18 @@ export function DnaProvider({
     [dna, resolvedRoles, loading]
   )
 
+  // Coarse gate. With no `access` snapshot the gate is inactive (every surface
+  // reachable); with one, a surface is reachable iff `can_access` resolves for
+  // the user id or one of their roles, cascading down `contains`.
+  const reachable = useMemo(
+    () => (surfaceId: string): boolean => {
+      if (!access) return true
+      if (loading || resolvedRoles === null) return false
+      return checkReachable(access, surfaceId, [userId, ...resolvedRoles])
+    },
+    [access, userId, resolvedRoles, loading]
+  )
+
   async function perform(opName: string, payload?: unknown): Promise<{ permitted: boolean }> {
     const roles = resolvedRoles ?? []
     const isPermitted = checkPermitted(dna, opName, roles)
@@ -122,9 +156,9 @@ export function DnaProvider({
   }
 
   const value: DnaContextValue = useMemo(
-    () => ({ permitted, perform, loading, resolveFlag }),
+    () => ({ permitted, perform, loading, resolveFlag, reachable }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [permitted, loading]
+    [permitted, reachable, loading]
   )
 
   return <DnaContext.Provider value={value}>{children}</DnaContext.Provider>

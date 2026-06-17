@@ -1,221 +1,231 @@
 {
   "domain": {
     "name": "assembly",
-    "path": "acme.manufacturing.assembly",
-    "description": "Discrete-manufacturing assembly line. WorkOrders flow through machines (system Roles) and human inspectors with parallel paint+stamp Steps converging at quality inspection.",
-    "resources": [
-      {
-        "id": "2a94ce87-16b5-48d6-bdb4-dd559ed86170",
-        "type": "resource",
-        "version": "1",
-        "name": "WorkOrder",
-        "description": "A production order for a batch of parts.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "part_number",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "quantity",
-            "type": "number",
-            "required": true
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "queued",
-              "cutting",
-              "in_progress",
-              "inspection",
-              "passed",
-              "failed",
-              "completed"
-            ]
-          }
-        ],
-        "actions": [
-          {
-            "name": "Release",
-            "type": "write"
-          },
-          {
-            "name": "Cut",
-            "type": "write"
-          },
-          {
-            "name": "Stamp",
-            "type": "write"
-          },
-          {
-            "name": "Paint",
-            "type": "write"
-          },
-          {
-            "name": "Inspect",
-            "type": "write"
-          },
-          {
-            "name": "Reject",
-            "type": "destructive"
-          },
-          {
-            "name": "Complete",
-            "type": "write"
-          }
-        ]
-      },
-      {
-        "id": "79bce36d-9560-4d3c-8041-42b320efced7",
-        "type": "resource",
-        "version": "1",
-        "name": "DefectReport",
-        "description": "A QC failure record tied to a WorkOrder.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "work_order_id",
-            "type": "reference",
-            "resource": "WorkOrder",
-            "required": true
-          },
-          {
-            "name": "defect_kind",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "dimensional",
-              "surface",
-              "alignment",
-              "other"
-            ]
-          },
-          {
-            "name": "noted_at",
-            "type": "datetime"
-          }
-        ],
-        "actions": [
-          {
-            "name": "File",
-            "type": "write"
-          }
-        ]
-      },
-      {
-        "id": "f029e1a3-9247-4219-a2f6-a1548c4bd82d",
-        "type": "resource",
-        "version": "1",
-        "name": "MachineRecord",
-        "description": "Resource template for the system actors backing the machine Roles (used for Role.resource link).",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "model",
-            "type": "string"
-          },
-          {
-            "name": "installed",
-            "type": "date"
-          }
-        ]
-      }
-    ],
-    "persons": [
-      {
-        "id": "97950ac7-5feb-4821-bfb9-31f8108aa0cc",
-        "type": "person",
-        "version": "1",
-        "name": "FloorWorker",
-        "description": "Production floor staff; eligible for ShiftSupervisor or QualityInspector Roles."
-      }
-    ],
-    "groups": [
-      {
-        "id": "14555168-9772-4843-bfea-644320e1b34c",
-        "type": "group",
-        "version": "1",
-        "name": "Shift",
-        "description": "A production shift. Scopes ShiftSupervisor and QualityInspector Memberships.",
-        "attributes": [
-          {
-            "name": "name",
-            "type": "string",
-            "required": true
-          }
-        ]
-      }
-    ],
-    "roles": [
-      {
-        "id": "6c543936-1364-483e-9d36-a1a16fbfc032",
-        "type": "role",
-        "version": "1",
-        "name": "ShiftSupervisor",
-        "description": "Human supervisor responsible for a Shift's WorkOrders.",
-        "scope": "Shift",
-        "cardinality": "one"
-      },
-      {
-        "id": "9770f1f4-fa0b-44a8-9ea2-b83616d8d5d3",
-        "type": "role",
-        "version": "1",
-        "name": "QualityInspector",
-        "description": "Inspects post-finish WorkOrders.",
-        "scope": "Shift"
-      },
-      {
-        "id": "f4353185-fa2c-4fda-9ad0-7f832d36bbb6",
-        "type": "role",
-        "version": "1",
-        "name": "CncMachine",
-        "description": "System Role: CNC milling machine that performs the Cut step on every WorkOrder.",
-        "system": true,
-        "resource": "MachineRecord"
-      },
-      {
-        "id": "6ba579d4-21af-4b72-b086-a6f9b3c4dc8a",
-        "type": "role",
-        "version": "1",
-        "name": "StampingPress",
-        "description": "System Role: hydraulic press that performs Stamp.",
-        "system": true,
-        "resource": "MachineRecord"
-      },
-      {
-        "id": "9c037fc8-7838-444d-a08c-31bd15fbc130",
-        "type": "role",
-        "version": "1",
-        "name": "PaintRobot",
-        "description": "System Role: robotic paint cell that performs Paint.",
-        "system": true,
-        "resource": "MachineRecord"
-      },
-      {
-        "id": "83a54ba3-9479-4ff7-8994-3e078bca195f",
-        "type": "role",
-        "version": "1",
-        "name": "MaintenanceScheduler",
-        "description": "System Role: nightly job that flags machines needing service. Scheduled, doesn't act on WorkOrders.",
-        "system": true
-      }
-    ]
+    "description": "Discrete-manufacturing assembly line. WorkOrders flow through machines (system Roles) and human inspectors with parallel paint+stamp Steps converging at quality inspection."
   },
+  "resources": [
+    {
+      "id": "2a94ce87-16b5-48d6-bdb4-dd559ed86170",
+      "type": "resource",
+      "version": "1",
+      "name": "WorkOrder",
+      "description": "A production order for a batch of parts.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "part_number",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "queued",
+            "cutting",
+            "in_progress",
+            "inspection",
+            "passed",
+            "failed",
+            "completed"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "name": "Release",
+          "type": "write"
+        },
+        {
+          "name": "Cut",
+          "type": "write"
+        },
+        {
+          "name": "Stamp",
+          "type": "write"
+        },
+        {
+          "name": "Paint",
+          "type": "write"
+        },
+        {
+          "name": "Inspect",
+          "type": "write"
+        },
+        {
+          "name": "Reject",
+          "type": "destructive"
+        },
+        {
+          "name": "Complete",
+          "type": "write"
+        }
+      ],
+      "domain": "assembly"
+    },
+    {
+      "id": "79bce36d-9560-4d3c-8041-42b320efced7",
+      "type": "resource",
+      "version": "1",
+      "name": "DefectReport",
+      "description": "A QC failure record tied to a WorkOrder.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "work_order_id",
+          "type": "reference",
+          "resource": "WorkOrder",
+          "required": true
+        },
+        {
+          "name": "defect_kind",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "dimensional",
+            "surface",
+            "alignment",
+            "other"
+          ]
+        },
+        {
+          "name": "noted_at",
+          "type": "datetime"
+        }
+      ],
+      "actions": [
+        {
+          "name": "File",
+          "type": "write"
+        }
+      ],
+      "domain": "assembly"
+    },
+    {
+      "id": "f029e1a3-9247-4219-a2f6-a1548c4bd82d",
+      "type": "resource",
+      "version": "1",
+      "name": "MachineRecord",
+      "description": "Resource template for the system actors backing the machine Roles (used for Role.resource link).",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "model",
+          "type": "string"
+        },
+        {
+          "name": "installed",
+          "type": "date"
+        }
+      ],
+      "domain": "assembly"
+    }
+  ],
+  "persons": [
+    {
+      "id": "97950ac7-5feb-4821-bfb9-31f8108aa0cc",
+      "type": "person",
+      "version": "1",
+      "name": "FloorWorker",
+      "description": "Production floor staff; eligible for ShiftSupervisor or QualityInspector Roles.",
+      "domain": "assembly"
+    }
+  ],
+  "positions": [
+    {
+      "id": "6c543936-1364-483e-9d36-a1a16fbfc032",
+      "type": "position",
+      "version": "1",
+      "name": "ShiftSupervisor",
+      "description": "Human supervisor responsible for a Shift's WorkOrders.",
+      "scope": "Shift",
+      "cardinality": "one",
+      "domain": "assembly"
+    },
+    {
+      "id": "9770f1f4-fa0b-44a8-9ea2-b83616d8d5d3",
+      "type": "position",
+      "version": "1",
+      "name": "QualityInspector",
+      "description": "Inspects post-finish WorkOrders.",
+      "scope": "Shift",
+      "domain": "assembly"
+    },
+    {
+      "id": "f4353185-fa2c-4fda-9ad0-7f832d36bbb6",
+      "type": "position",
+      "version": "1",
+      "name": "CncMachine",
+      "description": "System Role: CNC milling machine that performs the Cut step on every WorkOrder.",
+      "system": true,
+      "resource": "MachineRecord",
+      "domain": "assembly"
+    },
+    {
+      "id": "6ba579d4-21af-4b72-b086-a6f9b3c4dc8a",
+      "type": "position",
+      "version": "1",
+      "name": "StampingPress",
+      "description": "System Role: hydraulic press that performs Stamp.",
+      "system": true,
+      "resource": "MachineRecord",
+      "domain": "assembly"
+    },
+    {
+      "id": "9c037fc8-7838-444d-a08c-31bd15fbc130",
+      "type": "position",
+      "version": "1",
+      "name": "PaintRobot",
+      "description": "System Role: robotic paint cell that performs Paint.",
+      "system": true,
+      "resource": "MachineRecord",
+      "domain": "assembly"
+    },
+    {
+      "id": "83a54ba3-9479-4ff7-8994-3e078bca195f",
+      "type": "position",
+      "version": "1",
+      "name": "MaintenanceScheduler",
+      "description": "System Role: nightly job that flags machines needing service. Scheduled, doesn't act on WorkOrders.",
+      "system": true,
+      "domain": "assembly"
+    }
+  ],
+  "groups": [
+    {
+      "id": "14555168-9772-4843-bfea-644320e1b34c",
+      "type": "group",
+      "version": "1",
+      "name": "Shift",
+      "description": "A production shift. Scopes ShiftSupervisor and QualityInspector Memberships.",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "domain": "assembly"
+    }
+  ],
   "memberships": [
     {
       "id": "feea5da0-2541-4b6f-996e-0f153205f97c",
@@ -223,7 +233,7 @@
       "version": "1",
       "name": "FloorWorkerShiftSupervisor",
       "person": "FloorWorker",
-      "role": "ShiftSupervisor"
+      "position": "ShiftSupervisor"
     },
     {
       "id": "955c319e-9d28-403e-99b3-9c36dc68828f",
@@ -231,7 +241,7 @@
       "version": "1",
       "name": "FloorWorkerQualityInspector",
       "person": "FloorWorker",
-      "role": "QualityInspector"
+      "position": "QualityInspector"
     }
   ],
   "operations": [

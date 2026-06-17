@@ -2,23 +2,48 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational",
   "title": "OperationalDNA",
-  "description": "A complete Operational DNA document for a business. Operational DNA describes organizational modeling — what the org is and what it does, independent of UI, API, or deployment technology. Modeled around the Actor > Action > Subject triad: Roles act, Subjects (Resource | Person | Role | Group) receive actions.\n\nOrganized in three categories:\n- People: Person, Role, Group, Membership\n- Structures: Resource, Attribute, Relationship\n- Activities: Operation, Task, Step, Process, Trigger, Rule\n\nDomain wraps the noun primitives (Resources, Persons, Roles, Groups). Memberships and Activities live at the top level of the document.",
+  "description": "A complete Operational DNA document for a business. Operational DNA describes organizational modeling — what the org is and what it does, independent of UI, API, or deployment technology. Modeled around the Actor > Action > Subject triad: Positions act, Subjects (Resource | Person | Position | Group) receive actions.\n\nOrganized in three categories:\n- People: Person, Position, Group, Membership\n- Structures: Resource, Attribute, Relationship\n- Activities: Operation, Task, Step, Process, Trigger, Rule\n\nEvery primitive lives in a top-level collection (resources/persons/positions/groups and the activities). A primitive names its home Domain via its `domain` reference. `domain` is the thin tenant-root node; descendant domains live in the flat `domains[]`, each naming its `parent`.",
   "type": "object",
   "required": ["domain"],
   "additionalProperties": false,
   "properties": {
     "domain": {
       "$ref": "https://dna.codes/schemas/operational/domain",
-      "description": "The root domain, containing the full nested hierarchy of subdomains and noun primitives (Resources, Persons, Roles, Groups)."
+      "description": "The organization / tenant root Domain — a thin node (no contained primitives). Exactly one root; descendant domains live in the top-level `domains[]` and name their `parent`."
+    },
+    "domains": {
+      "type": "array",
+      "description": "The descendant (non-root) Domains, as a flat list of thin nodes. Each names its `parent`; the hierarchy is the parent-edge chain, not inline nesting.",
+      "items": { "$ref": "https://dna.codes/schemas/operational/domain" }
+    },
+    "resources": {
+      "type": "array",
+      "description": "Resource type definitions. Each names its home Domain via `domain`.",
+      "items": { "$ref": "https://dna.codes/schemas/operational/resource" }
+    },
+    "persons": {
+      "type": "array",
+      "description": "Person type definitions. Each names its home Domain via `domain`.",
+      "items": { "$ref": "https://dna.codes/schemas/operational/person" }
+    },
+    "positions": {
+      "type": "array",
+      "description": "Position type definitions. Each names its home Domain via `domain`.",
+      "items": { "$ref": "https://dna.codes/schemas/operational/position" }
+    },
+    "groups": {
+      "type": "array",
+      "description": "Group type definitions. Each names its home Domain via `domain`.",
+      "items": { "$ref": "https://dna.codes/schemas/operational/group" }
     },
     "memberships": {
       "type": "array",
-      "description": "Template-level eligibility statements: which Person types may hold which Roles in which Groups.",
+      "description": "Template-level eligibility statements: which Person types may hold which Positions in which Groups.",
       "items": { "$ref": "https://dna.codes/schemas/operational/membership" }
     },
     "operations": {
       "type": "array",
-      "description": "All Subject.Action operation pairs defined in this domain — the atomic units of business activity. Subject is any noun primitive (Resource, Person, Role, Group).",
+      "description": "All Subject.Action operation pairs defined in this domain — the atomic units of business activity. Subject is any noun primitive (Resource, Person, Position, Group).",
       "items": { "$ref": "https://dna.codes/schemas/operational/operation" }
     },
     "triggers": {
@@ -38,7 +63,7 @@
     },
     "tasks": {
       "type": "array",
-      "description": "Atomic reusable units of business activity: a Role performing exactly one Operation.",
+      "description": "Atomic reusable units of business activity: a Position performing exactly one Operation.",
       "items": { "$ref": "https://dna.codes/schemas/operational/task" }
     },
     "processes": {
@@ -49,47 +74,37 @@
   },
   "examples": [
     {
-      "domain": {
-        "name": "acme",
-        "path": "acme",
-        "domains": [
-          {
-            "name": "finance",
-            "path": "acme.finance",
-            "domains": [
-              {
-                "name": "lending",
-                "path": "acme.finance.lending",
-                "resources": [
-                  {
-                    "name": "Loan",
-                    "attributes": [
-                      { "name": "amount", "type": "number", "required": true },
-                      { "name": "status", "type": "enum", "values": ["pending", "active", "repaid"] }
-                    ],
-                    "actions": [
-                      { "name": "Apply",   "type": "write" },
-                      { "name": "Approve", "type": "write" }
-                    ]
-                  }
-                ],
-                "persons": [
-                  { "name": "Borrower", "description": "External borrower; applies for loans." },
-                  { "name": "Employee", "description": "Internal worker." }
-                ],
-                "groups": [
-                  { "name": "BankDepartment", "attributes": [{ "name": "region", "type": "string" }] }
-                ],
-                "roles": [
-                  { "name": "Underwriter", "description": "Reviews and approves loan applications.", "scope": "BankDepartment" }
-                ]
-              }
-            ]
-          }
-        ]
-      },
+      "domain": { "name": "acme", "description": "The organization / tenant root." },
+      "domains": [
+        { "name": "finance", "parent": "acme" },
+        { "name": "lending", "parent": "finance", "owner": "Underwriter", "path": "acme.finance.lending" }
+      ],
+      "resources": [
+        {
+          "name": "Loan",
+          "domain": "lending",
+          "attributes": [
+            { "name": "amount", "type": "number", "required": true },
+            { "name": "status", "type": "enum", "values": ["pending", "active", "repaid"] }
+          ],
+          "actions": [
+            { "name": "Apply",   "type": "write" },
+            { "name": "Approve", "type": "write" }
+          ]
+        }
+      ],
+      "persons": [
+        { "name": "Borrower", "domain": "lending", "description": "External borrower; applies for loans." },
+        { "name": "Employee", "domain": "lending", "description": "Internal worker." }
+      ],
+      "groups": [
+        { "name": "BankDepartment", "domain": "lending", "attributes": [{ "name": "region", "type": "string" }] }
+      ],
+      "positions": [
+        { "name": "Underwriter", "domain": "lending", "description": "Reviews and approves loan applications.", "scope": "BankDepartment" }
+      ],
       "memberships": [
-        { "name": "EmployeeUnderwriter", "person": "Employee", "role": "Underwriter" }
+        { "name": "EmployeeUnderwriter", "person": "Employee", "position": "Underwriter" }
       ],
       "operations": [
         { "resource": "Loan", "action": "Apply",   "name": "Loan.Apply",   "changes": [{ "attribute": "loan.status", "set": "under_review" }] },

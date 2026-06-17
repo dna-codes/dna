@@ -3,7 +3,7 @@ import { schemas, type JsonSchema } from '@dna-codes/dna-core'
 export type PrimitiveKind =
   | 'resource'
   | 'person'
-  | 'role'
+  | 'position'
   | 'group'
   | 'membership'
   | 'operation'
@@ -15,7 +15,7 @@ export type PrimitiveKind =
 export const PRIMITIVE_KINDS: PrimitiveKind[] = [
   'resource',
   'person',
-  'role',
+  'position',
   'group',
   'membership',
   'operation',
@@ -34,7 +34,7 @@ export interface ToolDefinition {
 export interface EnumPools {
   resources?: string[]
   persons?: string[]
-  roles?: string[]
+  positions?: string[]
   groups?: string[]
   operations?: string[]
   tasks?: string[]
@@ -131,7 +131,7 @@ function flattenAllOf(parent: Record<string, unknown>): Record<string, unknown> 
 const PRIMITIVE_SCHEMA: Record<PrimitiveKind, JsonSchema> = {
   resource: schemas.operational.resource,
   person: schemas.operational.person,
-  role: schemas.operational.role,
+  position: schemas.operational.position,
   group: schemas.operational.group,
   membership: schemas.operational.membership,
   operation: schemas.operational.operation,
@@ -144,11 +144,11 @@ const PRIMITIVE_SCHEMA: Record<PrimitiveKind, JsonSchema> = {
 const PRIMITIVE_PURPOSE: Record<PrimitiveKind, string> = {
   resource: 'Add a Resource (structure the org tracks: Loan, Invoice, Document).',
   person: 'Add a Person template (kind of human: Customer, Employee, Patient).',
-  role: 'Add a Role template (position: Underwriter, Doctor, LeadCounsel).',
-  group: 'Add a Group template (work-unit / container that scopes Roles: BankDepartment, Case).',
-  membership: 'Add a Membership: a Person template is eligible to hold a Role template (optionally within a Group).',
+  position: 'Add a Position template (Underwriter, Doctor, LeadCounsel).',
+  group: 'Add a Group template (work-unit / container that scopes Positions: BankDepartment, Case).',
+  membership: 'Add a Membership: a Person template is eligible to hold a Position template (optionally within a Group).',
   operation: 'Add an Operation: a Target.Action atomic unit of business activity (e.g. Loan.Approve).',
-  task: 'Add a Task: an Actor (Role) performing exactly one Operation.',
+  task: 'Add a Task: an Actor (Position) performing exactly one Operation.',
   process: 'Add a Process: a named DAG of Steps (an SOP / workflow).',
   trigger: 'Add a Trigger: what initiates an Operation or Process (user, schedule, webhook, prior operation).',
   rule: 'Add a Rule: an access constraint or condition gating an Operation.',
@@ -183,12 +183,12 @@ export function buildLayeredTools(): ToolDefinition[] {
 const REFERENCE_FIELDS: Record<PrimitiveKind, Partial<Record<string, keyof EnumPools>>> = {
   resource: { parent: 'resources' },
   person: { parent: 'persons', resource: 'resources' },
-  role: { parent: 'roles', resource: 'resources' },
+  position: { parent: 'positions', resource: 'resources' },
   group: { parent: 'groups' },
-  membership: { person: 'persons', role: 'roles', group: 'groups' },
+  membership: { person: 'persons', position: 'positions', group: 'groups' },
   operation: { target: 'resources' },
-  task: { actor: 'roles' },
-  process: { operator: 'roles' },
+  task: { actor: 'positions' },
+  process: { operator: 'positions' },
   trigger: {},
   rule: {},
 }

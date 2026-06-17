@@ -34,7 +34,7 @@ import type { OperationalDNA } from './merge';
  * which of these it specializes (a `Loan` ResourceType is `category: 'resource'`;
  * a `Borrower` is `category: 'person'`).
  */
-export type NounCategory = 'person' | 'role' | 'group' | 'resource';
+export type NounCategory = 'person' | 'position' | 'group' | 'resource';
 /**
  * Maturity of a registry type's *concept* (Kubernetes API-maturity model).
  * Orthogonal to the numeric schema `version`/`current_version`: a type can be
@@ -52,7 +52,7 @@ export declare const FOUNDATIONAL_RESOURCE_TYPE_NAMES: readonly string[];
 export declare function isFoundationalTypeName(name: string): boolean;
 /**
  * The default `stability` for a registry type identified by `name`. Foundational
- * types (Person/Role/Group/Resource) default to `stable`; every other type
+ * types (Person/Position/Group/Resource) default to `stable`; every other type
  * defaults to `experimental`. Used both when seeding/creating a type without an
  * explicit stability and when reading a legacy record that predates the field.
  * `is_seed` cannot be used for this because tenant-seeded types are also seeds.
@@ -240,9 +240,9 @@ export interface DnaDataStore {
      * `hasBeenSeeded()` return true.
      *
      * On first invocation against a fresh store, ALWAYS writes four
-     * foundational `ResourceType` records (`Person`, `Role`, `Group`,
+     * foundational `ResourceType` records (`Person`, `Position`, `Group`,
      * `Resource`) with `is_seed: true` and matching `category` values, then
-     * walks `dna.domain.{persons,roles,groups,resources}` and
+     * walks `dna.domain.{persons,positions,groups,resources}` and
      * `dna.relationships[]` for tenant-domain seeds.
      */
     seedFromDna(dna: OperationalDNA): Promise<SeedReport>;

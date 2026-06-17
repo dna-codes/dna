@@ -1,11 +1,3 @@
-import { Resource, OperationalDomain } from './types'
-
-export function collectResources(domain: OperationalDomain): Resource[] {
-  const out = [...(domain.resources ?? [])]
-  for (const sub of domain.domains ?? []) out.push(...collectResources(sub))
-  return out
-}
-
 /** Sanitize a DNA name for use as a mermaid identifier (no quotes / spaces). */
 export function mermaidId(s: string): string {
   return s.replace(/[^A-Za-z0-9_]/g, '_')

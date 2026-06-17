@@ -2,7 +2,7 @@ import type { ResourceTypeInput, RelationshipTypeInput } from '@dna-codes/dna-co
 
 export const resourceTypes: ResourceTypeInput[] = [
   { name: 'employee',    category: 'person',   description: 'A current employee of the organization.',            attribute_schema: [], stability: 'experimental' },
-  { name: 'role',        category: 'role',     description: 'A named job function or position type.',             attribute_schema: [], stability: 'experimental' },
+  { name: 'role',        category: 'position',     description: 'A named job function or position type.',             attribute_schema: [], stability: 'experimental' },
   { name: 'department',  category: 'group',    description: 'A functional division within the company.',          attribute_schema: [], stability: 'experimental' },
   { name: 'team',        category: 'group',    description: 'A cross-functional or project-based working group.', attribute_schema: [], stability: 'experimental' },
   { name: 'job-posting', category: 'resource', description: 'An open requisition being actively recruited for.',  attribute_schema: [], stability: 'experimental' },

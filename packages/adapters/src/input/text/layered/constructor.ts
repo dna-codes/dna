@@ -6,7 +6,7 @@ import {
   addPerson,
   addProcess,
   addResource,
-  addRole,
+  addPosition,
   addRule,
   addTask,
   addTrigger,
@@ -56,7 +56,7 @@ export type ToolCallResult =
         | 'schema_violation'
         | 'unknown_resource'
         | 'unknown_person'
-        | 'unknown_role'
+        | 'unknown_position'
         | 'unknown_group'
         | 'unknown_operation'
         | 'unknown_target'
@@ -94,7 +94,7 @@ const PLACEHOLDER_VERSION = '1'
 const ADD_BUILDER: Record<PrimitiveKind, AddBuilder> = {
   resource: addResource as AddBuilder,
   person: addPerson as AddBuilder,
-  role: addRole as AddBuilder,
+  position: addPosition as AddBuilder,
   group: addGroup as AddBuilder,
   membership: addMembership as AddBuilder,
   operation: addOperation as AddBuilder,
@@ -138,12 +138,11 @@ export class LayeredConstructor {
 
   /** Pools of declared primitive names — useful for narrowing tool schemas mid-flight. */
   pools(): EnumPools {
-    const dom = this.dna.domain
     return {
-      resources: namesOf(dom.resources),
-      persons: namesOf(dom.persons),
-      roles: namesOf(dom.roles),
-      groups: namesOf(dom.groups),
+      resources: namesOf(this.dna.resources),
+      persons: namesOf(this.dna.persons),
+      positions: namesOf(this.dna.positions),
+      groups: namesOf(this.dna.groups),
       operations: namesOf(this.dna.operations),
       tasks: namesOf(this.dna.tasks),
       processes: namesOf(this.dna.processes),
@@ -312,12 +311,11 @@ export class LayeredConstructor {
   }
 
   private collectionFor(kind: PrimitiveKind): unknown[] {
-    const dom = this.dna.domain
     switch (kind) {
-      case 'resource': return (dom.resources as unknown[]) ?? []
-      case 'person': return (dom.persons as unknown[]) ?? []
-      case 'role': return (dom.roles as unknown[]) ?? []
-      case 'group': return (dom.groups as unknown[]) ?? []
+      case 'resource': return (this.dna.resources as unknown[]) ?? []
+      case 'person': return (this.dna.persons as unknown[]) ?? []
+      case 'position': return (this.dna.positions as unknown[]) ?? []
+      case 'group': return (this.dna.groups as unknown[]) ?? []
       case 'membership': return (this.dna.memberships as unknown[]) ?? []
       case 'operation': return (this.dna.operations as unknown[]) ?? []
       case 'task': return (this.dna.tasks as unknown[]) ?? []
@@ -368,10 +366,10 @@ export class LayeredConstructor {
         }
         return null
       }
-      case 'role': {
+      case 'position': {
         const parent = string('parent')
-        if (parent && !(pools.roles ?? []).includes(parent)) {
-          return refError('unknown_role', 'parent', parent, pools.roles ?? [])
+        if (parent && !(pools.positions ?? []).includes(parent)) {
+          return refError('unknown_position', 'parent', parent, pools.positions ?? [])
         }
         const resource = string('resource')
         if (resource && !(pools.resources ?? []).includes(resource)) {
@@ -399,9 +397,9 @@ export class LayeredConstructor {
         if (person && !(pools.persons ?? []).includes(person)) {
           return refError('unknown_person', 'person', person, pools.persons ?? [])
         }
-        const role = string('role')
-        if (role && !(pools.roles ?? []).includes(role)) {
-          return refError('unknown_role', 'role', role, pools.roles ?? [])
+        const position = string('position')
+        if (position && !(pools.positions ?? []).includes(position)) {
+          return refError('unknown_position', 'position', position, pools.positions ?? [])
         }
         const group = string('group')
         const groupable = new Set([...(pools.groups ?? []), ...(pools.persons ?? [])])
@@ -415,7 +413,7 @@ export class LayeredConstructor {
         const targets = new Set([
           ...(pools.resources ?? []),
           ...(pools.persons ?? []),
-          ...(pools.roles ?? []),
+          ...(pools.positions ?? []),
           ...(pools.groups ?? []),
           ...(pools.processes ?? []),
         ])
@@ -426,7 +424,7 @@ export class LayeredConstructor {
       }
       case 'task': {
         const actor = string('actor')
-        const actors = new Set([...(pools.roles ?? []), ...(pools.persons ?? [])])
+        const actors = new Set([...(pools.positions ?? []), ...(pools.persons ?? [])])
         if (actor && !actors.has(actor)) {
           return refError('unknown_actor', 'actor', actor, [...actors])
         }
@@ -438,7 +436,7 @@ export class LayeredConstructor {
       }
       case 'process': {
         const operator = string('operator')
-        const operators = new Set([...(pools.roles ?? []), ...(pools.persons ?? [])])
+        const operators = new Set([...(pools.positions ?? []), ...(pools.persons ?? [])])
         if (operator && !operators.has(operator)) {
           return refError('unknown_operator', 'operator', operator, [...operators])
         }
@@ -516,7 +514,7 @@ function refError(
   code:
     | 'unknown_resource'
     | 'unknown_person'
-    | 'unknown_role'
+    | 'unknown_position'
     | 'unknown_group'
     | 'unknown_operation'
     | 'unknown_target'
@@ -555,7 +553,7 @@ function stableStringify(value: unknown): string {
 
 function cleanDocument(dna: OperationalDNA): Record<string, unknown> {
   const out: Record<string, unknown> = { domain: cleanDomain(dna.domain) }
-  const sections = ['memberships', 'operations', 'triggers', 'rules', 'tasks', 'processes'] as const
+  const sections = ['resources', 'persons', 'positions', 'groups', 'memberships', 'operations', 'triggers', 'rules', 'tasks', 'processes'] as const
   for (const key of sections) {
     const arr = dna[key]
     if (Array.isArray(arr) && arr.length > 0) out[key] = arr
@@ -567,10 +565,6 @@ function cleanDomain(d: OperationalDNA['domain']): Record<string, unknown> {
   const out: Record<string, unknown> = { name: d.name }
   if (d.path) out.path = d.path
   if (d.description) out.description = d.description
-  if (Array.isArray(d.resources) && d.resources.length) out.resources = d.resources
-  if (Array.isArray(d.persons) && d.persons.length) out.persons = d.persons
-  if (Array.isArray(d.roles) && d.roles.length) out.roles = d.roles
-  if (Array.isArray(d.groups) && d.groups.length) out.groups = d.groups
   return out
 }
 

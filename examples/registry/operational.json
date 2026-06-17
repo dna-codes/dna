@@ -1,185 +1,266 @@
 {
   "domain": {
     "name": "registry",
-    "path": "platform.registry",
-    "description": "A type-driven resource management platform. TypeDefinitions describe what data shapes the platform supports; Instances are validated runtime records of those types; Links capture typed relationships (plain references and role assignments). Demonstrates that DNA's existing Operational primitives express a generic config-vs-instance meta-pattern with no schema extensions.",
-    "resources": [
-      {
-        "id": "c456464a-cab9-4621-a3b8-7e443a13934c",
-        "type": "resource",
-        "version": "1",
-        "name": "TypeDefinition",
-        "description": "A configuration template that declares a runtime type. Every Instance in the registry validates against the TypeDefinition referenced by its `type_def` attribute.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "type_name",
-            "type": "string",
-            "required": true,
-            "description": "Platform-level name of the type (e.g., 'person', 'case', 'plaintiff', 'loan')."
-          },
-          {
-            "name": "category",
-            "type": "enum",
-            "required": true,
-            "values": ["person", "role", "group", "resource", "domain"],
-            "description": "Classifies what kind of noun this type produces. Mirrors DNA's noun-primitive distinction at the platform's data-model layer."
-          },
-          {
-            "name": "attribute_schema",
-            "type": "text",
-            "required": true,
-            "description": "JSON-Schema fragment that Instances of this type must validate against."
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": ["draft", "published", "archived"]
-          }
-        ],
-        "actions": [
-          { "name": "Create", "description": "Author a new draft TypeDefinition.", "type": "write" },
-          { "name": "Publish", "description": "Promote a draft to published; Instances may now be created against it.", "type": "write" },
-          { "name": "Archive", "description": "Retire a published type from further Instance creation.", "type": "destructive" }
-        ]
-      },
-      {
-        "id": "d441c9bf-3a75-4988-9df3-3bb0547ebccf",
-        "type": "resource",
-        "version": "1",
-        "name": "Instance",
-        "description": "A runtime record validated against its TypeDefinition. `data` carries the payload, `type_def` references the governing TypeDefinition.",
-        "attributes": [
-          { "name": "id", "type": "string", "required": true },
-          {
-            "name": "type_def",
-            "type": "reference",
-            "resource": "TypeDefinition",
-            "required": true
-          },
-          {
-            "name": "data",
-            "type": "text",
-            "required": true,
-            "description": "JSON payload conforming to the TypeDefinition's attribute_schema."
-          },
-          {
-            "name": "validation_status",
-            "type": "enum",
-            "values": ["valid", "invalid", "stale"],
-            "description": "Last computed result of running the ValidationEngine against `data`."
-          }
-        ],
-        "actions": [
-          { "name": "Create", "description": "Persist a new Instance for a published type.", "type": "write" },
-          { "name": "Update", "description": "Modify an Instance's data payload or re-run validation.", "type": "write" },
-          { "name": "Delete", "description": "Remove an Instance from the registry.", "type": "destructive" }
-        ]
-      },
-      {
-        "id": "f899ad51-c914-47a2-a2da-7413d5e6c018",
-        "type": "resource",
-        "version": "1",
-        "name": "Link",
-        "description": "A typed relationship between two Instances. `role` distinguishes plain references ('belongs_to') from role assignments ('lead_counsel') without requiring a separate primitive.",
-        "attributes": [
-          { "name": "id", "type": "string", "required": true },
-          { "name": "from", "type": "reference", "resource": "Instance", "required": true },
-          { "name": "to", "type": "reference", "resource": "Instance", "required": true },
-          {
-            "name": "role",
-            "type": "string",
-            "description": "Optional role name when the Link represents a role assignment (e.g., 'lead_counsel', 'attending_physician'). Omitted for plain references."
-          },
-          {
-            "name": "attributes",
-            "type": "text",
-            "description": "Optional JSON payload carrying role-specific attributes (e.g., assigned_at, scope)."
-          }
-        ],
-        "actions": [
-          { "name": "Create", "description": "Establish a Link between two Instances.", "type": "write" },
-          { "name": "Delete", "description": "Remove a Link.", "type": "destructive" }
-        ]
-      },
-      {
-        "id": "57ed826d-2078-4675-8a17-e206ae350bdb",
-        "type": "resource",
-        "version": "1",
-        "name": "ValidationService",
-        "description": "The platform's automated schema-validation actor. Backs the ValidationEngine Role's `resource:` link, mirroring the lending example's NightlyDelinquencySweep pattern.",
-        "attributes": [
-          { "name": "id", "type": "string", "required": true },
-          { "name": "last_run_at", "type": "datetime" }
-        ]
-      }
-    ],
-    "persons": [
-      {
-        "id": "3858fdb8-a636-401f-8ef3-d489be061cd1",
-        "type": "person",
-        "version": "1",
-        "name": "Administrator",
-        "description": "Platform administrator who designs TypeDefinitions and manages registry-wide configuration."
-      },
-      {
-        "id": "23ee5a24-18c8-40e9-af1e-05ffea087047",
-        "type": "person",
-        "version": "1",
-        "name": "Operator",
-        "description": "Day-to-day registry user who creates Instances and Links against published TypeDefinitions."
-      }
-    ],
-    "groups": [
-      {
-        "id": "81d17863-301b-42f8-8636-b3a0825fcba1",
-        "type": "group",
-        "version": "1",
-        "name": "Registry",
-        "description": "The container Group within which the registry's Roles are exercised."
-      }
-    ],
-    "roles": [
-      {
-        "id": "4225095e-c96b-41e7-ac0b-282cb25a6e0d",
-        "type": "role",
-        "version": "1",
-        "name": "TypeDesigner",
-        "description": "Authors and publishes TypeDefinitions.",
-        "scope": "Registry"
-      },
-      {
-        "id": "98ab16c9-9890-4681-a3ee-05f7fc8b6d2f",
-        "type": "role",
-        "version": "1",
-        "name": "DataManager",
-        "description": "Creates, updates, deletes Instances and Links against published types.",
-        "scope": "Registry"
-      },
-      {
-        "id": "9cfa0a8d-d7fd-4598-a8b6-4a72837ad75c",
-        "type": "role",
-        "version": "1",
-        "name": "Viewer",
-        "description": "Read-only access to TypeDefinitions, Instances, and Links.",
-        "scope": "Registry"
-      },
-      {
-        "id": "3473b757-d998-473a-b4b3-e630b26f3f78",
-        "type": "role",
-        "version": "1",
-        "name": "ValidationEngine",
-        "description": "System actor that runs schema validation on Instances. Same pattern as NightlyDelinquencySweep (lending) and the manufacturing system Roles.",
-        "system": true,
-        "resource": "ValidationService"
-      }
-    ]
+    "description": "A type-driven resource management platform. TypeDefinitions describe what data shapes the platform supports; Instances are validated runtime records of those types; Links capture typed relationships (plain references and role assignments). Demonstrates that DNA's existing Operational primitives express a generic config-vs-instance meta-pattern with no schema extensions."
   },
+  "resources": [
+    {
+      "id": "c456464a-cab9-4621-a3b8-7e443a13934c",
+      "type": "resource",
+      "version": "1",
+      "name": "TypeDefinition",
+      "description": "A configuration template that declares a runtime type. Every Instance in the registry validates against the TypeDefinition referenced by its `type_def` attribute.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "type_name",
+          "type": "string",
+          "required": true,
+          "description": "Platform-level name of the type (e.g., 'person', 'case', 'plaintiff', 'loan')."
+        },
+        {
+          "name": "category",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "person",
+            "role",
+            "group",
+            "resource",
+            "domain"
+          ],
+          "description": "Classifies what kind of noun this type produces. Mirrors DNA's noun-primitive distinction at the platform's data-model layer."
+        },
+        {
+          "name": "attribute_schema",
+          "type": "text",
+          "required": true,
+          "description": "JSON-Schema fragment that Instances of this type must validate against."
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "draft",
+            "published",
+            "archived"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "name": "Create",
+          "description": "Author a new draft TypeDefinition.",
+          "type": "write"
+        },
+        {
+          "name": "Publish",
+          "description": "Promote a draft to published; Instances may now be created against it.",
+          "type": "write"
+        },
+        {
+          "name": "Archive",
+          "description": "Retire a published type from further Instance creation.",
+          "type": "destructive"
+        }
+      ],
+      "domain": "registry"
+    },
+    {
+      "id": "d441c9bf-3a75-4988-9df3-3bb0547ebccf",
+      "type": "resource",
+      "version": "1",
+      "name": "Instance",
+      "description": "A runtime record validated against its TypeDefinition. `data` carries the payload, `type_def` references the governing TypeDefinition.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "type_def",
+          "type": "reference",
+          "resource": "TypeDefinition",
+          "required": true
+        },
+        {
+          "name": "data",
+          "type": "text",
+          "required": true,
+          "description": "JSON payload conforming to the TypeDefinition's attribute_schema."
+        },
+        {
+          "name": "validation_status",
+          "type": "enum",
+          "values": [
+            "valid",
+            "invalid",
+            "stale"
+          ],
+          "description": "Last computed result of running the ValidationEngine against `data`."
+        }
+      ],
+      "actions": [
+        {
+          "name": "Create",
+          "description": "Persist a new Instance for a published type.",
+          "type": "write"
+        },
+        {
+          "name": "Update",
+          "description": "Modify an Instance's data payload or re-run validation.",
+          "type": "write"
+        },
+        {
+          "name": "Delete",
+          "description": "Remove an Instance from the registry.",
+          "type": "destructive"
+        }
+      ],
+      "domain": "registry"
+    },
+    {
+      "id": "f899ad51-c914-47a2-a2da-7413d5e6c018",
+      "type": "resource",
+      "version": "1",
+      "name": "Link",
+      "description": "A typed relationship between two Instances. `role` distinguishes plain references ('belongs_to') from role assignments ('lead_counsel') without requiring a separate primitive.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "from",
+          "type": "reference",
+          "resource": "Instance",
+          "required": true
+        },
+        {
+          "name": "to",
+          "type": "reference",
+          "resource": "Instance",
+          "required": true
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "description": "Optional role name when the Link represents a role assignment (e.g., 'lead_counsel', 'attending_physician'). Omitted for plain references."
+        },
+        {
+          "name": "attributes",
+          "type": "text",
+          "description": "Optional JSON payload carrying role-specific attributes (e.g., assigned_at, scope)."
+        }
+      ],
+      "actions": [
+        {
+          "name": "Create",
+          "description": "Establish a Link between two Instances.",
+          "type": "write"
+        },
+        {
+          "name": "Delete",
+          "description": "Remove a Link.",
+          "type": "destructive"
+        }
+      ],
+      "domain": "registry"
+    },
+    {
+      "id": "57ed826d-2078-4675-8a17-e206ae350bdb",
+      "type": "resource",
+      "version": "1",
+      "name": "ValidationService",
+      "description": "The platform's automated schema-validation actor. Backs the ValidationEngine Role's `resource:` link, mirroring the lending example's NightlyDelinquencySweep pattern.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "last_run_at",
+          "type": "datetime"
+        }
+      ],
+      "domain": "registry"
+    }
+  ],
+  "persons": [
+    {
+      "id": "3858fdb8-a636-401f-8ef3-d489be061cd1",
+      "type": "person",
+      "version": "1",
+      "name": "Administrator",
+      "description": "Platform administrator who designs TypeDefinitions and manages registry-wide configuration.",
+      "domain": "registry"
+    },
+    {
+      "id": "23ee5a24-18c8-40e9-af1e-05ffea087047",
+      "type": "person",
+      "version": "1",
+      "name": "Operator",
+      "description": "Day-to-day registry user who creates Instances and Links against published TypeDefinitions.",
+      "domain": "registry"
+    }
+  ],
+  "positions": [
+    {
+      "id": "4225095e-c96b-41e7-ac0b-282cb25a6e0d",
+      "type": "position",
+      "version": "1",
+      "name": "TypeDesigner",
+      "description": "Authors and publishes TypeDefinitions.",
+      "scope": "Registry",
+      "domain": "registry"
+    },
+    {
+      "id": "98ab16c9-9890-4681-a3ee-05f7fc8b6d2f",
+      "type": "position",
+      "version": "1",
+      "name": "DataManager",
+      "description": "Creates, updates, deletes Instances and Links against published types.",
+      "scope": "Registry",
+      "domain": "registry"
+    },
+    {
+      "id": "9cfa0a8d-d7fd-4598-a8b6-4a72837ad75c",
+      "type": "position",
+      "version": "1",
+      "name": "Viewer",
+      "description": "Read-only access to TypeDefinitions, Instances, and Links.",
+      "scope": "Registry",
+      "domain": "registry"
+    },
+    {
+      "id": "3473b757-d998-473a-b4b3-e630b26f3f78",
+      "type": "position",
+      "version": "1",
+      "name": "ValidationEngine",
+      "description": "System actor that runs schema validation on Instances. Same pattern as NightlyDelinquencySweep (lending) and the manufacturing system Roles.",
+      "system": true,
+      "resource": "ValidationService",
+      "domain": "registry"
+    }
+  ],
+  "groups": [
+    {
+      "id": "81d17863-301b-42f8-8636-b3a0825fcba1",
+      "type": "group",
+      "version": "1",
+      "name": "Registry",
+      "description": "The container Group within which the registry's Roles are exercised.",
+      "domain": "registry"
+    }
+  ],
   "memberships": [
     {
       "id": "77d292b3-0461-44dd-ad39-1ccc7b995314",
@@ -187,7 +268,7 @@
       "version": "1",
       "name": "AdminTypeDesigner",
       "person": "Administrator",
-      "role": "TypeDesigner",
+      "position": "TypeDesigner",
       "description": "Administrators may hold the TypeDesigner role within the Registry."
     },
     {
@@ -196,7 +277,7 @@
       "version": "1",
       "name": "AdminDataManager",
       "person": "Administrator",
-      "role": "DataManager",
+      "position": "DataManager",
       "description": "Administrators may also act as DataManagers."
     },
     {
@@ -205,7 +286,7 @@
       "version": "1",
       "name": "OperatorDataManager",
       "person": "Operator",
-      "role": "DataManager",
+      "position": "DataManager",
       "description": "Operators are DataManagers by default."
     },
     {
@@ -214,7 +295,7 @@
       "version": "1",
       "name": "OperatorViewer",
       "person": "Operator",
-      "role": "Viewer",
+      "position": "Viewer",
       "description": "Operators may also hold the read-only Viewer role."
     }
   ],
@@ -226,7 +307,12 @@
       "target": "TypeDefinition",
       "action": "Create",
       "name": "TypeDefinition.Create",
-      "changes": [{ "attribute": "status", "set": "draft" }]
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "draft"
+        }
+      ]
     },
     {
       "id": "746f6a59-3403-4227-b74b-6ab4874e8ab4",
@@ -235,7 +321,12 @@
       "target": "TypeDefinition",
       "action": "Publish",
       "name": "TypeDefinition.Publish",
-      "changes": [{ "attribute": "status", "set": "published" }]
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "published"
+        }
+      ]
     },
     {
       "id": "c6fb77fa-a48a-4510-abc1-003f63a6cd3d",
@@ -244,7 +335,12 @@
       "target": "TypeDefinition",
       "action": "Archive",
       "name": "TypeDefinition.Archive",
-      "changes": [{ "attribute": "status", "set": "archived" }]
+      "changes": [
+        {
+          "attribute": "status",
+          "set": "archived"
+        }
+      ]
     },
     {
       "id": "b911df31-024d-4b14-bcf9-07fe82e29792",
@@ -253,7 +349,12 @@
       "target": "Instance",
       "action": "Create",
       "name": "Instance.Create",
-      "changes": [{ "attribute": "validation_status", "set": "stale" }]
+      "changes": [
+        {
+          "attribute": "validation_status",
+          "set": "stale"
+        }
+      ]
     },
     {
       "id": "fe1ad500-f6a3-4f24-b37a-c97e25862da6",
@@ -346,7 +447,11 @@
       "name": "TypeDefinitionCreateAccess",
       "operation": "TypeDefinition.Create",
       "rule_type": "access",
-      "allow": [{ "role": "TypeDesigner" }]
+      "allow": [
+        {
+          "role": "TypeDesigner"
+        }
+      ]
     },
     {
       "id": "b6681751-d29b-432a-a855-959a5f98b733",
@@ -355,7 +460,11 @@
       "name": "TypeDefinitionPublishAccess",
       "operation": "TypeDefinition.Publish",
       "rule_type": "access",
-      "allow": [{ "role": "TypeDesigner" }]
+      "allow": [
+        {
+          "role": "TypeDesigner"
+        }
+      ]
     },
     {
       "id": "63703192-5d28-4967-9425-3b7acb939b0f",
@@ -364,7 +473,11 @@
       "name": "TypeDefinitionArchiveAccess",
       "operation": "TypeDefinition.Archive",
       "rule_type": "access",
-      "allow": [{ "role": "TypeDesigner" }]
+      "allow": [
+        {
+          "role": "TypeDesigner"
+        }
+      ]
     },
     {
       "id": "734fb15a-6b12-4659-8edb-1c347fdc34b6",
@@ -373,7 +486,11 @@
       "name": "InstanceCreateAccess",
       "operation": "Instance.Create",
       "rule_type": "access",
-      "allow": [{ "role": "DataManager" }]
+      "allow": [
+        {
+          "role": "DataManager"
+        }
+      ]
     },
     {
       "id": "dc465dda-5c25-4110-afc6-258879be5711",
@@ -382,7 +499,11 @@
       "name": "InstanceUpdateByDataManager",
       "operation": "Instance.Update",
       "rule_type": "access",
-      "allow": [{ "role": "DataManager" }]
+      "allow": [
+        {
+          "role": "DataManager"
+        }
+      ]
     },
     {
       "id": "55ad7cd5-1374-4cd3-a409-98846f5494b8",
@@ -391,7 +512,11 @@
       "name": "InstanceUpdateByValidationEngine",
       "operation": "Instance.Update",
       "rule_type": "access",
-      "allow": [{ "role": "ValidationEngine" }],
+      "allow": [
+        {
+          "role": "ValidationEngine"
+        }
+      ],
       "description": "Separate access entry so the system-actor wiring stays visible alongside the human DataManager rule."
     },
     {
@@ -401,7 +526,11 @@
       "name": "InstanceDeleteAccess",
       "operation": "Instance.Delete",
       "rule_type": "access",
-      "allow": [{ "role": "DataManager" }]
+      "allow": [
+        {
+          "role": "DataManager"
+        }
+      ]
     },
     {
       "id": "acf3eb01-9ef9-4c37-a128-fec02806c03e",
@@ -410,7 +539,11 @@
       "name": "LinkCreateAccess",
       "operation": "Link.Create",
       "rule_type": "access",
-      "allow": [{ "role": "DataManager" }]
+      "allow": [
+        {
+          "role": "DataManager"
+        }
+      ]
     },
     {
       "id": "198b9b04-2237-4a19-b84a-4ec49bead55e",
@@ -419,7 +552,11 @@
       "name": "LinkDeleteAccess",
       "operation": "Link.Delete",
       "rule_type": "access",
-      "allow": [{ "role": "DataManager" }]
+      "allow": [
+        {
+          "role": "DataManager"
+        }
+      ]
     },
     {
       "id": "e9c22320-c488-4efa-b286-4a853f44c899",
@@ -565,8 +702,17 @@
       "operator": "TypeDesigner",
       "startStep": "design",
       "steps": [
-        { "id": "design", "task": "design-type" },
-        { "id": "publish", "task": "publish-type", "depends_on": ["design"] }
+        {
+          "id": "design",
+          "task": "design-type"
+        },
+        {
+          "id": "publish",
+          "task": "publish-type",
+          "depends_on": [
+            "design"
+          ]
+        }
       ]
     },
     {
@@ -578,12 +724,20 @@
       "operator": "DataManager",
       "startStep": "create",
       "steps": [
-        { "id": "create", "task": "create-instance" },
+        {
+          "id": "create",
+          "task": "create-instance"
+        },
         {
           "id": "validate",
           "task": "validate-instance",
-          "depends_on": ["create"],
-          "conditions": ["TypeIsPublished", "TypeIsNotRole"]
+          "depends_on": [
+            "create"
+          ],
+          "conditions": [
+            "TypeIsPublished",
+            "TypeIsNotRole"
+          ]
         }
       ]
     },
@@ -596,7 +750,10 @@
       "operator": "DataManager",
       "startStep": "link",
       "steps": [
-        { "id": "link", "task": "link-instances" }
+        {
+          "id": "link",
+          "task": "link-instances"
+        }
       ]
     }
   ]

@@ -67,6 +67,12 @@ export declare const COUNT_LINKS_OF_ROLE_CYPHER = "MATCH ()-[r:LINK {role: $role
 export declare const DELETE_LINKS_OF_ROLE_CYPHER = "MATCH ()-[r:LINK {role: $role}]->() DELETE r";
 export declare const HAS_SEED_MARKER_CYPHER = "MATCH (m:SeedMarker) RETURN m LIMIT 1";
 export declare const WRITE_SEED_MARKER_CYPHER = "MERGE (m:SeedMarker) SET m.createdAt = $createdAt, m.dnaHash = $dnaHash RETURN m";
+/**
+ * Delete every node (type-metadata nodes, instance nodes, the SeedMarker) and
+ * its relationships. Constraints/indexes are schema, not data, so they survive
+ * — a subsequent `migrate()` is idempotent. Used by the reset flow.
+ */
+export declare const CLEAR_GRAPH_CYPHER = "MATCH (n) DETACH DELETE n";
 /** Cypher for `instance.create` — caller MUST validate the `label`. */
 export declare function createInstanceCypher(label: string): string;
 /** Cypher for `instance.get` — caller MUST validate the `label`. */

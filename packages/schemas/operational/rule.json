@@ -39,7 +39,7 @@
         "properties": {
           "role": {
             "type": "string",
-            "description": "A Resource (acting as a Role) that is permitted.",
+            "description": "A Resource (acting as a Position) that is permitted.",
             "examples": ["Admin", "Underwriter", "Manager"]
           },
           "ownership": {

@@ -26,10 +26,10 @@ describe('@dna-codes/dna-core', () => {
         'membership',
         'operation',
         'person',
+        'position',
         'process',
         'relationship',
         'resource',
-        'role',
         'rule',
         'task',
         'trigger',
@@ -41,7 +41,7 @@ describe('@dna-codes/dna-core', () => {
     })
 
     it('loads product core/api/web schemas under the right namespaces', () => {
-      expect(Object.keys(schemas.product.core).sort()).toEqual(['action', 'field', 'operation', 'resource', 'role', 'user'])
+      expect(Object.keys(schemas.product.core).sort()).toEqual(['action', 'field', 'operation', 'permission', 'resource', 'role', 'user'])
       expect(Object.keys(schemas.product.api).sort()).toEqual(['endpoint', 'namespace', 'param', 'schema'])
       expect(Object.keys(schemas.product.web).sort()).toEqual(['block', 'layout', 'page', 'route'])
     })
@@ -83,9 +83,9 @@ describe('@dna-codes/dna-core', () => {
       const ids = all.map((s) => s.$id)
       expect(new Set(ids).size).toBe(ids.length)
 
-      // 2 meta (stability + lens) + 15 op + 6 product-core + 4 product-api + 4 product-web + 7 product-ui + 10 technical = 48 primitives
-      // (product-ui gained App + Module; meta gained the lens meta-schema) + 5 aggregates = 53 schemas total
-      expect(all.length).toBe(53)
+      // 2 meta (stability + lens) + 15 op + 7 product-core + 4 product-api + 4 product-web + 7 product-ui + 10 technical = 49 primitives
+      // (product-core gained Permission) + 5 aggregates = 54 schemas total
+      expect(all.length).toBe(54)
     })
   })
 

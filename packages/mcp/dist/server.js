@@ -18,9 +18,11 @@ const reporting_chains_js_1 = require("./lenses/reporting-chains.js");
 const span_of_control_js_1 = require("./lenses/span-of-control.js");
 const graph_data_js_1 = require("./lenses/graph-data.js");
 const job_descriptions_js_1 = require("./lenses/job-descriptions.js");
+const process_flow_js_1 = require("./lenses/process-flow.js");
 const pipeline_js_1 = require("./lenses/pipeline.js");
 const accounts_js_1 = require("./lenses/accounts.js");
 const type_registry_js_1 = require("./lenses/type-registry.js");
+const product_app_preview_js_1 = require("./lenses/product-app-preview.js");
 const passthroughAuth = (_req, _res, next) => next();
 // ── Validation helpers ────────────────────────────────────────────────────────
 async function validatePatchOps(ops, store, mode = 'build') {
@@ -383,48 +385,37 @@ function createMcpServer(options) {
     });
     return server;
 }
+/** The REST lens builders, keyed by URL name. Each maps a store to a JSON view model. */
+const LENS_BUILDERS = {
+    'org-chart': org_chart_js_1.buildOrgChart,
+    'people-positions': people_positions_js_1.buildPeoplePositions,
+    'reporting-chains': reporting_chains_js_1.buildReportingChains,
+    'span-of-control': span_of_control_js_1.buildSpanOfControl,
+    'job-descriptions': job_descriptions_js_1.buildJobDescriptions,
+    'process-flow': process_flow_js_1.buildProcessFlow,
+    'pipeline': pipeline_js_1.buildPipeline,
+    'accounts': accounts_js_1.buildAccounts,
+    'type-registry': type_registry_js_1.buildTypeRegistryGraph,
+    'product-app-preview': product_app_preview_js_1.buildProductAppPreview,
+};
 async function handleLensRequest(lensName, dataStore, res) {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
+    const builder = LENS_BUILDERS[lensName];
+    if (!builder) {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: `Unknown lens "${lensName}"` }));
+        return;
+    }
     try {
-        if (lensName === 'org-chart') {
-            res.writeHead(200);
-            res.end(JSON.stringify(await (0, org_chart_js_1.buildOrgChart)(dataStore)));
-        }
-        else if (lensName === 'people-positions') {
-            res.writeHead(200);
-            res.end(JSON.stringify(await (0, people_positions_js_1.buildPeoplePositions)(dataStore)));
-        }
-        else if (lensName === 'reporting-chains') {
-            res.writeHead(200);
-            res.end(JSON.stringify(await (0, reporting_chains_js_1.buildReportingChains)(dataStore)));
-        }
-        else if (lensName === 'span-of-control') {
-            res.writeHead(200);
-            res.end(JSON.stringify(await (0, span_of_control_js_1.buildSpanOfControl)(dataStore)));
-        }
-        else if (lensName === 'job-descriptions') {
-            res.writeHead(200);
-            res.end(JSON.stringify(await (0, job_descriptions_js_1.buildJobDescriptions)(dataStore)));
-        }
-        else if (lensName === 'pipeline') {
-            res.writeHead(200);
-            res.end(JSON.stringify(await (0, pipeline_js_1.buildPipeline)(dataStore)));
-        }
-        else if (lensName === 'accounts') {
-            res.writeHead(200);
-            res.end(JSON.stringify(await (0, accounts_js_1.buildAccounts)(dataStore)));
-        }
-        else if (lensName === 'type-registry') {
-            res.writeHead(200);
-            res.end(JSON.stringify(await (0, type_registry_js_1.buildTypeRegistryGraph)(dataStore)));
-        }
-        else {
-            res.writeHead(404);
-            res.end(JSON.stringify({ error: `Unknown lens "${lensName}"` }));
-        }
+        // Build (and serialize) the body BEFORE sending headers, so a builder error
+        // can return a clean 500 rather than throwing ERR_HTTP_HEADERS_SENT.
+        const body = JSON.stringify(await builder(dataStore));
+        res.writeHead(200);
+        res.end(body);
     }
     catch (err) {
+        console.error(`Lens "${lensName}" failed:`, err);
         res.writeHead(500);
         res.end(JSON.stringify({ error: String(err) }));
     }

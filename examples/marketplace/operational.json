@@ -1,201 +1,206 @@
 {
   "domain": {
     "name": "marketplace",
-    "path": "rentals.marketplace",
-    "description": "Two-sided rental marketplace (Airbnb-style). The same Person template (Member) is eligible for peer Roles (Host, Guest) across distinct Group types (Listing, Booking) — captured by Memberships, not by per-instance bindings.",
-    "resources": [],
-    "persons": [
-      {
-        "id": "40fa5122-8fa7-4921-932d-a1bf97062ed8",
-        "type": "person",
-        "version": "1",
-        "name": "Member",
-        "description": "Anyone on the platform. Person template — eligible for both Host and Guest Roles via Memberships. The same Member instance can simultaneously hold Host on one Listing and Guest on a Booking elsewhere; that simultaneity is runtime data.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "display_name",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "email",
-            "type": "string"
-          },
-          {
-            "name": "joined_at",
-            "type": "datetime"
-          }
-        ]
-      },
-      {
-        "id": "278c7ea3-d879-474e-ba52-d7c13ffceb49",
-        "type": "person",
-        "version": "1",
-        "name": "PlatformStaff",
-        "description": "Internal worker; eligible for the global SupportAgent Role."
-      }
-    ],
-    "groups": [
-      {
-        "id": "a9b22a31-8f8c-486c-bf98-3b42c9280b9f",
-        "type": "group",
-        "version": "1",
-        "name": "Listing",
-        "description": "A property for rent. Group that scopes the Host Role; also has its own lifecycle and attributes.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "title",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "host_id",
-            "type": "reference",
-            "resource": "Member",
-            "required": true
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "draft",
-              "active",
-              "paused",
-              "delisted"
-            ]
-          },
-          {
-            "name": "nightly_rate",
-            "type": "number",
-            "required": true
-          }
-        ],
-        "actions": [
-          {
-            "name": "Publish",
-            "description": "Host publishes a draft listing.",
-            "type": "write"
-          },
-          {
-            "name": "Pause",
-            "type": "write"
-          },
-          {
-            "name": "Delist",
-            "type": "destructive"
-          }
-        ]
-      },
-      {
-        "id": "4ff141dd-be37-44a5-b064-865b64f39598",
-        "type": "group",
-        "version": "1",
-        "name": "Booking",
-        "description": "A reservation against a Listing for a Guest. Group that scopes the Guest Role; also has its own lifecycle.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "listing_id",
-            "type": "reference",
-            "resource": "Listing",
-            "required": true
-          },
-          {
-            "name": "guest_id",
-            "type": "reference",
-            "resource": "Member",
-            "required": true
-          },
-          {
-            "name": "checkin",
-            "type": "date",
-            "required": true
-          },
-          {
-            "name": "checkout",
-            "type": "date",
-            "required": true
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "requested",
-              "approved",
-              "declined",
-              "cancelled",
-              "completed"
-            ]
-          }
-        ],
-        "actions": [
-          {
-            "name": "Request",
-            "description": "Guest requests a booking.",
-            "type": "write"
-          },
-          {
-            "name": "Approve",
-            "description": "Host approves a pending booking.",
-            "type": "write"
-          },
-          {
-            "name": "Decline",
-            "type": "write"
-          },
-          {
-            "name": "Cancel",
-            "type": "destructive"
-          }
-        ]
-      }
-    ],
-    "roles": [
-      {
-        "id": "cafa64cd-2a82-4aeb-b21d-b70ba0aaa55a",
-        "type": "role",
-        "version": "1",
-        "name": "Host",
-        "description": "A Member who has published a Listing. Scoped to the Listing they own.",
-        "scope": "Listing",
-        "cardinality": "one",
-        "required": true
-      },
-      {
-        "id": "4e4cee2a-625c-4389-9ecf-34ff68282022",
-        "type": "role",
-        "version": "1",
-        "name": "Guest",
-        "description": "A Member on a Booking they requested. Scoped to that Booking.",
-        "scope": "Booking",
-        "cardinality": "one",
-        "required": true
-      },
-      {
-        "id": "44d4a659-c3bd-4e49-93c0-b23f441d91e3",
-        "type": "role",
-        "version": "1",
-        "name": "SupportAgent",
-        "description": "Platform staff handling disputes. Unscoped — global across all Listings and Bookings."
-      }
-    ]
+    "description": "Two-sided rental marketplace (Airbnb-style). The same Person template (Member) is eligible for peer Roles (Host, Guest) across distinct Group types (Listing, Booking) — captured by Memberships, not by per-instance bindings."
   },
+  "persons": [
+    {
+      "id": "40fa5122-8fa7-4921-932d-a1bf97062ed8",
+      "type": "person",
+      "version": "1",
+      "name": "Member",
+      "description": "Anyone on the platform. Person template — eligible for both Host and Guest Roles via Memberships. The same Member instance can simultaneously hold Host on one Listing and Guest on a Booking elsewhere; that simultaneity is runtime data.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "display_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "email",
+          "type": "string"
+        },
+        {
+          "name": "joined_at",
+          "type": "datetime"
+        }
+      ],
+      "domain": "marketplace"
+    },
+    {
+      "id": "278c7ea3-d879-474e-ba52-d7c13ffceb49",
+      "type": "person",
+      "version": "1",
+      "name": "PlatformStaff",
+      "description": "Internal worker; eligible for the global SupportAgent Role.",
+      "domain": "marketplace"
+    }
+  ],
+  "positions": [
+    {
+      "id": "cafa64cd-2a82-4aeb-b21d-b70ba0aaa55a",
+      "type": "position",
+      "version": "1",
+      "name": "Host",
+      "description": "A Member who has published a Listing. Scoped to the Listing they own.",
+      "scope": "Listing",
+      "cardinality": "one",
+      "required": true,
+      "domain": "marketplace"
+    },
+    {
+      "id": "4e4cee2a-625c-4389-9ecf-34ff68282022",
+      "type": "position",
+      "version": "1",
+      "name": "Guest",
+      "description": "A Member on a Booking they requested. Scoped to that Booking.",
+      "scope": "Booking",
+      "cardinality": "one",
+      "required": true,
+      "domain": "marketplace"
+    },
+    {
+      "id": "44d4a659-c3bd-4e49-93c0-b23f441d91e3",
+      "type": "position",
+      "version": "1",
+      "name": "SupportAgent",
+      "description": "Platform staff handling disputes. Unscoped — global across all Listings and Bookings.",
+      "domain": "marketplace"
+    }
+  ],
+  "groups": [
+    {
+      "id": "a9b22a31-8f8c-486c-bf98-3b42c9280b9f",
+      "type": "group",
+      "version": "1",
+      "name": "Listing",
+      "description": "A property for rent. Group that scopes the Host Role; also has its own lifecycle and attributes.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "host_id",
+          "type": "reference",
+          "resource": "Member",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "draft",
+            "active",
+            "paused",
+            "delisted"
+          ]
+        },
+        {
+          "name": "nightly_rate",
+          "type": "number",
+          "required": true
+        }
+      ],
+      "actions": [
+        {
+          "name": "Publish",
+          "description": "Host publishes a draft listing.",
+          "type": "write"
+        },
+        {
+          "name": "Pause",
+          "type": "write"
+        },
+        {
+          "name": "Delist",
+          "type": "destructive"
+        }
+      ],
+      "domain": "marketplace"
+    },
+    {
+      "id": "4ff141dd-be37-44a5-b064-865b64f39598",
+      "type": "group",
+      "version": "1",
+      "name": "Booking",
+      "description": "A reservation against a Listing for a Guest. Group that scopes the Guest Role; also has its own lifecycle.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "listing_id",
+          "type": "reference",
+          "resource": "Listing",
+          "required": true
+        },
+        {
+          "name": "guest_id",
+          "type": "reference",
+          "resource": "Member",
+          "required": true
+        },
+        {
+          "name": "checkin",
+          "type": "date",
+          "required": true
+        },
+        {
+          "name": "checkout",
+          "type": "date",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "requested",
+            "approved",
+            "declined",
+            "cancelled",
+            "completed"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "name": "Request",
+          "description": "Guest requests a booking.",
+          "type": "write"
+        },
+        {
+          "name": "Approve",
+          "description": "Host approves a pending booking.",
+          "type": "write"
+        },
+        {
+          "name": "Decline",
+          "type": "write"
+        },
+        {
+          "name": "Cancel",
+          "type": "destructive"
+        }
+      ],
+      "domain": "marketplace"
+    }
+  ],
   "memberships": [
     {
       "id": "11a6ed50-1842-4c81-a8c7-5754b5218c1c",
@@ -203,7 +208,7 @@
       "version": "1",
       "name": "MemberHost",
       "person": "Member",
-      "role": "Host",
+      "position": "Host",
       "description": "Members may hold the Host role on Listings they own."
     },
     {
@@ -212,7 +217,7 @@
       "version": "1",
       "name": "MemberGuest",
       "person": "Member",
-      "role": "Guest",
+      "position": "Guest",
       "description": "Members may hold the Guest role on Bookings they place."
     },
     {
@@ -221,7 +226,7 @@
       "version": "1",
       "name": "PlatformStaffSupport",
       "person": "PlatformStaff",
-      "role": "SupportAgent",
+      "position": "SupportAgent",
       "description": "Platform staff may hold the global SupportAgent role."
     }
   ],

@@ -1,11 +1,11 @@
-import { DnaInput, Resource, OperationalDomain } from '../types'
+import { DnaInput } from '../types'
 import { hashes } from '../util'
 
 export function renderDomainModel(dna: DnaInput, h: number): string | null {
   const op = dna.operational
   if (!op) return null
 
-  const resources = collectResources(op.domain)
+  const resources = op.resources ?? []
   if (!resources.length) return null
 
   const relsByFrom = groupBy(op.relationships ?? [], (r) => r.from)
@@ -45,12 +45,6 @@ export function renderDomainModel(dna: DnaInput, h: number): string | null {
   }
 
   return lines.join('\n')
-}
-
-function collectResources(domain: OperationalDomain): Resource[] {
-  const out = [...(domain.resources ?? [])]
-  for (const sub of domain.domains ?? []) out.push(...collectResources(sub))
-  return out
 }
 
 function groupBy<T>(arr: T[], key: (x: T) => string): Map<string, T[]> {

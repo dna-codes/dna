@@ -39,8 +39,13 @@
     },
     "roles": {
       "type": "array",
-      "description": "Product-layer projection of the Operational Roles referenced by the product surfaces — the RBAC roles read by api auth middleware and ui permission guards. Materialized, not hand-authored.",
+      "description": "Product-layer projection of the Operational Positions referenced by the product surfaces — the RBAC roles read by api auth middleware and ui permission guards. Materialized, not hand-authored.",
       "items": { "$ref": "https://dna.codes/schemas/product/core/role" }
+    },
+    "permissions": {
+      "type": "array",
+      "description": "Reified authorizations (principal + role + scope), the product-layer parallel to operational Memberships. Derive-first from operational Membership + access Rules (carrying a `grants` edge back to the Membership), with author-fallback for permissions that have no backing Membership.",
+      "items": { "$ref": "https://dna.codes/schemas/product/core/permission" }
     },
     "operations": {
       "type": "array",

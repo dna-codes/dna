@@ -65,6 +65,7 @@ Context root. All `<Operation>` and `useOperation` calls must be descendants.
 | `roles` | `string[]` | one of three | Pre-resolved role names (sync, SSR-safe) |
 | `resolveRoles` | `(userId) => Promise<string[]>` | one of three | Async role resolver (bridges any auth system) |
 | `store` | `DnaDataStore` | one of three | Resolve roles via link traversal |
+| `access` | `StructuralAccess` | | `can_access` + `contains` snapshot driving the coarse `<Surface>` gate. Omit to leave every surface reachable |
 | `onAudit` | `(event: AuditEvent) => void` | | Audit sink — called on every `perform()`, fire-and-forget |
 | `flags` | `(opName: string) => boolean \| Promise<boolean>` | | Feature flag resolver |
 
@@ -87,6 +88,26 @@ Declarative rendering gate. Renders `children` when the current user is permitte
 | `name` | `string` | required | Operation name (e.g. `"Loan.Approve"`) |
 | `fallback` | `ReactNode` | `null` | Rendered when gate is closed |
 | `loading` | `ReactNode` | `null` | Rendered while roles or flags are resolving |
+
+### `<Surface>`
+
+The **coarse** gate. Renders `children` only when the current user can `can_access` the structural product surface (App/Module/Workflow/Page) identified by `id`, resolved against the provider's `access` snapshot. Access cascades down `contains`: a grant on an App reaches its Modules/Pages unless a more specific grant on a contained node narrows it. An unreachable surface is not rendered at all.
+
+```tsx
+<Surface id="app:lending" fallback={<NotProvisioned />}>
+  <LendingApp />
+  {/* fine gates live inside the surface */}
+  <Operation name="Loan.Approve"><ApproveButton /></Operation>
+</Surface>
+```
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `id` | `string` | required | Structural node id (App/Module/Workflow/Page) |
+| `fallback` | `ReactNode` | `null` | Rendered when the surface is unreachable |
+| `loading` | `ReactNode` | `null` | Rendered while roles/access are resolving |
+
+When `<DnaProvider>` is given no `access` snapshot, `<Surface>` treats every surface as reachable — the coarse gate is opt-in and never narrows an app that doesn't author `can_access`.
 
 ### `useOperation(name)`
 
@@ -121,16 +142,17 @@ type AuditEvent = {
 }
 ```
 
-## Two-gate model
+## Two-grain access model
 
-`<Operation>` combines two independent gates:
+Access composes in two grains. The **coarse** grain (`<Surface>`) decides whether a whole structural surface is visible; the **fine** grain (`<Operation>`) decides whether an individual control inside a visible surface is enabled. Both must pass for a gated action to be performable: a surface the user cannot `can_access` is never rendered, and within a rendered surface `<Operation>` still gates each control.
 
-| Gate | Source | Closed when |
-|---|---|---|
-| Permission | DNA access rules + resolved roles | user's roles not in the allow list |
-| Feature flag | `flags` resolver | resolver returns `false` |
+| Grain | Component | Source | Hidden/closed when |
+|---|---|---|---|
+| Coarse | `<Surface>` | `can_access` edges (authored governance), cascading down `contains` | no `can_access` resolves for the user's roles up the containment chain |
+| Fine | `<Operation>` | DNA access rules + resolved roles | user's roles not in the operation's allow list |
+| Fine | `<Operation>` | `flags` resolver | resolver returns `false` |
 
-Both must be open for children to render.
+`can_access` is **authored governance**, not derived — it is set by humans/agents on product surfaces and is preserved across projection re-runs (unlike `Role.permissions[]`, which is a derived rollup). The companion `assigned_to` edge (User → App) records which app a user is *homed* in, distinct from which apps their roles may reach.
 
 ## Audit
 

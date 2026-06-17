@@ -22,13 +22,13 @@ describe('@dna-codes/dna-input-json', () => {
   describe('root resource', () => {
     it('names the root resource from options.name', () => {
       const { operational } = parse(bookSample, { name: 'Book' })
-      const root = operational.domain.resources.find((r) => r.name === 'Book')
+      const root = operational.resources.find((r) => r.name === 'Book')
       expect(root).toBeDefined()
     })
 
     it('infers scalar attribute types from values', () => {
       const { operational } = parse(bookSample, { name: 'Book' })
-      const book = operational.domain.resources.find((r) => r.name === 'Book')!
+      const book = operational.resources.find((r) => r.name === 'Book')!
       const byName = Object.fromEntries(book.attributes.map((a) => [a.name, a]))
       expect(byName.id.type).toBe('string')
       expect(byName.rating.type).toBe('number')
@@ -38,13 +38,13 @@ describe('@dna-codes/dna-input-json', () => {
 
     it('detects date-only strings', () => {
       const { operational } = parse({ due_date: '2026-12-31' }, { name: 'Thing' })
-      const attr = operational.domain.resources[0].attributes.find((a) => a.name === 'due_date')
+      const attr = operational.resources[0].attributes.find((a) => a.name === 'due_date')
       expect(attr?.type).toBe('date')
     })
 
     it('drops arrays of scalars — no faithful single-attribute representation in DNA', () => {
       const { operational } = parse(bookSample, { name: 'Book' })
-      const tags = operational.domain.resources.find((r) => r.name === 'Book')!
+      const tags = operational.resources.find((r) => r.name === 'Book')!
         .attributes.find((a) => a.name === 'tags')
       expect(tags).toBeUndefined()
     })
@@ -53,14 +53,14 @@ describe('@dna-codes/dna-input-json', () => {
   describe('nested objects → child resource + one-to-one relationship', () => {
     it('extracts a child Resource from a nested object', () => {
       const { operational } = parse(bookSample, { name: 'Book' })
-      const author = operational.domain.resources.find((r) => r.name === 'Author')
+      const author = operational.resources.find((r) => r.name === 'Author')
       expect(author).toBeDefined()
       expect(author!.attributes.map((a) => a.name).sort()).toEqual(['id', 'name'])
     })
 
     it('adds a reference attribute on the parent resource', () => {
       const { operational } = parse(bookSample, { name: 'Book' })
-      const book = operational.domain.resources.find((r) => r.name === 'Book')!
+      const book = operational.resources.find((r) => r.name === 'Book')!
       const authorAttr = book.attributes.find((a) => a.name === 'author')
       expect(authorAttr).toEqual({ name: 'author', type: 'reference', resource: 'Author' })
     })
@@ -84,7 +84,7 @@ describe('@dna-codes/dna-input-json', () => {
   describe('arrays of objects → child resource + one-to-many relationship', () => {
     it('singularizes array keys to derive the child resource name', () => {
       const { operational } = parse(bookSample, { name: 'Book' })
-      const review = operational.domain.resources.find((r) => r.name === 'Review')
+      const review = operational.resources.find((r) => r.name === 'Review')
       expect(review).toBeDefined()
       expect(review!.attributes.map((a) => a.name).sort()).toEqual([
         'comment',
@@ -112,7 +112,7 @@ describe('@dna-codes/dna-input-json', () => {
         },
         { name: 'Container' },
       )
-      const item = operational.domain.resources.find((r) => r.name === 'Item')!
+      const item = operational.resources.find((r) => r.name === 'Item')!
       expect(item.attributes.map((a) => a.name).sort()).toEqual(['a', 'b', 'c'])
     })
   })
@@ -123,12 +123,12 @@ describe('@dna-codes/dna-input-json', () => {
         { id: 'x', categories: [{ name: 'fiction' }] },
         { name: 'Book' },
       )
-      expect(operational.domain.resources.map((r) => r.name).sort()).toEqual(['Book', 'Category'])
+      expect(operational.resources.map((r) => r.name).sort()).toEqual(['Book', 'Category'])
     })
 
     it('does not strip -ss', () => {
       const { operational } = parse({ id: 'x', address: { street: '1 Main' } }, { name: 'Order' })
-      expect(operational.domain.resources.map((r) => r.name).sort()).toEqual(['Address', 'Order'])
+      expect(operational.resources.map((r) => r.name).sort()).toEqual(['Address', 'Order'])
     })
 
     it('honors resourceNameFromKey override', () => {
@@ -141,7 +141,7 @@ describe('@dna-codes/dna-input-json', () => {
         name: 'Book',
         resourceNameFromKey: (k) => (k === 'author' ? 'Person' : pascal(k)),
       })
-      expect(operational.domain.resources.find((r) => r.name === 'Person')).toBeDefined()
+      expect(operational.resources.find((r) => r.name === 'Person')).toBeDefined()
     })
   })
 
@@ -154,7 +154,7 @@ describe('@dna-codes/dna-input-json', () => {
         ],
         { name: 'Book' },
       )
-      const book = operational.domain.resources.find((r) => r.name === 'Book')!
+      const book = operational.resources.find((r) => r.name === 'Book')!
       expect(book.attributes.map((a) => a.name).sort()).toEqual(['id', 'subtitle', 'title'])
     })
 

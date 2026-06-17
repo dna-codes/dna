@@ -1,312 +1,323 @@
 {
   "domain": {
     "name": "inpatient",
-    "path": "stmary.clinical.inpatient",
-    "description": "Hospital inpatient ward — Patient-centered care team. Patient is a Person template (structure with medical attributes and lifecycle); Roles like AttendingPhysician are scoped TO that Patient (Role.scope can target a Person, not just a Group). The Patient is the per-Patient organizational context; the Pharmacy is a traditional Group scoping Pharmacist Memberships.",
-    "resources": [
-      {
-        "id": "652bb47a-21f4-4243-8db4-a551b6378cc7",
-        "type": "resource",
-        "version": "1",
-        "name": "Encounter",
-        "description": "A single clinical interaction with a Patient (rounds, intake, exam).",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "patient_id",
-            "type": "reference",
-            "resource": "Patient",
-            "required": true
-          },
-          {
-            "name": "kind",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "intake",
-              "rounds",
-              "consult",
-              "discharge"
-            ]
-          },
-          {
-            "name": "occurred_at",
-            "type": "datetime"
-          }
-        ],
-        "actions": [
-          {
-            "name": "Open",
-            "type": "write"
-          },
-          {
-            "name": "Close",
-            "type": "write"
-          }
-        ]
-      },
-      {
-        "id": "a204af8c-ce66-4d7a-9f00-4277701faff9",
-        "type": "resource",
-        "version": "1",
-        "name": "Order",
-        "description": "A clinical order (medication, lab, imaging) placed against a Patient.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "patient_id",
-            "type": "reference",
-            "resource": "Patient",
-            "required": true
-          },
-          {
-            "name": "kind",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "medication",
-              "lab",
-              "imaging",
-              "diet"
-            ]
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "pending",
-              "active",
-              "completed",
-              "cancelled"
-            ]
-          }
-        ],
-        "actions": [
-          {
-            "name": "Place",
-            "type": "write"
-          },
-          {
-            "name": "Cancel",
-            "type": "destructive"
-          },
-          {
-            "name": "Complete",
-            "type": "write"
-          }
-        ]
-      },
-      {
-        "id": "3943b5c4-31b0-4112-acc0-5db8b024f682",
-        "type": "resource",
-        "version": "1",
-        "name": "Prescription",
-        "description": "A medication order requiring pharmacist sign-off and nurse administration.",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "patient_id",
-            "type": "reference",
-            "resource": "Patient",
-            "required": true
-          },
-          {
-            "name": "drug",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "dose_mg",
-            "type": "number",
-            "required": true
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "draft",
-              "pending_review",
-              "approved",
-              "dispensed",
-              "administered",
-              "rejected"
-            ]
-          }
-        ],
-        "actions": [
-          {
-            "name": "Write",
-            "type": "write"
-          },
-          {
-            "name": "Review",
-            "type": "write"
-          },
-          {
-            "name": "Approve",
-            "type": "write"
-          },
-          {
-            "name": "Reject",
-            "type": "write"
-          },
-          {
-            "name": "Administer",
-            "type": "write"
-          }
-        ]
-      }
-    ],
-    "persons": [
-      {
-        "id": "dc4354de-db53-4704-9646-1fb3e568998d",
-        "type": "person",
-        "version": "1",
-        "name": "Patient",
-        "description": "An admitted person under care. Person template — structure with medical attributes and lifecycle (Admit, Discharge). Per-Patient Roles like AttendingPhysician scope directly to this Person (Role.scope = Patient).",
-        "attributes": [
-          {
-            "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "mrn",
-            "type": "string",
-            "required": true,
-            "description": "Medical record number"
-          },
-          {
-            "name": "name",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "admitted_at",
-            "type": "datetime"
-          },
-          {
-            "name": "ward",
-            "type": "string"
-          },
-          {
-            "name": "status",
-            "type": "enum",
-            "required": true,
-            "values": [
-              "admitted",
-              "discharged",
-              "transferred"
-            ]
-          }
-        ],
-        "actions": [
-          {
-            "name": "Admit",
-            "type": "write"
-          },
-          {
-            "name": "Discharge",
-            "type": "write"
-          },
-          {
-            "name": "Transfer",
-            "type": "write"
-          }
-        ]
-      },
-      {
-        "id": "65a504b3-5ce1-490d-8ff8-365eac8cccb2",
-        "type": "person",
-        "version": "1",
-        "name": "Doctor",
-        "description": "Physician; eligible for the AttendingPhysician and ConsultingSpecialist Roles."
-      },
-      {
-        "id": "abbe6345-3d97-49dc-8631-ef5ea9885505",
-        "type": "person",
-        "version": "1",
-        "name": "Nurse",
-        "description": "Nursing staff; eligible for the PrimaryNurse Role."
-      },
-      {
-        "id": "71be286a-08dd-48fc-be66-78aa69ccce31",
-        "type": "person",
-        "version": "1",
-        "name": "PharmacyStaff",
-        "description": "Pharmacy worker; eligible for the Pharmacist Role."
-      }
-    ],
-    "groups": [
-      {
-        "id": "44c5fdc2-c63b-46f0-91ec-ff4c19a14d5b",
-        "type": "group",
-        "version": "1",
-        "name": "Pharmacy",
-        "description": "The hospital pharmacy. Scopes Pharmacist Memberships.",
-        "attributes": [
-          {
-            "name": "name",
-            "type": "string",
-            "required": true
-          }
-        ]
-      }
-    ],
-    "roles": [
-      {
-        "id": "49d86c4e-7544-4ec8-85f9-d28b41e1edba",
-        "type": "role",
-        "version": "1",
-        "name": "AttendingPhysician",
-        "description": "Doctor with primary responsibility for a Patient.",
-        "scope": "Patient",
-        "cardinality": "one",
-        "excludes": [
-          "ConsultingSpecialist"
-        ]
-      },
-      {
-        "id": "4b53c79f-d035-4360-9d6d-f64afc2ff8af",
-        "type": "role",
-        "version": "1",
-        "name": "PrimaryNurse",
-        "description": "Nurse with primary responsibility for a Patient on a shift.",
-        "scope": "Patient",
-        "cardinality": "one"
-      },
-      {
-        "id": "0fc16adb-f66e-40c2-a74f-8265e6bee62d",
-        "type": "role",
-        "version": "1",
-        "name": "ConsultingSpecialist",
-        "description": "Specialist consulted on a Patient (multiple may exist per Patient).",
-        "scope": "Patient"
-      },
-      {
-        "id": "001333ed-3275-4746-97b0-83d703d0ed13",
-        "type": "role",
-        "version": "1",
-        "name": "Pharmacist",
-        "description": "Pharmacy staff reviewing medication orders. Scoped to the Pharmacy as a whole.",
-        "scope": "Pharmacy"
-      }
-    ]
+    "description": "Hospital inpatient ward — Patient-centered care team. Patient is a Person template (structure with medical attributes and lifecycle); Roles like AttendingPhysician are scoped TO that Patient (Role.scope can target a Person, not just a Group). The Patient is the per-Patient organizational context; the Pharmacy is a traditional Group scoping Pharmacist Memberships."
   },
+  "resources": [
+    {
+      "id": "652bb47a-21f4-4243-8db4-a551b6378cc7",
+      "type": "resource",
+      "version": "1",
+      "name": "Encounter",
+      "description": "A single clinical interaction with a Patient (rounds, intake, exam).",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "patient_id",
+          "type": "reference",
+          "resource": "Patient",
+          "required": true
+        },
+        {
+          "name": "kind",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "intake",
+            "rounds",
+            "consult",
+            "discharge"
+          ]
+        },
+        {
+          "name": "occurred_at",
+          "type": "datetime"
+        }
+      ],
+      "actions": [
+        {
+          "name": "Open",
+          "type": "write"
+        },
+        {
+          "name": "Close",
+          "type": "write"
+        }
+      ],
+      "domain": "inpatient"
+    },
+    {
+      "id": "a204af8c-ce66-4d7a-9f00-4277701faff9",
+      "type": "resource",
+      "version": "1",
+      "name": "Order",
+      "description": "A clinical order (medication, lab, imaging) placed against a Patient.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "patient_id",
+          "type": "reference",
+          "resource": "Patient",
+          "required": true
+        },
+        {
+          "name": "kind",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "medication",
+            "lab",
+            "imaging",
+            "diet"
+          ]
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "pending",
+            "active",
+            "completed",
+            "cancelled"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "name": "Place",
+          "type": "write"
+        },
+        {
+          "name": "Cancel",
+          "type": "destructive"
+        },
+        {
+          "name": "Complete",
+          "type": "write"
+        }
+      ],
+      "domain": "inpatient"
+    },
+    {
+      "id": "3943b5c4-31b0-4112-acc0-5db8b024f682",
+      "type": "resource",
+      "version": "1",
+      "name": "Prescription",
+      "description": "A medication order requiring pharmacist sign-off and nurse administration.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "patient_id",
+          "type": "reference",
+          "resource": "Patient",
+          "required": true
+        },
+        {
+          "name": "drug",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "dose_mg",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "draft",
+            "pending_review",
+            "approved",
+            "dispensed",
+            "administered",
+            "rejected"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "name": "Write",
+          "type": "write"
+        },
+        {
+          "name": "Review",
+          "type": "write"
+        },
+        {
+          "name": "Approve",
+          "type": "write"
+        },
+        {
+          "name": "Reject",
+          "type": "write"
+        },
+        {
+          "name": "Administer",
+          "type": "write"
+        }
+      ],
+      "domain": "inpatient"
+    }
+  ],
+  "persons": [
+    {
+      "id": "dc4354de-db53-4704-9646-1fb3e568998d",
+      "type": "person",
+      "version": "1",
+      "name": "Patient",
+      "description": "An admitted person under care. Person template — structure with medical attributes and lifecycle (Admit, Discharge). Per-Patient Roles like AttendingPhysician scope directly to this Person (Role.scope = Patient).",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "mrn",
+          "type": "string",
+          "required": true,
+          "description": "Medical record number"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "admitted_at",
+          "type": "datetime"
+        },
+        {
+          "name": "ward",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "admitted",
+            "discharged",
+            "transferred"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "name": "Admit",
+          "type": "write"
+        },
+        {
+          "name": "Discharge",
+          "type": "write"
+        },
+        {
+          "name": "Transfer",
+          "type": "write"
+        }
+      ],
+      "domain": "inpatient"
+    },
+    {
+      "id": "65a504b3-5ce1-490d-8ff8-365eac8cccb2",
+      "type": "person",
+      "version": "1",
+      "name": "Doctor",
+      "description": "Physician; eligible for the AttendingPhysician and ConsultingSpecialist Roles.",
+      "domain": "inpatient"
+    },
+    {
+      "id": "abbe6345-3d97-49dc-8631-ef5ea9885505",
+      "type": "person",
+      "version": "1",
+      "name": "Nurse",
+      "description": "Nursing staff; eligible for the PrimaryNurse Role.",
+      "domain": "inpatient"
+    },
+    {
+      "id": "71be286a-08dd-48fc-be66-78aa69ccce31",
+      "type": "person",
+      "version": "1",
+      "name": "PharmacyStaff",
+      "description": "Pharmacy worker; eligible for the Pharmacist Role.",
+      "domain": "inpatient"
+    }
+  ],
+  "positions": [
+    {
+      "id": "49d86c4e-7544-4ec8-85f9-d28b41e1edba",
+      "type": "position",
+      "version": "1",
+      "name": "AttendingPhysician",
+      "description": "Doctor with primary responsibility for a Patient.",
+      "scope": "Patient",
+      "cardinality": "one",
+      "excludes": [
+        "ConsultingSpecialist"
+      ],
+      "domain": "inpatient"
+    },
+    {
+      "id": "4b53c79f-d035-4360-9d6d-f64afc2ff8af",
+      "type": "position",
+      "version": "1",
+      "name": "PrimaryNurse",
+      "description": "Nurse with primary responsibility for a Patient on a shift.",
+      "scope": "Patient",
+      "cardinality": "one",
+      "domain": "inpatient"
+    },
+    {
+      "id": "0fc16adb-f66e-40c2-a74f-8265e6bee62d",
+      "type": "position",
+      "version": "1",
+      "name": "ConsultingSpecialist",
+      "description": "Specialist consulted on a Patient (multiple may exist per Patient).",
+      "scope": "Patient",
+      "domain": "inpatient"
+    },
+    {
+      "id": "001333ed-3275-4746-97b0-83d703d0ed13",
+      "type": "position",
+      "version": "1",
+      "name": "Pharmacist",
+      "description": "Pharmacy staff reviewing medication orders. Scoped to the Pharmacy as a whole.",
+      "scope": "Pharmacy",
+      "domain": "inpatient"
+    }
+  ],
+  "groups": [
+    {
+      "id": "44c5fdc2-c63b-46f0-91ec-ff4c19a14d5b",
+      "type": "group",
+      "version": "1",
+      "name": "Pharmacy",
+      "description": "The hospital pharmacy. Scopes Pharmacist Memberships.",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "domain": "inpatient"
+    }
+  ],
   "memberships": [
     {
       "id": "5506cc5c-2847-4abe-953e-f477e1d3cd41",
@@ -314,7 +325,7 @@
       "version": "1",
       "name": "DoctorAttendingPhysician",
       "person": "Doctor",
-      "role": "AttendingPhysician"
+      "position": "AttendingPhysician"
     },
     {
       "id": "ee8610d0-ee9c-46b5-b32c-25777956f578",
@@ -322,7 +333,7 @@
       "version": "1",
       "name": "DoctorConsultingSpecialist",
       "person": "Doctor",
-      "role": "ConsultingSpecialist"
+      "position": "ConsultingSpecialist"
     },
     {
       "id": "23cc8b1a-e9bc-4d2c-b0e1-1f34376a34f4",
@@ -330,7 +341,7 @@
       "version": "1",
       "name": "NursePrimaryNurse",
       "person": "Nurse",
-      "role": "PrimaryNurse"
+      "position": "PrimaryNurse"
     },
     {
       "id": "5f0004b0-3529-49e9-9e7a-7480b8da6212",
@@ -338,7 +349,7 @@
       "version": "1",
       "name": "PharmacyStaffPharmacist",
       "person": "PharmacyStaff",
-      "role": "Pharmacist"
+      "position": "Pharmacist"
     }
   ],
   "operations": [

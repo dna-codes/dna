@@ -54,10 +54,10 @@ export const schemas = {
     membership: load('operational/membership.json'),
     operation: load('operational/operation.json'),
     person: load('operational/person.json'),
+    position: load('operational/position.json'),
     process: load('operational/process.json'),
     relationship: load('operational/relationship.json'),
     resource: load('operational/resource.json'),
-    role: load('operational/role.json'),
     rule: load('operational/rule.json'),
     task: load('operational/task.json'),
     trigger: load('operational/trigger.json'),
@@ -67,6 +67,7 @@ export const schemas = {
       action: load('product/core/action.json'),
       field: load('product/core/field.json'),
       operation: load('product/core/operation.json'),
+      permission: load('product/core/permission.json'),
       resource: load('product/core/resource.json'),
       role: load('product/core/role.json'),
       user: load('product/core/user.json'),
@@ -171,11 +172,30 @@ export type { LensDefValidation } from './lens/validate-def'
 export { project } from './projection/project'
 export type { ProductLevel, ProductNode, ProductEdge, ProductSubgraph, ProjectOptions } from './projection/types'
 
+// Projection persistence: runtime type registration + apply
+export { seedProductTypes, applyProjection, PRODUCT_LEVEL_TYPE_NAME } from './projection/apply'
+export type { ApplyReport } from './projection/apply'
+
+// Permission projection: org→app authorization causal chain (derive-first / author-fallback)
+export { projectPermissions, permissionKey } from './projection/permissions'
+export type { PermissionProjectionInput } from './projection/permissions'
+export { applyPermissions, PERMISSION_TYPE_NAME } from './projection/apply'
+export type { ApplyPermissionsReport } from './projection/apply'
+export type { PermissionNode, GrantEdge, PermissionProjection } from './projection/types'
+
+// Coarse structural access — the product-UI governance gate doctrine (pure)
+export { resolveStructuralAccess, lintEmptySurfaces } from './access/structural-access'
+export type {
+  StructuralAccessGraph,
+  EmptySurfaceLintInput,
+  EmptySurfaceWarning,
+} from './access/structural-access'
+
 export {
   createOperationalDna,
   addResource,
   addPerson,
-  addRole,
+  addPosition,
   addGroup,
   addMembership,
   addOperation,
@@ -190,6 +210,9 @@ export type {
   BuilderResult,
   CreateOperationalDnaOptions,
 } from './builders'
+
+export { derivePath } from './domain/path'
+export type { DomainLike } from './domain/path'
 
 export { merge } from './merge'
 export type {
@@ -255,9 +278,9 @@ export type {
   ProcessStep,
   Relationship,
   RelationshipCardinality,
+  Position,
+  PositionScope,
   Resource,
-  Role,
-  RoleScope,
   Rule,
   RuleAllowEntry,
   RuleCondition,
@@ -294,8 +317,8 @@ export {
   getResources,
   getPerson,
   getPersons,
-  getRole,
-  getRoles,
+  getPosition,
+  getPositions,
   getGroup,
   getGroups,
   getMembership,
@@ -315,6 +338,6 @@ export {
   getRules,
   getRulesForOperation,
   getActorsForOperation,
-  getMembershipsForRole,
+  getMembershipsForPosition,
   getMembershipsForPerson,
 } from './queries'

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational/task",
   "title": "Task",
-  "description": "A Task is the atomic reusable unit of business activity: a Role performing exactly one Operation. A Task reads as '<Role> does <Operation>' (e.g. 'Underwriter does Loan.Approve'). Different Operation = different Task. Tasks are referenced by Steps inside a Process and are the primary unit of composition for SOPs.\n\nThe `actor` field references a Role (declared in the domain's roles[]). System actors are Roles with `system: true`.",
+  "description": "A Task is the atomic reusable unit of business activity: a Position performing exactly one Operation. A Task reads as '<Position> does <Operation>' (e.g. 'Underwriter does Loan.Approve'). Different Operation = different Task. Tasks are referenced by Steps inside a Process and are the primary unit of composition for SOPs.\n\nThe `actor` field references a Position (declared in the domain's positions[]). System actors are Positions with `system: true`.",
   "type": "object",
   "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "required": ["name", "actor", "operation"],
@@ -21,7 +21,7 @@
     },
     "actor": {
       "type": "string",
-      "description": "The Role that performs this task. References a declared Role (human or system).",
+      "description": "The Position that performs this task. References a declared Position (human or system).",
       "pattern": "^[A-Z][a-zA-Z0-9]*$",
       "examples": ["LoanOfficer", "Underwriter", "ClosingSpecialist", "NightlyDelinquencySweep"]
     },

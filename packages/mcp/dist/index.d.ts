@@ -4,6 +4,8 @@ export type { OrgChartViewModel, OrgChartNode, OrgChartPerson } from './lenses/o
 export type { PipelineViewModel, PipelineOpportunity } from './lenses/pipeline.js';
 export type { AccountsViewModel, AccountEntry, AccountOpportunity } from './lenses/accounts.js';
 export type { TypeRegistryViewModel, TypeRegistryNode, TypeRegistryEdge } from './lenses/type-registry.js';
+export type { ProcessFlowViewModel, ProcessFlowProcess, ProcessFlowStep } from './lenses/process-flow.js';
+export type { ProductAppPreviewViewModel, PreviewNode, AccessGrant, ContainsEdge, SurfaceOperation, OperationAllow, SurfaceRecords, } from './lenses/product-app-preview.js';
 export type { WidgetPayload, StatRow, StatTile, RecordTable, RecordCard, RecordField, BadgeList, BadgeItem, WidgetKind } from './widgets.js';
 export { WIDGET_KINDS } from './widgets.js';
 export { PACKS, DEFAULT_PACK, renderPackForPrompt } from './packs/index.js';

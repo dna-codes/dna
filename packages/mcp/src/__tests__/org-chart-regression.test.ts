@@ -12,7 +12,7 @@ async function seedOrg(store: DnaDataStore) {
   await store.migrate()
   await store.resourceType.create({ name: 'company', category: 'group', attribute_schema: [], stability: 'stable' })
   await store.resourceType.create({ name: 'department', category: 'group', attribute_schema: [], stability: 'stable' })
-  await store.resourceType.create({ name: 'position', category: 'role', attribute_schema: [], stability: 'stable' })
+  await store.resourceType.create({ name: 'position', category: 'position', attribute_schema: [], stability: 'stable' })
   await store.resourceType.create({ name: 'person', category: 'person', attribute_schema: [], stability: 'stable' })
   await store.relationshipType.create({ name: 'belongs_to', from: 'position', to: 'company', cardinality: 'many-to-one', attribute: 'belongs_to', stability: 'stable' })
   await store.relationshipType.create({ name: 'reports_to', from: 'position', to: 'position', cardinality: 'many-to-one', attribute: 'reports_to', stability: 'stable' })

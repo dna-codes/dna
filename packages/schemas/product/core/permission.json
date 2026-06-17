@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/product/core/permission",
+  "title": "Permission",
+  "description": "A Permission is a reified authorization — the product-layer parallel to operational Membership. Following the Actor › Action › Resource model (as in AWS Cedar), it binds a `principal` (a User), a `role` (the capacity / action-set), and a `scope` (the Resource slot — a namespaced entity reference). Permission is a resource type (a node), not a bare edge, so the `grants` relationship has a node to point at.\n\nDerive-first / author-fallback: the business→product projection materializes a Permission (and its `grants` edge back to the backing Membership) from operational Membership + access Rules. A Permission MAY also be hand-authored when no backing Membership exists (e.g. a service account), in which case it carries no `grants` edge. Identity is the tuple {principal, role, scope}, so a derived Permission reconciles onto a matching authored one rather than duplicating it.",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/meta/stability" }],
+  "required": ["principal", "role", "scope"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Optional human-readable name for this Permission.",
+      "examples": ["KyleApproverPandT"]
+    },
+    "principal": {
+      "type": "string",
+      "description": "The User this Permission is granted to — the Cedar principal. References a product User by name.",
+      "examples": ["Kyle", "Member", "Borrower"]
+    },
+    "role": {
+      "type": "string",
+      "description": "The Role (capacity / action-set) the principal exercises. References a product Role by name.",
+      "examples": ["Approver", "Underwriter", "Admin"]
+    },
+    "scope": {
+      "type": "string",
+      "description": "The Resource slot — a single Cedar-style `::`-delimited qualified entity reference of arbitrary nesting depth, pointing at an entity that already exists (the product projection of an operational Group, or any Resource). NOT a separate Scope type; a reference. Examples: 'Alloc8::Groups::P&T', 'Alloc8::Groups::P&T::Subteam::Platform'.",
+      "examples": ["Alloc8::Groups::P&T", "Alloc8::Groups::P&T::Subteam::Platform", "BankDepartment"]
+    },
+    "grant_reason": {
+      "type": "string",
+      "description": "Optional provenance: why this Permission exists. For a derived Permission this echoes the backing Membership; for an authored Permission it documents the out-of-band justification.",
+      "examples": ["Holds the Head position in the P&T group", "Service account for nightly sync"]
+    }
+  },
+  "examples": [
+    {
+      "name": "KyleApproverPandT",
+      "principal": "Kyle",
+      "role": "Approver",
+      "scope": "Alloc8::Groups::P&T",
+      "grant_reason": "Holds the Head position in the P&T group"
+    }
+  ]
+}

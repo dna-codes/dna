@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { Fragment, useState, useRef, useEffect } from 'react'
 import type { WidgetPayload, StatRow, RecordTable, RecordCard, BadgeList } from '@dna-codes/dna-mcp'
 
 interface WidgetShellProps {
@@ -150,14 +150,14 @@ function RecordCardWidget({ widget }: { widget: RecordCard }) {
       {widget.fields.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.125rem 0.75rem' }}>
           {widget.fields.map((f, i) => (
-            <>
-              <span key={`l${i}`} style={{ fontSize: 'var(--ui-font-size-xs)', color: 'var(--ui-color-text-muted)', whiteSpace: 'nowrap' }}>
+            <Fragment key={i}>
+              <span style={{ fontSize: 'var(--ui-font-size-xs)', color: 'var(--ui-color-text-muted)', whiteSpace: 'nowrap' }}>
                 {f.label}
               </span>
-              <span key={`v${i}`} style={{ fontSize: 'var(--ui-font-size-xs)', color: 'var(--ui-color-text)' }}>
+              <span style={{ fontSize: 'var(--ui-font-size-xs)', color: 'var(--ui-color-text)' }}>
                 {f.value}
               </span>
-            </>
+            </Fragment>
           ))}
         </div>
       )}

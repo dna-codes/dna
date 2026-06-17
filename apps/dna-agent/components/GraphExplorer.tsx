@@ -83,9 +83,14 @@ export function GraphExplorer({ refreshSignal, source = 'instances' }: { refresh
   const containerRef = useRef<HTMLDivElement>(null)
   const paperRef = useRef<any>(null)
   const cleanupRef = useRef<(() => void) | null>(null)
+  const elemByIdRef = useRef<Map<string, any>>(new Map())
+  const nodesRef = useRef<GraphNode[]>([])
+  const selectedElRef = useRef<any>(null)
   const [status, setStatus] = useState<'loading' | 'empty' | 'ready' | 'error'>('loading')
   const [errorMsg, setErrorMsg] = useState('')
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('directed')
+  const [query, setQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
 
   const fitView = useCallback(() => {
     paperRef.current?.scaleContentToFit({ padding: 40, minScaleX: 0.1, maxScaleX: 1.5, minScaleY: 0.1, maxScaleY: 1.5 })
@@ -101,6 +106,37 @@ export function GraphExplorer({ refreshSignal, source = 'instances' }: { refresh
     paper.scale(newScale, newScale)
     paper.translate(w / 2 * (1 - newScale / sx), h / 2 * (1 - newScale / sx))
   }, [])
+
+  // Highlight a single element (teal), reverting any previously-selected one so
+  // exactly one node is highlighted at a time. Passing null clears the selection.
+  const selectElement = useCallback((el: any) => {
+    const prev = selectedElRef.current
+    if (prev && prev !== el) {
+      prev.attr('body/stroke', BRAND_COLOR)
+      prev.attr('body/strokeWidth', 1.5)
+      prev.attr('body/fill', 'transparent')
+    }
+    selectedElRef.current = el
+    if (el) {
+      el.attr('body/stroke', '#2dd4bf')
+      el.attr('body/strokeWidth', 3)
+      el.attr('body/fill', 'rgba(45,212,191,0.12)')
+    }
+  }, [])
+
+  // Center the view on a node and select (highlight) it.
+  const focusNodeId = useCallback((id: string) => {
+    const paper = paperRef.current
+    const el = elemByIdRef.current.get(id)
+    if (!paper || !el) return
+    const W = containerRef.current?.offsetWidth ?? 600
+    const H = containerRef.current?.offsetHeight ?? 400
+    const scale = Math.max(0.9, Math.min(1.4, paper.scale().sx))
+    paper.scale(scale, scale)
+    const bbox = el.getBBox()
+    paper.translate(W / 2 - (bbox.x + bbox.width / 2) * scale, H / 2 - (bbox.y + bbox.height / 2) * scale)
+    selectElement(el)
+  }, [selectElement])
 
   const build = useCallback(async () => {
     if (cleanupRef.current) { cleanupRef.current(); cleanupRef.current = null }
@@ -123,22 +159,35 @@ export function GraphExplorer({ refreshSignal, source = 'instances' }: { refresh
       setErrorMsg(String(e)); setStatus('error'); return
     }
 
-    if (data.nodes.length === 0) { setStatus('empty'); return }
+    if (data.nodes.length === 0) { nodesRef.current = []; elemByIdRef.current = new Map(); setStatus('empty'); return }
+    nodesRef.current = data.nodes
 
-    containerRef.current.innerHTML = ''
     const joint = await import('@joint/core')
+
+    // The container can unmount during the awaits above (a status re-render or a
+    // tab switch in LensPanelShell). Re-check the ref and bail rather than
+    // dereferencing null.
+    const container = containerRef.current
+    if (!container) return
+    container.innerHTML = ''
 
     const graph = new joint.dia.Graph({}, { cellNamespace: joint.shapes })
     const paper = new joint.dia.Paper({
-      el: containerRef.current,
+      el: container,
       model: graph,
       width: W,
       height: H,
       background: { color: '#0A0F1E' },
-      interactive: { elementMove: false },
+      // Nodes are draggable; links stay fixed (read-only explorer).
+      interactive: { elementMove: true, linkMove: false, labelMove: false },
       gridSize: 1,
     })
     paperRef.current = paper
+    selectedElRef.current = null
+
+    // Click a node to highlight it (exactly one at a time); click blank to clear.
+    ;(paper as any).on('element:pointerclick', (view: any) => selectElement(view.model))
+    ;(paper as any).on('blank:pointerclick', () => selectElement(null))
 
     const nodeIds = new Set(data.nodes.map(n => n.id))
     const validEdges = data.edges.filter(e => nodeIds.has(e.source) && nodeIds.has(e.target))
@@ -174,6 +223,7 @@ export function GraphExplorer({ refreshSignal, source = 'instances' }: { refresh
       graph.addCell(el)
       elementById.set(node.id, el)
     }
+    elemByIdRef.current = elementById
 
     // ── Create links ─────────────────────────────────────────────────────────
     for (const edge of validEdges) {
@@ -282,18 +332,18 @@ export function GraphExplorer({ refreshSignal, source = 'instances' }: { refresh
       paper.scale(newScale, newScale)
       paper.translate(e.clientX - rect.left - lx * newScale, e.clientY - rect.top - ly * newScale)
     }
-    containerRef.current.addEventListener('wheel', onWheel, { passive: false })
+    container.addEventListener('wheel', onWheel, { passive: false })
 
     // ── Resize ───────────────────────────────────────────────────────────────
     const ro = new ResizeObserver(() => {
       if (containerRef.current)
         paper.setDimensions(containerRef.current.offsetWidth, containerRef.current.offsetHeight)
     })
-    ro.observe(containerRef.current)
+    ro.observe(container)
 
-    if (containerRef.current) containerRef.current.style.cursor = 'grab'
+    container.style.cursor = 'grab'
 
-    const containerEl = containerRef.current
+    const containerEl = container
     cleanupRef.current = () => {
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
@@ -302,7 +352,7 @@ export function GraphExplorer({ refreshSignal, source = 'instances' }: { refresh
     }
 
     setStatus('ready')
-  }, [layoutMode, source])
+  }, [layoutMode, source, selectElement])
 
   useEffect(() => {
     build()
@@ -320,6 +370,9 @@ export function GraphExplorer({ refreshSignal, source = 'instances' }: { refresh
     cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   }
+
+  const q = query.trim().toLowerCase()
+  const matches = q ? nodesRef.current.filter(n => n.name.toLowerCase().includes(q)).slice(0, 8) : []
 
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
@@ -365,6 +418,46 @@ export function GraphExplorer({ refreshSignal, source = 'instances' }: { refresh
           </button>
         ))}
       </div>
+
+      {/* Node search — top-center */}
+      {status === 'ready' && (
+        <div style={{ position: 'absolute', top: '0.75rem', left: '50%', transform: 'translateX(-50%)', zIndex: 10, width: 220 }}>
+          <input
+            value={query}
+            onChange={e => { setQuery(e.target.value); setSearchOpen(true) }}
+            onFocus={() => setSearchOpen(true)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && matches[0]) { focusNodeId(matches[0].id); setSearchOpen(false) }
+              else if (e.key === 'Escape') { setSearchOpen(false) }
+            }}
+            placeholder="Find a node…"
+            style={{
+              width: '100%', height: 28, padding: '0 0.6rem', boxSizing: 'border-box',
+              fontSize: '0.75rem', background: 'rgba(15,23,42,0.92)',
+              border: `1px solid ${searchOpen ? 'var(--primary)' : 'var(--border)'}`,
+              borderRadius: 4, color: 'var(--text)', outline: 'none',
+            }}
+          />
+          {searchOpen && matches.length > 0 && (
+            <div style={{ marginTop: 4, background: 'rgba(10,15,30,0.98)', border: '1px solid var(--border)', borderRadius: 4, overflow: 'hidden', maxHeight: 240, overflowY: 'auto' }}>
+              {matches.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => { focusNodeId(m.id); setQuery(m.name); setSearchOpen(false) }}
+                  style={{
+                    display: 'flex', flexDirection: 'column', gap: 1, width: '100%', textAlign: 'left',
+                    padding: '0.3rem 0.6rem', background: 'none', border: 'none',
+                    borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', color: 'var(--text)',
+                  }}
+                >
+                  <span style={{ fontSize: '0.75rem' }}>{m.name}</span>
+                  <span style={{ fontSize: '0.6rem', color: 'var(--primary)', fontFamily: 'ui-monospace, monospace' }}>{m.type}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Zoom controls — top-right */}
       {status === 'ready' && (

@@ -69,16 +69,16 @@ function asStability(raw: unknown): Stability | undefined {
   return typeof raw === 'string' && STABILITY_VALUES.includes(raw) ? (raw as Stability) : undefined
 }
 
-const NOUN_KEYS: Array<{ key: 'resources' | 'persons' | 'roles' | 'groups'; category: NounCategory }> = [
+const NOUN_KEYS: Array<{ key: 'resources' | 'persons' | 'positions' | 'groups'; category: NounCategory }> = [
   { key: 'resources', category: 'resource' },
   { key: 'persons', category: 'person' },
-  { key: 'roles', category: 'role' },
+  { key: 'positions', category: 'position' },
   { key: 'groups', category: 'group' },
 ]
 
 const FOUNDATIONAL: Array<{ name: string; category: NounCategory }> = [
   { name: 'Person', category: 'person' },
-  { name: 'Role', category: 'role' },
+  { name: 'Position', category: 'position' },
   { name: 'Group', category: 'group' },
   { name: 'Resource', category: 'resource' },
 ]
@@ -239,10 +239,10 @@ export function createClient(_dna?: OperationalDNA): DnaDataStore {
         report.resourceTypesCreated += 1
       }
 
-      // 2. Tenant-domain ResourceTypes from dna.domain.*
-      const domain = dna.domain ?? {}
+      // 2. Tenant ResourceTypes from the document's top-level noun collections
+      //    (home-edge model — nouns no longer live under `dna.domain`).
       for (const { key, category } of NOUN_KEYS) {
-        const list = Array.isArray(domain[key]) ? (domain[key] as NounDnaShape[]) : []
+        const list = Array.isArray(dna[key]) ? (dna[key] as NounDnaShape[]) : []
         for (const entry of list) {
           if (typeof entry?.name !== 'string') continue
           if (resourceTypeIdByName.has(entry.name)) {

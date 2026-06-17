@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dna.codes/schemas/operational/operation",
   "title": "Operation",
-  "description": "An Operation is a Subject.Action pair — the atomic unit of business activity. The Subject (target) can be any targetable primitive: Resource, Person, Role, Group, or Process. Examples: Loan.Approve (Resource), Patient.GetAdmitted (Person), Underwriter.Activate (Role, org-admin lifecycle), Case.Settle (Group), PublishFlow.Start (Process, lifecycle action on the SOP itself). The Actor that performs an Operation is expressed through Rules (access) and Tasks (assignment), not on the Operation itself.\n\nThe `target` field is a noun name that the validator resolves across resources[], persons[], roles[], groups[], and processes[] collections. The `action` field must match an entry in the target's actions[] catalog when one is declared.",
+  "description": "An Operation is a Subject.Action pair — the atomic unit of business activity. The Subject (target) can be any targetable primitive: Resource, Person, Position, Group, or Process. Examples: Loan.Approve (Resource), Patient.GetAdmitted (Person), Underwriter.Activate (Position, org-admin lifecycle), Case.Settle (Group), PublishFlow.Start (Process, lifecycle action on the SOP itself). The Actor that performs an Operation is expressed through Rules (access) and Tasks (assignment), not on the Operation itself.\n\nThe `target` field is a noun name that the validator resolves across resources[], persons[], positions[], groups[], and processes[] collections. The `action` field must match an entry in the target's actions[] catalog when one is declared.",
   "type": "object",
   "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
   "required": ["target", "action"],
@@ -11,7 +11,7 @@
     "type": { "const": "operation" },
     "target": {
       "type": "string",
-      "description": "The targetable primitive this operation acts on. Resolves across Resource, Person, Role, Group, and Process collections.",
+      "description": "The targetable primitive this operation acts on. Resolves across Resource, Person, Position, Group, and Process collections.",
       "pattern": "^[A-Z][a-zA-Z0-9]*$",
       "examples": ["Loan", "Patient", "Underwriter", "Case", "Account", "PublishFlow"]
     },
@@ -51,7 +51,7 @@
   "examples": [
     { "target": "Loan",        "action": "Approve",     "name": "Loan.Approve",        "description": "Approves a pending loan application.", "changes": [{ "attribute": "status", "set": "active" }] },
     { "target": "Patient",     "action": "GetAdmitted", "name": "Patient.GetAdmitted", "description": "Patient is admitted to a hospital." },
-    { "target": "Underwriter", "action": "Activate",    "name": "Underwriter.Activate", "description": "Activates an Underwriter Role definition (org admin)." },
+    { "target": "Underwriter", "action": "Activate",    "name": "Underwriter.Activate", "description": "Activates an Underwriter Position definition (org admin)." },
     { "target": "Case",        "action": "Settle",      "name": "Case.Settle",         "description": "Marks a legal case as settled.", "changes": [{ "attribute": "status", "set": "settled" }, { "attribute": "settled_at", "set": "now" }] }
   ]
 }

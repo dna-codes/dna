@@ -23,7 +23,7 @@ export interface BuilderResult {
     dna: OperationalDNA;
     conflicts: Conflict[];
 }
-type NounCollection = 'resources' | 'persons' | 'roles' | 'groups';
+type NounCollection = 'resources' | 'persons' | 'positions' | 'groups';
 type ActivityCollection = 'memberships' | 'operations' | 'triggers' | 'rules' | 'tasks' | 'processes' | 'relationships';
 export type BuilderCollection = NounCollection | ActivityCollection;
 export declare function composeInto(dna: OperationalDNA, primitive: unknown, collection: BuilderCollection, schemaId: string, opts?: BuilderOptions): BuilderResult;

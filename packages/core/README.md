@@ -608,6 +608,30 @@ Schemas cross-reference each other by absolute URI (e.g. `https://dna.codes/sche
 
 Operational is modeled around the **Actor > Action > Subject** triad. `Resource` and `Action` appear at both the Operational and Product layers by design — a Product `Resource` is the surface projection of an Operational `Resource`, likewise for `Action`. The Actor is a `Role` (or `Person`) referenced by `Rule` (access), `Task` (assignment), `Membership` (eligibility), and `Process` (operator), rather than declared on the Operation itself. State mutations live on `Operation.changes`; there is no separate Outcome primitive. See each layer's doc in [`docs/`](./docs/) for full semantics.
 
+## Product-UI governance — two-grain access
+
+Product structural surfaces (`App`/`Module`/`Workflow`/`Page`) are access-controlled in **two composed grains**:
+
+- **Coarse** — `can_access` (`Role`|`User` → surface) grants whether a *whole surface* is reachable. `assigned_to` (`User` → `App`) records which app a user is *homed* in. Both are the **authored governance edge class**: created by humans/agents, **never derived**, and preserved across projection re-runs (unlike `Role.permissions[]`, a derived rollup). `seedProductTypes()` registers these relationship types; `applyProjection()` never creates, removes, or rewrites the edges themselves.
+- **Fine** — operation-level access `Rules` (gated in the UI by `<Operation>` in `@dna-codes/dna-react`) decide whether an individual control is enabled within a visible surface.
+
+`resolveStructuralAccess(graph, surfaceId, subjects)` is the pure resolver for the coarse grain. Access **cascades down** `contains`: a grant on an `App` reaches its `Module`s/`Page`s unless a more specific `can_access` on a contained node overrides it (widening or narrowing). Default is deny.
+
+```ts
+import { resolveStructuralAccess, lintEmptySurfaces } from '@dna-codes/dna-core'
+
+resolveStructuralAccess(
+  {
+    grants:   [{ subject: 'Underwriter', surface: 'app:lending' }],
+    contains: [{ parent: 'app:lending', child: 'mod:origination' }],
+  },
+  'mod:origination',
+  ['Underwriter'],               // current user id + role names
+) // → true (inherited from the App grant)
+```
+
+`lintEmptySurfaces(input)` flags a role granted `can_access` to a surface whose exposed operations it can never perform — a "coarse access, no fine access" contradiction worth surfacing.
+
 ## What this package does *not* include
 
 - **The raw JSON schemas.** Those live in [`@dna-codes/dna-schemas`](../schemas/) (core depends on it).

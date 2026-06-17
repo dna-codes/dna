@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/operational/position",
+  "title": "Position",
+  "description": "A Position is the organizational position a Person fills — the kind of capacity Persons occupy. Examples: Underwriter, Doctor, ChargeNurse, LeadCounsel, SuperAdmin, Head of P&T. Positions are exercised within Groups (Underwriter operates within BankDepartment); the type-level Position-Group relationship is captured by `scope`.\n\nPosition is one of four noun primitives (alongside Resource, Person, Group). All four share the noun base shape: name, optional attributes[], optional actions[], optional parent. Position adds: scope, system, and resource-link fields. Actions on a Position cover org-admin lifecycle (Underwriter.Activate, Doctor.Certify) — not 'what an Underwriter does' (those are Operations on other nouns, assigned via Tasks).",
+  "type": "object",
+  "allOf": [{ "$ref": "https://dna.codes/schemas/operational/base" }],
+  "required": ["name"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "type": { "const": "position" },
+    "name": {
+      "type": "string",
+      "description": "The singular PascalCase name of the Position.",
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "examples": ["Underwriter", "Doctor", "ChargeNurse", "LeadCounsel", "SuperAdmin", "NightlyDelinquencySweep"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable explanation of this Position's authority and purpose."
+    },
+    "domain": {
+      "type": "string",
+      "description": "The home Domain this Position belongs to, referenced by Domain `name` (the authored form of the primary `belongs_to` edge). Names a Domain in the document's `domain` root or flat `domains[]`."
+    },
+    "scope": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[A-Z][a-zA-Z0-9]*$" },
+        { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][a-zA-Z0-9]*$" }, "minItems": 1 }
+      ],
+      "description": "The Group type(s) this Position is exercised within. Single Group name (Underwriter scope: BankDepartment) or array of Group names (SuperAdmin scope: [Workspace, Tenant]). Positions with no scope are global. The validator resolves each entry to a Group declaration.",
+      "examples": ["BankDepartment", "Case", ["Workspace", "Tenant"]]
+    },
+    "parent": {
+      "type": "string",
+      "description": "Optional parent Position for hierarchy (SeniorUnderwriter.parent = Underwriter). A child with no `scope` inherits its parent's effective scope; a child that declares its own `scope` must be narrower-or-equal (sub-Group via Group.parent, equal Person, or array subset). Cycles are rejected. Action and Membership inheritance are intentionally NOT implied — children declare their own actions[] and Memberships reference Positions by exact name.",
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "examples": ["Underwriter", "Nurse", "AttendingPhysician"]
+    },
+    "system": {
+      "type": "boolean",
+      "description": "If true, this Position represents a non-human (system) actor — scheduled jobs, bots, integrations. System Positions are not eligible for Memberships (no Person fills them)."
+    },
+    "resource": {
+      "type": "string",
+      "description": "Optional Resource template that backs this Position — used when a system Position is embodied by a Resource at another layer (e.g., NightlyDelinquencySweep backed by ScheduledJob, or ExternalCreditBureau backed by CreditBureau).",
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "examples": ["ScheduledJob", "CreditBureau"]
+    },
+    "attributes": {
+      "type": "array",
+      "description": "Fields that describe this Position template (rare — most Position detail lives in Memberships and authorities).",
+      "items": { "$ref": "https://dna.codes/schemas/operational/attribute" }
+    },
+    "actions": {
+      "type": "array",
+      "description": "Verbs supporting org-admin lifecycle on the Position itself (Underwriter.Activate, Doctor.Certify, Position.Retire). NOT what someone in this Position does — those are Operations on other nouns assigned via Tasks.",
+      "items": { "$ref": "https://dna.codes/schemas/operational/action" }
+    },
+    "cardinality": {
+      "type": "string",
+      "enum": ["one", "many"],
+      "default": "many",
+      "description": "Per-scope-instance Person count limit. \"one\" means at most one Person may hold this Position on any given scope instance at runtime; \"many\" (default) means unbounded. \"one\" requires a declared or inherited scope and is incompatible with system: true. The validator checks the declaration only — runtime systems enforce the count.",
+      "examples": ["one", "many"]
+    },
+    "required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether at least one Person must hold this Position on every scope instance at runtime. Composes orthogonally with cardinality: { cardinality: 'one', required: true } means exactly one. Requires a declared or inherited scope and is incompatible with system: true. The validator checks the declaration only — runtime systems enforce presence.",
+      "examples": [true, false]
+    },
+    "excludes": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[A-Z][a-zA-Z0-9]*$" },
+      "uniqueItems": true,
+      "description": "Names of other Positions that the same Person SHALL NOT simultaneously hold on the same scope instance. Symmetric (one-sided declaration is enough). Both Positions must share at least one effective-scope entry. No self-reference. Incompatible with system: true. The validator checks well-formedness only — runtime systems enforce the constraint.",
+      "examples": [["ConsultingSpecialist"], ["CoCounsel"]]
+    }
+  },
+  "examples": [
+    {
+      "name": "Underwriter",
+      "description": "Reviews and approves loan applications.",
+      "scope": "BankDepartment",
+      "actions": [
+        { "name": "Activate", "type": "write" },
+        { "name": "Retire",   "type": "destructive" }
+      ]
+    },
+    {
+      "name": "LeadCounsel",
+      "description": "Lead attorney on a legal case.",
+      "scope": "Case",
+      "cardinality": "one",
+      "required": true,
+      "excludes": ["CoCounsel"]
+    },
+    {
+      "name": "SuperAdmin",
+      "description": "Top-level admin within a Workspace or Tenant.",
+      "scope": ["Workspace", "Tenant"]
+    },
+    {
+      "name": "NightlyDelinquencySweep",
+      "description": "Scheduled job that flags delinquent loans.",
+      "system": true,
+      "resource": "ScheduledJob"
+    }
+  ]
+}

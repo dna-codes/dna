@@ -5,8 +5,8 @@ function list(dna: OperationalDNA): Membership[] {
   return (dna.memberships ?? []) as Membership[]
 }
 
-export function getMembershipsForRole(dna: OperationalDNA, roleName: string): Membership[] {
-  return list(dna).filter(m => m.role === roleName)
+export function getMembershipsForPosition(dna: OperationalDNA, positionName: string): Membership[] {
+  return list(dna).filter(m => m.position === positionName)
 }
 
 export function getMembershipsForPerson(dna: OperationalDNA, personName: string): Membership[] {

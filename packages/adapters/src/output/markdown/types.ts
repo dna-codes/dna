@@ -15,6 +15,11 @@ export interface DnaInput {
 
 export interface OperationalDna {
   domain: OperationalDomain
+  domains?: OperationalDomain[]
+  resources?: Resource[]
+  persons?: Person[]
+  positions?: Position[]
+  groups?: Group[]
   memberships?: Membership[]
   operations?: Operation[]
   rules?: Rule[]
@@ -28,11 +33,8 @@ export interface OperationalDomain {
   name: string
   path?: string
   description?: string
-  resources?: Resource[]
-  persons?: Person[]
-  roles?: Role[]
-  groups?: Group[]
-  domains?: OperationalDomain[]
+  owner?: string
+  parent?: string
 }
 
 export interface Resource {
@@ -60,7 +62,7 @@ export interface Group {
   parent?: string
 }
 
-export interface Role {
+export interface Position {
   name: string
   description?: string
   scope?: string | string[]
@@ -75,7 +77,7 @@ export interface Membership {
   name: string
   description?: string
   person: string
-  role: string
+  position: string
   group?: string
 }
 

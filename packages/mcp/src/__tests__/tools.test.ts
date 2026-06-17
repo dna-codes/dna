@@ -18,7 +18,7 @@ async function seedStore(store: DnaDataStore) {
 
   // Seed resource types
   await store.resourceType.create({ name: 'company', category: 'group', attribute_schema: [], stability: 'stable' })
-  await store.resourceType.create({ name: 'position', category: 'role', attribute_schema: [], stability: 'stable' })
+  await store.resourceType.create({ name: 'position', category: 'position', attribute_schema: [], stability: 'stable' })
   await store.resourceType.create({ name: 'person', category: 'person', attribute_schema: [], stability: 'stable' })
 
   // Seed relationship types

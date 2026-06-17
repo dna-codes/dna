@@ -3,15 +3,14 @@
 import { useState, useEffect } from 'react'
 import { OrgChartPanel } from './OrgChartPanel'
 import { PeoplePositionsPanel } from './PeoplePositionsPanel'
-import { ReportingChainsPanel } from './ReportingChainsPanel'
-import { SpanOfControlPanel } from './SpanOfControlPanel'
+import { ProcessFlowPanel } from './ProcessFlowPanel'
 import { GraphExplorer } from './GraphExplorer'
 import { JobDescriptionsPanel } from './JobDescriptionsPanel'
 import { PipelinePanel } from './PipelinePanel'
 import { AccountsPanel } from './AccountsPanel'
 import { TypeOrgChartPanel } from './TypeOrgChartPanel'
-import { TypeReportingChainsPanel } from './TypeReportingChainsPanel'
 import { TypeJobDescriptionsPanel } from './TypeJobDescriptionsPanel'
+import { ProductAppPreviewPanel } from './ProductAppPreviewPanel'
 import { InlineWidget } from './InlineWidget'
 import type { SavedLens } from '@/lib/saved-lenses'
 
@@ -27,17 +26,15 @@ interface TabDef {
 const BUILD_TABS: TabDef[] = [
   { id: 'graph-explorer',   label: 'Schema Graph',     render: s => <GraphExplorer refreshSignal={s} source="types" /> },
   { id: 'org-chart',        label: 'Org Chart',        render: s => <TypeOrgChartPanel refreshSignal={s} /> },
-  { id: 'reporting-chains', label: 'Reporting Chains', render: s => <TypeReportingChainsPanel refreshSignal={s} /> },
   { id: 'job-descriptions', label: 'Job Descriptions', render: s => <TypeJobDescriptionsPanel refreshSignal={s} /> },
 ]
 
 const PACK_TABS: Record<string, TabDef[]> = {
   operational: [
     { id: 'org-chart',         label: 'Org Chart',         render: s => <OrgChartPanel refreshSignal={s} /> },
-    { id: 'people-positions',  label: 'People & Positions', render: s => <PeoplePositionsPanel refreshSignal={s} /> },
-    { id: 'reporting-chains',  label: 'Reporting Chains',  render: s => <ReportingChainsPanel refreshSignal={s} /> },
-    { id: 'span-of-control',   label: 'Span of Control',   render: s => <SpanOfControlPanel refreshSignal={s} /> },
+    { id: 'process-flow',      label: 'Process Flow',      render: s => <ProcessFlowPanel refreshSignal={s} /> },
     { id: 'job-descriptions',  label: 'Job Descriptions',  render: s => <JobDescriptionsPanel refreshSignal={s} /> },
+    { id: 'product-app-preview', label: 'App Preview',     render: s => <ProductAppPreviewPanel refreshSignal={s} /> },
     { id: 'graph-explorer',    label: 'Graph Explorer',    render: s => <GraphExplorer refreshSignal={s} /> },
   ],
   crm: [
@@ -48,7 +45,6 @@ const PACK_TABS: Record<string, TabDef[]> = {
   hr: [
     { id: 'org-chart',        label: 'Org Chart',       render: s => <OrgChartPanel refreshSignal={s} /> },
     { id: 'roster',           label: 'Roster',           render: s => <PeoplePositionsPanel refreshSignal={s} /> },
-    { id: 'reporting-chains', label: 'Reporting Chains', render: s => <ReportingChainsPanel refreshSignal={s} /> },
     { id: 'open-positions',   label: 'Open Positions',   render: s => <JobDescriptionsPanel refreshSignal={s} /> },
     { id: 'graph-explorer',   label: 'Graph Explorer',   render: s => <GraphExplorer refreshSignal={s} /> },
   ],

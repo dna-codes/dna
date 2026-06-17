@@ -69,7 +69,7 @@ describe('examples — lending', () => {
   })
 
   it('models a system actor as a Role with system: true, referenced from a schedule-source Trigger', () => {
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     const sweep = roles.find((r) => r.name === 'NightlyDelinquencySweep')
     expect(sweep).toBeDefined()
     expect(sweep.system).toBe(true)
@@ -84,7 +84,7 @@ describe('examples — lending', () => {
   })
 
   it('declares a scoped Role (Underwriter.scope = BankDepartment)', () => {
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     const underwriter = roles.find((r) => r.name === 'Underwriter')
     expect(underwriter?.scope).toBe('BankDepartment')
   })
@@ -93,7 +93,7 @@ describe('examples — lending', () => {
     const memberships = dna.memberships as Array<any>
     const empUnderwriter = memberships.find((m) => m.name === 'EmployeeUnderwriter')
     expect(empUnderwriter?.person).toBe('Employee')
-    expect(empUnderwriter?.role).toBe('Underwriter')
+    expect(empUnderwriter?.position).toBe('Underwriter')
   })
 
   it('uses a Person directly as Task.actor (Borrower) AND a Role as Task.actor (Underwriter)', () => {
@@ -115,14 +115,14 @@ describe('examples — mass-tort', () => {
   const dna = loadExample('mass-tort')
 
   it('declares Case as a first-class Group with attributes and lifecycle', () => {
-    const groups = dna.domain.groups as Array<any>
+    const groups = dna.groups as Array<any>
     const caseGroup = groups.find((g) => g.name === 'Case')
     expect(caseGroup).toBeDefined()
     expect(caseGroup.attributes?.length).toBeGreaterThan(0)
   })
 
   it('declares Roles scoped to the Case Group', () => {
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     for (const roleName of ['LeadCounsel', 'CoCounsel', 'Paralegal', 'Judge']) {
       const role = roles.find((r) => r.name === roleName)
       expect(role?.scope).toBe('Case')
@@ -132,8 +132,8 @@ describe('examples — mass-tort', () => {
   it('captures multi-Person → multi-Role eligibility via Memberships', () => {
     const memberships = dna.memberships as Array<any>
     // Partner can be either LeadCounsel or CoCounsel
-    const partnerLead = memberships.find((m) => m.person === 'Partner' && m.role === 'LeadCounsel')
-    const partnerCo = memberships.find((m) => m.person === 'Partner' && m.role === 'CoCounsel')
+    const partnerLead = memberships.find((m) => m.person === 'Partner' && m.position === 'LeadCounsel')
+    const partnerCo = memberships.find((m) => m.person === 'Partner' && m.position === 'CoCounsel')
     expect(partnerLead).toBeDefined()
     expect(partnerCo).toBeDefined()
   })
@@ -145,7 +145,7 @@ describe('examples — mass-tort', () => {
   })
 
   it('exercises external-actor pattern (Claimant as Person — structure AND actor)', () => {
-    const persons = dna.domain.persons as Array<any>
+    const persons = dna.persons as Array<any>
     const claimant = persons.find((p) => p.name === 'Claimant')
     expect(claimant?.attributes?.length).toBeGreaterThan(0)
   })
@@ -156,21 +156,21 @@ describe('examples — marketplace', () => {
 
   it('has the same Person template eligible for two peer Roles via Memberships', () => {
     const memberships = dna.memberships as Array<any>
-    const memberHost = memberships.find((m) => m.person === 'Member' && m.role === 'Host')
-    const memberGuest = memberships.find((m) => m.person === 'Member' && m.role === 'Guest')
+    const memberHost = memberships.find((m) => m.person === 'Member' && m.position === 'Host')
+    const memberGuest = memberships.find((m) => m.person === 'Member' && m.position === 'Guest')
     expect(memberHost).toBeDefined()
     expect(memberGuest).toBeDefined()
   })
 
   it('treats both Listing and Booking as first-class Groups with attributes and lifecycle', () => {
-    const groups = dna.domain.groups as Array<any>
+    const groups = dna.groups as Array<any>
     const listing = groups.find((g) => g.name === 'Listing')
     const booking = groups.find((g) => g.name === 'Booking')
     expect(listing?.attributes?.length).toBeGreaterThan(0)
     expect(booking?.attributes?.length).toBeGreaterThan(0)
     expect(listing?.actions?.length).toBeGreaterThan(0)
 
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     const host = roles.find((r) => r.name === 'Host')
     const guest = roles.find((r) => r.name === 'Guest')
     expect(host?.scope).toBe('Listing')
@@ -178,7 +178,7 @@ describe('examples — marketplace', () => {
   })
 
   it('has a global (unscoped) Role alongside scoped ones', () => {
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     const support = roles.find((r) => r.name === 'SupportAgent')
     expect(support).toBeDefined()
     expect(support.scope).toBeUndefined()
@@ -195,30 +195,30 @@ describe('examples — healthcare', () => {
   const dna = loadExample('healthcare')
 
   it('treats Patient as a Person template with attributes and lifecycle actions', () => {
-    const persons = dna.domain.persons as Array<any>
+    const persons = dna.persons as Array<any>
     const patient = persons.find((p) => p.name === 'Patient')
     expect(patient?.attributes?.length).toBeGreaterThan(0)
     expect(patient?.actions?.length).toBeGreaterThan(0)
   })
 
   it('has Roles scoped to a Person (AttendingPhysician.scope = Patient)', () => {
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     const attending = roles.find((r) => r.name === 'AttendingPhysician')
     expect(attending?.scope).toBe('Patient')
   })
 
   it('mixes scope targets — some Roles scope to a Person, others to a Group (Pharmacy)', () => {
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     const pharmacist = roles.find((r) => r.name === 'Pharmacist')
     expect(pharmacist?.scope).toBe('Pharmacy')
-    const groups = dna.domain.groups as Array<any>
+    const groups = dna.groups as Array<any>
     expect(groups.find((g) => g.name === 'Pharmacy')).toBeDefined()
   })
 
   it('declares Memberships pinning Person types to multiple Roles (Doctor → Attending OR Consulting)', () => {
     const memberships = dna.memberships as Array<any>
-    const attending = memberships.find((m) => m.person === 'Doctor' && m.role === 'AttendingPhysician')
-    const consulting = memberships.find((m) => m.person === 'Doctor' && m.role === 'ConsultingSpecialist')
+    const attending = memberships.find((m) => m.person === 'Doctor' && m.position === 'AttendingPhysician')
+    const consulting = memberships.find((m) => m.person === 'Doctor' && m.position === 'ConsultingSpecialist')
     expect(attending).toBeDefined()
     expect(consulting).toBeDefined()
   })
@@ -240,7 +240,7 @@ describe('examples — manufacturing', () => {
   const dna = loadExample('manufacturing')
 
   it('declares multiple system Roles (system: true), some backed by a Resource', () => {
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     const machineNames = ['CncMachine', 'StampingPress', 'PaintRobot', 'MaintenanceScheduler']
     for (const name of machineNames) {
       const role = roles.find((r) => r.name === name)
@@ -284,26 +284,26 @@ describe('examples — education', () => {
   const dna = loadExample('education')
 
   it('separates Course (Resource catalog) from CourseOffering (Group)', () => {
-    const resources = dna.domain.resources as Array<any>
-    const groups = dna.domain.groups as Array<any>
+    const resources = dna.resources as Array<any>
+    const groups = dna.groups as Array<any>
     expect(resources.find((r) => r.name === 'Course')).toBeDefined()
     expect(groups.find((g) => g.name === 'CourseOffering')).toBeDefined()
 
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     expect(roles.find((r) => r.name === 'Instructor')?.scope).toBe('CourseOffering')
     expect(roles.find((r) => r.name === 'Student')?.scope).toBe('CourseOffering')
   })
 
   it('has a Person template eligible for both Instructor and Student Roles via Memberships', () => {
     const memberships = dna.memberships as Array<any>
-    const facultyInstructor = memberships.find((m) => m.person === 'FacultyMember' && m.role === 'Instructor')
-    const memberStudent = memberships.find((m) => m.person === 'UniversityMember' && m.role === 'Student')
+    const facultyInstructor = memberships.find((m) => m.person === 'FacultyMember' && m.position === 'Instructor')
+    const memberStudent = memberships.find((m) => m.person === 'UniversityMember' && m.position === 'Student')
     expect(facultyInstructor).toBeDefined()
     expect(memberStudent).toBeDefined()
   })
 
   it('declares three distinct scope tiers (CourseOffering, Department, global)', () => {
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     const instructor = roles.find((r) => r.name === 'Instructor')
     const chair = roles.find((r) => r.name === 'DepartmentChair')
     const registrar = roles.find((r) => r.name === 'Registrar')
@@ -326,7 +326,7 @@ describe('examples — registry', () => {
   const dna = loadExample('registry')
 
   it('declares the TypeDefinition / Instance / Link triad with TypeDefinition carrying a category enum', () => {
-    const resources = dna.domain.resources as Array<any>
+    const resources = dna.resources as Array<any>
     const typeDef = resources.find((r) => r.name === 'TypeDefinition')
     const instance = resources.find((r) => r.name === 'Instance')
     const link = resources.find((r) => r.name === 'Link')
@@ -344,12 +344,12 @@ describe('examples — registry', () => {
   })
 
   it('declares ValidationEngine as a system Role linked to a Resource template', () => {
-    const roles = dna.domain.roles as Array<any>
+    const roles = dna.positions as Array<any>
     const engine = roles.find((r) => r.name === 'ValidationEngine')
     expect(engine?.system).toBe(true)
     expect(engine?.resource).toBe('ValidationService')
 
-    const resources = dna.domain.resources as Array<any>
+    const resources = dna.resources as Array<any>
     expect(resources.find((r) => r.name === 'ValidationService')).toBeDefined()
   })
 

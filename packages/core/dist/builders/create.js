@@ -6,7 +6,7 @@ exports.createOperationalDna = createOperationalDna;
  * primitives via the `add*` builders.
  *
  * The returned DNA has only a `domain` with the supplied metadata; every
- * collection (resources, persons, roles, groups, memberships, operations,
+ * collection (resources, persons, positions, groups, memberships, operations,
  * triggers, rules, relationships, tasks, processes) is absent until a
  * primitive is added.
  */
