@@ -922,6 +922,169 @@ export const skinComponents: StyleObject = {
     "marginInline": "auto",
     "paddingInline": "var(--ui-space-4)"
   },
+  "[data-ui-appbar]": {
+    "display": "flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-4)",
+    "height": "var(--ui-shell-header-height)",
+    "paddingInline": "var(--ui-space-4)",
+    "background": "var(--ui-color-surface)",
+    "borderBottom": "var(--ui-border-width) var(--ui-border-style)\n    var(--ui-color-border)",
+    "color": "var(--ui-color-text)"
+  },
+  "[data-ui-appbar-brand]": {
+    "display": "inline-flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-2)",
+    "fontWeight": "var(--ui-font-weight-semibold)",
+    "color": "var(--ui-color-text)",
+    "textDecoration": "none",
+    "whiteSpace": "nowrap"
+  },
+  "[data-ui-appbar-nav]": {
+    "display": "flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-1)"
+  },
+  "[data-ui-appbar-nav] a": {
+    "display": "inline-flex",
+    "alignItems": "center",
+    "padding": "var(--ui-space-1) var(--ui-space-3)",
+    "borderRadius": "var(--ui-radius-md)",
+    "color": "var(--ui-color-text-muted)",
+    "textDecoration": "none",
+    "fontSize": "var(--ui-font-size-sm)",
+    "transition": "background-color var(--ui-transition),\n    color var(--ui-transition)"
+  },
+  "[data-ui-appbar-nav] a:hover": {
+    "background": "var(--ui-color-muted)",
+    "color": "var(--ui-color-text)"
+  },
+  "[data-ui-appbar-nav] a[aria-current]": {
+    "color": "var(--ui-color-text)",
+    "boxShadow": "inset 0 -2px 0 0 var(--ui-color-selection-line)"
+  },
+  "[data-ui-appbar-search]": {
+    "display": "flex",
+    "alignItems": "center",
+    "flex": "1 1 auto",
+    "minWidth": "0",
+    "maxWidth": "22rem"
+  },
+  "[data-ui-appbar-search] > *": {
+    "width": "100%"
+  },
+  "[data-ui-appbar-spacer]": {
+    "flex": "1 1 auto"
+  },
+  "[data-ui-appbar-actions]": {
+    "display": "inline-flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-2)",
+    "marginInlineStart": "auto"
+  },
+  "[data-ui-navrail]": {
+    "display": "flex",
+    "flexDirection": "column",
+    "gap": "var(--ui-space-1)"
+  },
+  "[data-ui-navrail-section]": {
+    "display": "flex",
+    "flexDirection": "column",
+    "gap": "var(--ui-space-1)",
+    "paddingBlock": "var(--ui-space-2)"
+  },
+  "[data-ui-navrail-section] + [data-ui-navrail-section]": {
+    "borderTop": "var(--ui-border-width) var(--ui-border-style)\n    var(--ui-color-border)"
+  },
+  "[data-ui-navrail-label]": {
+    "paddingInline": "var(--ui-space-3)",
+    "marginBottom": "var(--ui-space-1)",
+    "fontFamily": "var(--ui-font-mono)",
+    "fontSize": "var(--ui-font-size-xs)",
+    "fontWeight": "var(--ui-font-weight-medium)",
+    "textTransform": "uppercase",
+    "letterSpacing": "0.06em",
+    "color": "var(--ui-color-text-subtle)"
+  },
+  "[data-ui-navrail-item]": {
+    "display": "flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-2)",
+    "padding": "var(--ui-space-2) var(--ui-space-3)",
+    "borderRadius": "var(--ui-radius-md)",
+    "color": "var(--ui-color-text-muted)",
+    "textDecoration": "none",
+    "fontSize": "var(--ui-font-size-sm)",
+    "transition": "background-color var(--ui-transition),\n    color var(--ui-transition)"
+  },
+  "[data-ui-navrail-item]:hover": {
+    "background": "var(--ui-color-muted)",
+    "color": "var(--ui-color-text)"
+  },
+  "[data-ui-navrail-item][aria-current=\"page\"]": {
+    "background": "var(--ui-color-selection)",
+    "color": "var(--ui-color-text)",
+    "fontWeight": "var(--ui-font-weight-medium)",
+    "boxShadow": "inset 2px 0 0 0 var(--ui-color-selection-line)"
+  },
+  "[data-ui-navrail-item]:focus-visible": {
+    "outline": "none",
+    "boxShadow": "var(--ui-focus-ring)"
+  },
+  "[data-ui-page-header]": {
+    "display": "flex",
+    "flexDirection": "column",
+    "gap": "var(--ui-space-3)",
+    "paddingBottom": "var(--ui-space-4)",
+    "marginBottom": "var(--ui-space-5)",
+    "borderBottom": "var(--ui-border-width) var(--ui-border-style)\n    var(--ui-color-border)"
+  },
+  "[data-ui-page-header-breadcrumb]": {
+    "display": "flex",
+    "flexWrap": "wrap",
+    "alignItems": "center",
+    "gap": "var(--ui-space-2)",
+    "fontSize": "var(--ui-font-size-sm)"
+  },
+  "[data-ui-page-header-breadcrumb-item]": {
+    "color": "var(--ui-color-text-muted)",
+    "textDecoration": "none"
+  },
+  "[data-ui-page-header-breadcrumb-item]:hover": {
+    "color": "var(--ui-color-primary)",
+    "textDecoration": "underline"
+  },
+  "[data-ui-page-header-breadcrumb-item][aria-current=\"page\"]": {
+    "color": "var(--ui-color-text)"
+  },
+  "[data-ui-page-header-breadcrumb-item]\n  + [data-ui-page-header-breadcrumb-item]::before": {
+    "content": "\"/\"",
+    "marginInlineEnd": "var(--ui-space-2)",
+    "color": "var(--ui-color-text-subtle)"
+  },
+  "[data-ui-page-header-heading]": {
+    "display": "flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-3)"
+  },
+  "[data-ui-page-header-title]": {
+    "margin": "0",
+    "fontSize": "var(--ui-font-size-xl)",
+    "fontWeight": "var(--ui-font-weight-semibold)",
+    "color": "var(--ui-color-text)"
+  },
+  "[data-ui-page-header-actions]": {
+    "display": "inline-flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-2)",
+    "marginInlineStart": "auto"
+  },
+  "[data-ui-page-header-description]": {
+    "margin": "0",
+    "color": "var(--ui-color-text-muted)",
+    "fontSize": "var(--ui-font-size-sm)"
+  },
   "[data-ui-workflow]": {
     "fontFamily": "var(--ui-font-family)",
     "color": "var(--ui-color-text)"

@@ -217,6 +217,50 @@ productionized DNA.codes brand theme, light + dark), `@dna/ui-library/skin.css`
 dependency of this package — the plugin is dependency-free and only loaded by
 consumers who use it.
 
+## Application chrome (GitHub-style)
+
+Three compound components compose the structural primitives into a canonical,
+GitHub-style app shell — so apps consume finished chrome instead of re-composing
+it. All are headless (the same `Slot`/`data-ui-*` rules as every component); the
+default skin lays them out.
+
+| Component | Element / landmark | Parts |
+| --------- | ------------------ | ----- |
+| `AppBar` | `<header>` → `banner` | `Root`, `Brand`, `Nav` (primary `navigation`), `Search` (`search` landmark), `Spacer`, `Actions` |
+| `NavRail` | `<nav>` → `navigation` | `Root`, `Section`, `Label`, `Item` (active = `aria-current="page"`) |
+| `PageHeader` | `<div>` (non-landmark; lives in `<main>`) | `Root`, `Breadcrumb`, `BreadcrumbItem`, `Heading`, `Title`, `Actions`, `Description` |
+
+```tsx
+<Application>
+  <AppBar.Root>
+    <AppBar.Brand>DNA.codes</AppBar.Brand>
+    <AppBar.Search><Input type="search" aria-label="Search" /></AppBar.Search>
+    <AppBar.Actions><Avatar><Avatar.Fallback>TK</Avatar.Fallback></Avatar></AppBar.Actions>
+  </AppBar.Root>
+  <Sidebar asChild>
+    <NavRail.Root>
+      <NavRail.Item href="/overview" aria-current="page">Overview</NavRail.Item>
+      <NavRail.Item href="/resources">Resources</NavRail.Item>
+    </NavRail.Root>
+  </Sidebar>
+  <Page title="Resources">
+    <PageHeader.Root>
+      <PageHeader.Breadcrumb>
+        <PageHeader.BreadcrumbItem href="/">DNA.codes</PageHeader.BreadcrumbItem>
+        <PageHeader.BreadcrumbItem asChild aria-current="page"><span>Resources</span></PageHeader.BreadcrumbItem>
+      </PageHeader.Breadcrumb>
+      <PageHeader.Heading>
+        <PageHeader.Title>Resources</PageHeader.Title>
+        <PageHeader.Actions><Button variant="primary">New</Button></PageHeader.Actions>
+      </PageHeader.Heading>
+    </PageHeader.Root>
+  </Page>
+</Application>
+```
+
+See the `Structure/AppBar`, `Structure/NavRail`, and `Structure/PageHeader`
+stories (the `AppBar` → `ApplicationShell` story composes all three).
+
 ## Component conventions
 
 This library's foundation is a **headless Radix behavior core plus an opt-in

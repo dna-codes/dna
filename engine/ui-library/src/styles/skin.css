@@ -1030,6 +1030,189 @@
 }
 
 /* ------------------------------------------------------------------ *
+ * Application chrome — AppBar (global top bar)
+ * ------------------------------------------------------------------ */
+[data-ui-appbar] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-4);
+  height: var(--ui-shell-header-height);
+  padding-inline: var(--ui-space-4);
+  background: var(--ui-color-surface);
+  border-bottom: var(--ui-border-width) var(--ui-border-style)
+    var(--ui-color-border);
+  color: var(--ui-color-text);
+}
+[data-ui-appbar-brand] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  font-weight: var(--ui-font-weight-semibold);
+  color: var(--ui-color-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+[data-ui-appbar-nav] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+}
+[data-ui-appbar-nav] a {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ui-space-1) var(--ui-space-3);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-muted);
+  text-decoration: none;
+  font-size: var(--ui-font-size-sm);
+  transition:
+    background-color var(--ui-transition),
+    color var(--ui-transition);
+}
+[data-ui-appbar-nav] a:hover {
+  background: var(--ui-color-muted);
+  color: var(--ui-color-text);
+}
+[data-ui-appbar-nav] a[aria-current] {
+  color: var(--ui-color-text);
+  box-shadow: inset 0 -2px 0 0 var(--ui-color-selection-line);
+}
+[data-ui-appbar-search] {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 22rem;
+}
+[data-ui-appbar-search] > * {
+  width: 100%;
+}
+[data-ui-appbar-spacer] {
+  flex: 1 1 auto;
+}
+[data-ui-appbar-actions] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  margin-inline-start: auto;
+}
+
+/* ------------------------------------------------------------------ *
+ * Application chrome — NavRail (left section-nav rail)
+ * ------------------------------------------------------------------ */
+[data-ui-navrail] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+}
+[data-ui-navrail-section] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+  padding-block: var(--ui-space-2);
+}
+[data-ui-navrail-section] + [data-ui-navrail-section] {
+  border-top: var(--ui-border-width) var(--ui-border-style)
+    var(--ui-color-border);
+}
+[data-ui-navrail-label] {
+  padding-inline: var(--ui-space-3);
+  margin-bottom: var(--ui-space-1);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-xs);
+  font-weight: var(--ui-font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ui-color-text-subtle);
+}
+[data-ui-navrail-item] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text-muted);
+  text-decoration: none;
+  font-size: var(--ui-font-size-sm);
+  transition:
+    background-color var(--ui-transition),
+    color var(--ui-transition);
+}
+[data-ui-navrail-item]:hover {
+  background: var(--ui-color-muted);
+  color: var(--ui-color-text);
+}
+[data-ui-navrail-item][aria-current="page"] {
+  background: var(--ui-color-selection);
+  color: var(--ui-color-text);
+  font-weight: var(--ui-font-weight-medium);
+  box-shadow: inset 2px 0 0 0 var(--ui-color-selection-line);
+}
+[data-ui-navrail-item]:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* ------------------------------------------------------------------ *
+ * Application chrome — PageHeader (in-page title + breadcrumb + actions)
+ * ------------------------------------------------------------------ */
+[data-ui-page-header] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+  padding-bottom: var(--ui-space-4);
+  margin-bottom: var(--ui-space-5);
+  border-bottom: var(--ui-border-width) var(--ui-border-style)
+    var(--ui-color-border);
+}
+[data-ui-page-header-breadcrumb] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+  font-size: var(--ui-font-size-sm);
+}
+[data-ui-page-header-breadcrumb-item] {
+  color: var(--ui-color-text-muted);
+  text-decoration: none;
+}
+[data-ui-page-header-breadcrumb-item]:hover {
+  color: var(--ui-color-primary);
+  text-decoration: underline;
+}
+[data-ui-page-header-breadcrumb-item][aria-current="page"] {
+  color: var(--ui-color-text);
+}
+[data-ui-page-header-breadcrumb-item]
+  + [data-ui-page-header-breadcrumb-item]::before {
+  content: "/";
+  margin-inline-end: var(--ui-space-2);
+  color: var(--ui-color-text-subtle);
+}
+[data-ui-page-header-heading] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+}
+[data-ui-page-header-title] {
+  margin: 0;
+  font-size: var(--ui-font-size-xl);
+  font-weight: var(--ui-font-weight-semibold);
+  color: var(--ui-color-text);
+}
+[data-ui-page-header-actions] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  margin-inline-start: auto;
+}
+[data-ui-page-header-description] {
+  margin: 0;
+  color: var(--ui-color-text-muted);
+  font-size: var(--ui-font-size-sm);
+}
+
+/* ------------------------------------------------------------------ *
  * Workflow (state-machine stepper) — active step = selection
  * ------------------------------------------------------------------ */
 [data-ui-workflow] {

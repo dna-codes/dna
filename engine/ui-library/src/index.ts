@@ -57,6 +57,12 @@ export * from "./components/Content";
 export * from "./components/Workflow";
 export * from "./components/Container";
 
+// Application chrome — GitHub-style compositions over the structural primitives:
+// the global top bar, the left section-nav rail, and the in-page header.
+export * from "./components/AppBar";
+export * from "./components/NavRail";
+export * from "./components/PageHeader";
+
 // State-machine engine (XState). Tier-2 backbone: the headless `Machine`
 // component set plus the public machine API (hooks, the sequence-machine
 // factory, Radix-widget binding adapters, and the re-exported XState toolkit).
