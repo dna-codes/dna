@@ -1213,6 +1213,213 @@
 }
 
 /* ------------------------------------------------------------------ *
+ * Content pattern — List (dense repo/issue-style rows)
+ * ------------------------------------------------------------------ */
+[data-ui-list] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: var(--ui-border-width) var(--ui-border-style) var(--ui-color-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-color-surface);
+  overflow: hidden;
+}
+[data-ui-list-row] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-2) var(--ui-space-4);
+  color: var(--ui-color-text);
+  text-decoration: none;
+  transition: background-color var(--ui-transition);
+}
+[data-ui-list-row] + [data-ui-list-row] {
+  border-top: var(--ui-border-width) var(--ui-border-style)
+    var(--ui-color-border);
+}
+a[data-ui-list-row]:hover,
+[data-ui-list-row][role="button"]:hover {
+  background: var(--ui-color-surface-raised);
+}
+[data-ui-list-row]:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+[data-ui-list-leading] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--ui-color-text-muted);
+}
+[data-ui-list-main] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+[data-ui-list-title] {
+  font-weight: var(--ui-font-weight-semibold);
+  font-size: var(--ui-font-size-sm);
+  color: var(--ui-color-text);
+}
+[data-ui-list-title] a {
+  color: var(--ui-color-primary);
+  text-decoration: none;
+}
+[data-ui-list-title] a:hover {
+  text-decoration: underline;
+}
+[data-ui-list-description] {
+  font-size: var(--ui-font-size-xs);
+  color: var(--ui-color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+[data-ui-list-trailing] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  color: var(--ui-color-text-muted);
+  font-size: var(--ui-font-size-xs);
+}
+
+/* ------------------------------------------------------------------ *
+ * Content pattern — EmptyState (centered "nothing here yet")
+ * ------------------------------------------------------------------ */
+[data-ui-empty-state] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-6) var(--ui-space-5);
+  border: var(--ui-border-width) var(--ui-border-style) var(--ui-color-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-color-surface);
+  color: var(--ui-color-text-muted);
+}
+[data-ui-empty-state-icon] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--ui-font-size-xl);
+  color: var(--ui-color-text-subtle);
+}
+[data-ui-empty-state-title] {
+  margin: 0;
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-semibold);
+  color: var(--ui-color-text);
+}
+[data-ui-empty-state-description] {
+  margin: 0;
+  max-width: 28rem;
+  font-size: var(--ui-font-size-sm);
+  color: var(--ui-color-text-muted);
+}
+[data-ui-empty-state-actions] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  margin-top: var(--ui-space-2);
+}
+
+/* ------------------------------------------------------------------ *
+ * Content pattern — Command palette (combobox + filterable listbox)
+ * ------------------------------------------------------------------ */
+[data-ui-command-overlay] {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ui-z-overlay);
+  background: var(--ui-color-overlay);
+  animation: ui-fade-in var(--ui-transition);
+}
+[data-ui-command-dialog] {
+  position: fixed;
+  top: 15vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--ui-z-modal);
+  width: min(40rem, calc(100vw - 2 * var(--ui-space-4)));
+  background: var(--ui-color-surface-raised);
+  border: var(--ui-border-width) var(--ui-border-style)
+    var(--ui-color-border-strong);
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow-lg);
+  overflow: hidden;
+  animation: ui-fade-in var(--ui-transition);
+}
+[data-ui-command] {
+  display: flex;
+  flex-direction: column;
+  color: var(--ui-color-text);
+  font-family: var(--ui-font-family);
+}
+[data-ui-command-input] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--ui-space-4);
+  border: none;
+  border-bottom: var(--ui-border-width) var(--ui-border-style)
+    var(--ui-color-border);
+  background: transparent;
+  color: var(--ui-color-text);
+  font-family: inherit;
+  font-size: var(--ui-font-size-md);
+  outline: none;
+}
+[data-ui-command-input]::placeholder {
+  color: var(--ui-color-text-subtle);
+}
+[data-ui-command-list] {
+  max-height: 22rem;
+  overflow-y: auto;
+  padding: var(--ui-space-2);
+}
+[data-ui-command-group] + [data-ui-command-group] {
+  margin-top: var(--ui-space-2);
+}
+[data-ui-command-group-heading] {
+  padding: var(--ui-space-2) var(--ui-space-2) var(--ui-space-1);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-xs);
+  font-weight: var(--ui-font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ui-color-text-subtle);
+}
+[data-ui-command-item] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-color-text);
+  font-size: var(--ui-font-size-sm);
+  cursor: pointer;
+  user-select: none;
+}
+[data-ui-command-item][data-active] {
+  background: var(--ui-color-selection);
+  box-shadow: inset 2px 0 0 0 var(--ui-color-selection-line);
+}
+[data-ui-command-item][data-disabled] {
+  color: var(--ui-color-text-subtle);
+  cursor: default;
+}
+[data-ui-command-empty] {
+  padding: var(--ui-space-5);
+  text-align: center;
+  color: var(--ui-color-text-muted);
+  font-size: var(--ui-font-size-sm);
+}
+
+/* ------------------------------------------------------------------ *
  * Workflow (state-machine stepper) — active step = selection
  * ------------------------------------------------------------------ */
 [data-ui-workflow] {

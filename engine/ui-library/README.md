@@ -261,6 +261,50 @@ default skin lays them out.
 See the `Structure/AppBar`, `Structure/NavRail`, and `Structure/PageHeader`
 stories (the `AppBar` → `ApplicationShell` story composes all three).
 
+## Content patterns (GitHub-style)
+
+Three more compound components cover the dense content surfaces.
+
+| Component | What it is | Parts |
+| --------- | ---------- | ----- |
+| `List` | dense repo/issue-style rows (`<ul role="list">`) | `Root`, `Row` (whole-row link via `asChild`), `Leading`, `Main`, `Title`, `Description`, `Trailing` |
+| `EmptyState` | the centered "nothing here yet" placeholder | `Root`, `Icon`, `Title`, `Description`, `Actions` |
+| `Command` | command/search palette building blocks | `Dialog` (modal, on Radix `Dialog`) or `Root` (inline), `Input` (combobox), `List` (listbox), `Group`, `Item` (option), `Empty` |
+
+`Command` is a cmdk-style combobox: **filtering is consumer-controlled** (you
+render the `Item`s matching your query) while the component owns virtual focus
+(`aria-activedescendant`), `↑`/`↓`/`Home`/`End`/`Enter` keyboard navigation, and
+pointer hover — over a `role="combobox"`/`listbox`/`option` tree.
+
+```tsx
+<Command.Dialog open={open} onOpenChange={setOpen} label="Command palette">
+  <Command.Input value={q} onValueChange={setQ} placeholder="Type a command…" />
+  <Command.List>
+    {results.length === 0 && <Command.Empty>No results.</Command.Empty>}
+    {results.map((r) => (
+      <Command.Item key={r.id} onSelect={() => run(r)}>{r.label}</Command.Item>
+    ))}
+  </Command.List>
+</Command.Dialog>
+```
+
+See the `Content/List`, `Content/EmptyState`, and `Content/Command` stories.
+
+### Replacing an app's interim compositions
+
+These chrome + content components are the canonical replacements for the
+interim, app-local compositions a consuming app stands up before they ship:
+
+| App concern | Interim composition | Canonical component |
+| ----------- | ------------------- | ------------------- |
+| DNA theme (light/dark) | `theme.css` + `BrandStyle.tsx` | `@dna/ui-library/dna.css` |
+| Top app bar | `AppShell.tsx` | `AppBar` |
+| Left section nav | `AppShell.tsx` (`Sidebar`) | `NavRail` |
+| Page header + breadcrumb | `PageHeader.tsx` | `PageHeader` |
+| Dense rows | `Table.*` | `List` |
+| Empty state | `Card` placeholder | `EmptyState` |
+| Command palette | _not yet built_ | `Command` |
+
 ## Component conventions
 
 This library's foundation is a **headless Radix behavior core plus an opt-in

@@ -1085,6 +1085,197 @@ export const skinComponents: StyleObject = {
     "color": "var(--ui-color-text-muted)",
     "fontSize": "var(--ui-font-size-sm)"
   },
+  "[data-ui-list]": {
+    "listStyle": "none",
+    "margin": "0",
+    "padding": "0",
+    "border": "var(--ui-border-width) var(--ui-border-style) var(--ui-color-border)",
+    "borderRadius": "var(--ui-radius-md)",
+    "background": "var(--ui-color-surface)",
+    "overflow": "hidden"
+  },
+  "[data-ui-list-row]": {
+    "display": "flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-3)",
+    "padding": "var(--ui-space-2) var(--ui-space-4)",
+    "color": "var(--ui-color-text)",
+    "textDecoration": "none",
+    "transition": "background-color var(--ui-transition)"
+  },
+  "[data-ui-list-row] + [data-ui-list-row]": {
+    "borderTop": "var(--ui-border-width) var(--ui-border-style)\n    var(--ui-color-border)"
+  },
+  "a[data-ui-list-row]:hover,\n[data-ui-list-row][role=\"button\"]:hover": {
+    "background": "var(--ui-color-surface-raised)"
+  },
+  "[data-ui-list-row]:focus-visible": {
+    "outline": "none",
+    "boxShadow": "var(--ui-focus-ring)"
+  },
+  "[data-ui-list-leading]": {
+    "display": "inline-flex",
+    "alignItems": "center",
+    "justifyContent": "center",
+    "flexShrink": 0,
+    "color": "var(--ui-color-text-muted)"
+  },
+  "[data-ui-list-main]": {
+    "display": "flex",
+    "flexDirection": "column",
+    "gap": "2px",
+    "flex": "1 1 auto",
+    "minWidth": "0"
+  },
+  "[data-ui-list-title]": {
+    "fontWeight": "var(--ui-font-weight-semibold)",
+    "fontSize": "var(--ui-font-size-sm)",
+    "color": "var(--ui-color-text)"
+  },
+  "[data-ui-list-title] a": {
+    "color": "var(--ui-color-primary)",
+    "textDecoration": "none"
+  },
+  "[data-ui-list-title] a:hover": {
+    "textDecoration": "underline"
+  },
+  "[data-ui-list-description]": {
+    "fontSize": "var(--ui-font-size-xs)",
+    "color": "var(--ui-color-text-muted)",
+    "whiteSpace": "nowrap",
+    "overflow": "hidden",
+    "textOverflow": "ellipsis"
+  },
+  "[data-ui-list-trailing]": {
+    "display": "inline-flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-2)",
+    "flexShrink": 0,
+    "marginInlineStart": "auto",
+    "color": "var(--ui-color-text-muted)",
+    "fontSize": "var(--ui-font-size-xs)"
+  },
+  "[data-ui-empty-state]": {
+    "display": "flex",
+    "flexDirection": "column",
+    "alignItems": "center",
+    "textAlign": "center",
+    "gap": "var(--ui-space-3)",
+    "padding": "var(--ui-space-6) var(--ui-space-5)",
+    "border": "var(--ui-border-width) var(--ui-border-style) var(--ui-color-border)",
+    "borderRadius": "var(--ui-radius-md)",
+    "background": "var(--ui-color-surface)",
+    "color": "var(--ui-color-text-muted)"
+  },
+  "[data-ui-empty-state-icon]": {
+    "display": "inline-flex",
+    "alignItems": "center",
+    "justifyContent": "center",
+    "fontSize": "var(--ui-font-size-xl)",
+    "color": "var(--ui-color-text-subtle)"
+  },
+  "[data-ui-empty-state-title]": {
+    "margin": "0",
+    "fontSize": "var(--ui-font-size-lg)",
+    "fontWeight": "var(--ui-font-weight-semibold)",
+    "color": "var(--ui-color-text)"
+  },
+  "[data-ui-empty-state-description]": {
+    "margin": "0",
+    "maxWidth": "28rem",
+    "fontSize": "var(--ui-font-size-sm)",
+    "color": "var(--ui-color-text-muted)"
+  },
+  "[data-ui-empty-state-actions]": {
+    "display": "inline-flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-2)",
+    "marginTop": "var(--ui-space-2)"
+  },
+  "[data-ui-command-overlay]": {
+    "position": "fixed",
+    "inset": "0",
+    "zIndex": "var(--ui-z-overlay)",
+    "background": "var(--ui-color-overlay)",
+    "animation": "ui-fade-in var(--ui-transition)"
+  },
+  "[data-ui-command-dialog]": {
+    "position": "fixed",
+    "top": "15vh",
+    "left": "50%",
+    "transform": "translateX(-50%)",
+    "zIndex": "var(--ui-z-modal)",
+    "width": "min(40rem, calc(100vw - 2 * var(--ui-space-4)))",
+    "background": "var(--ui-color-surface-raised)",
+    "border": "var(--ui-border-width) var(--ui-border-style)\n    var(--ui-color-border-strong)",
+    "borderRadius": "var(--ui-radius-lg)",
+    "boxShadow": "var(--ui-shadow-lg)",
+    "overflow": "hidden",
+    "animation": "ui-fade-in var(--ui-transition)"
+  },
+  "[data-ui-command]": {
+    "display": "flex",
+    "flexDirection": "column",
+    "color": "var(--ui-color-text)",
+    "fontFamily": "var(--ui-font-family)"
+  },
+  "[data-ui-command-input]": {
+    "width": "100%",
+    "boxSizing": "border-box",
+    "padding": "var(--ui-space-4)",
+    "border": "none",
+    "borderBottom": "var(--ui-border-width) var(--ui-border-style)\n    var(--ui-color-border)",
+    "background": "transparent",
+    "color": "var(--ui-color-text)",
+    "fontFamily": "inherit",
+    "fontSize": "var(--ui-font-size-md)",
+    "outline": "none"
+  },
+  "[data-ui-command-input]::placeholder": {
+    "color": "var(--ui-color-text-subtle)"
+  },
+  "[data-ui-command-list]": {
+    "maxHeight": "22rem",
+    "overflowY": "auto",
+    "padding": "var(--ui-space-2)"
+  },
+  "[data-ui-command-group] + [data-ui-command-group]": {
+    "marginTop": "var(--ui-space-2)"
+  },
+  "[data-ui-command-group-heading]": {
+    "padding": "var(--ui-space-2) var(--ui-space-2) var(--ui-space-1)",
+    "fontFamily": "var(--ui-font-mono)",
+    "fontSize": "var(--ui-font-size-xs)",
+    "fontWeight": "var(--ui-font-weight-medium)",
+    "textTransform": "uppercase",
+    "letterSpacing": "0.06em",
+    "color": "var(--ui-color-text-subtle)"
+  },
+  "[data-ui-command-item]": {
+    "display": "flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-3)",
+    "padding": "var(--ui-space-2) var(--ui-space-3)",
+    "borderRadius": "var(--ui-radius-md)",
+    "color": "var(--ui-color-text)",
+    "fontSize": "var(--ui-font-size-sm)",
+    "cursor": "pointer",
+    "userSelect": "none"
+  },
+  "[data-ui-command-item][data-active]": {
+    "background": "var(--ui-color-selection)",
+    "boxShadow": "inset 2px 0 0 0 var(--ui-color-selection-line)"
+  },
+  "[data-ui-command-item][data-disabled]": {
+    "color": "var(--ui-color-text-subtle)",
+    "cursor": "default"
+  },
+  "[data-ui-command-empty]": {
+    "padding": "var(--ui-space-5)",
+    "textAlign": "center",
+    "color": "var(--ui-color-text-muted)",
+    "fontSize": "var(--ui-font-size-sm)"
+  },
   "[data-ui-workflow]": {
     "fontFamily": "var(--ui-font-family)",
     "color": "var(--ui-color-text)"

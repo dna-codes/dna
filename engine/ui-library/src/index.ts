@@ -63,6 +63,12 @@ export * from "./components/AppBar";
 export * from "./components/NavRail";
 export * from "./components/PageHeader";
 
+// Content patterns — GitHub-style dense rows, the empty-state placeholder, and
+// the command/search palette building blocks (combobox + filterable listbox).
+export * from "./components/List";
+export * from "./components/EmptyState";
+export * from "./components/Command";
+
 // State-machine engine (XState). Tier-2 backbone: the headless `Machine`
 // component set plus the public machine API (hooks, the sequence-machine
 // factory, Radix-widget binding adapters, and the re-exported XState toolkit).
