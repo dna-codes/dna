@@ -1420,6 +1420,48 @@ a[data-ui-list-row]:hover,
 }
 
 /* ------------------------------------------------------------------ *
+ * Appearance — ThemeToggle (segmented Light / Dark / System control)
+ * ------------------------------------------------------------------ */
+[data-ui-theme-toggle] {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: var(--ui-border-width) var(--ui-border-style) var(--ui-color-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-color-surface-sunken);
+}
+[data-ui-theme-toggle-option] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+  height: var(--ui-control-height-sm);
+  padding-inline: var(--ui-space-3);
+  border: none;
+  border-radius: var(--ui-radius-sm);
+  background: transparent;
+  color: var(--ui-color-text-muted);
+  font-family: var(--ui-font-family);
+  font-size: var(--ui-font-size-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--ui-transition),
+    color var(--ui-transition);
+}
+[data-ui-theme-toggle-option]:hover {
+  color: var(--ui-color-text);
+}
+[data-ui-theme-toggle-option][data-state="checked"] {
+  background: var(--ui-color-surface-raised);
+  color: var(--ui-color-text);
+  box-shadow: var(--ui-shadow-sm);
+}
+[data-ui-theme-toggle-option]:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* ------------------------------------------------------------------ *
  * Workflow (state-machine stepper) — active step = selection
  * ------------------------------------------------------------------ */
 [data-ui-workflow] {

@@ -80,6 +80,11 @@ import "@dna/ui-library/skin.css"; // the look, keyed off the [data-ui-*] hooks
 <html data-theme="light">   <!-- light mode -->
 ```
 
+For the UI control that flips it, use **`ThemeToggle`** (a Light/Dark/System
+segmented control) or the headless **`useTheme()`** / **`setTheme()`** store it
+is built on — both write `data-theme` and persist the choice. See
+[Appearance](#appearance-control).
+
 `data-theme` also works on any element, so a subtree can opt into the opposite
 mode (a light card inside a dark app). The theme is **self-contained** — it
 defines every `--ui-*` token the skin reads, so the two imports above are all you
@@ -290,6 +295,29 @@ pointer hover — over a `role="combobox"`/`listbox`/`option` tree.
 
 See the `Content/List`, `Content/EmptyState`, and `Content/Command` stories.
 
+## Appearance control
+
+`ThemeToggle` is the canonical Light / Dark / System appearance control — a
+segmented selector built on Radix `RadioGroup` (roving focus + arrow-key
+selection, no pointer-API dependency, so it is testable in jsdom). It is bound to
+a tiny headless store: selecting an option writes `data-theme` to the document
+element (which `dna.css` keys off) and persists the choice to `localStorage`.
+
+Drive appearance from code — without the UI — via the same store:
+
+```tsx
+import { ThemeToggle, useTheme, setTheme } from "@dna/ui-library";
+
+<AppBar.Actions><ThemeToggle /></AppBar.Actions>;
+
+const { theme, resolvedTheme, setTheme } = useTheme(); // theme: light|dark|system
+setTheme("dark"); // imperative, no component needed
+```
+
+To avoid a flash of the wrong theme before React mounts, read
+`THEME_STORAGE_KEY` in an inline `<head>` script and set `data-theme` up front.
+See the `Appearance/ThemeToggle` story.
+
 ### Replacing an app's interim compositions
 
 These chrome + content components are the canonical replacements for the
@@ -304,6 +332,7 @@ interim, app-local compositions a consuming app stands up before they ship:
 | Dense rows | `Table.*` | `List` |
 | Empty state | `Card` placeholder | `EmptyState` |
 | Command palette | _not yet built_ | `Command` |
+| Theme / appearance toggle | `ThemeToggle.tsx` (segmented `Button`s) | `ThemeToggle` (+ `useTheme`) |
 
 ## Component conventions
 

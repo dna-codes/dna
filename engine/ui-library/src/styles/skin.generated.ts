@@ -1276,6 +1276,42 @@ export const skinComponents: StyleObject = {
     "color": "var(--ui-color-text-muted)",
     "fontSize": "var(--ui-font-size-sm)"
   },
+  "[data-ui-theme-toggle]": {
+    "display": "inline-flex",
+    "alignItems": "center",
+    "gap": "2px",
+    "padding": "2px",
+    "border": "var(--ui-border-width) var(--ui-border-style) var(--ui-color-border)",
+    "borderRadius": "var(--ui-radius-md)",
+    "background": "var(--ui-color-surface-sunken)"
+  },
+  "[data-ui-theme-toggle-option]": {
+    "display": "inline-flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-1)",
+    "height": "var(--ui-control-height-sm)",
+    "paddingInline": "var(--ui-space-3)",
+    "border": "none",
+    "borderRadius": "var(--ui-radius-sm)",
+    "background": "transparent",
+    "color": "var(--ui-color-text-muted)",
+    "fontFamily": "var(--ui-font-family)",
+    "fontSize": "var(--ui-font-size-sm)",
+    "cursor": "pointer",
+    "transition": "background-color var(--ui-transition),\n    color var(--ui-transition)"
+  },
+  "[data-ui-theme-toggle-option]:hover": {
+    "color": "var(--ui-color-text)"
+  },
+  "[data-ui-theme-toggle-option][data-state=\"checked\"]": {
+    "background": "var(--ui-color-surface-raised)",
+    "color": "var(--ui-color-text)",
+    "boxShadow": "var(--ui-shadow-sm)"
+  },
+  "[data-ui-theme-toggle-option]:focus-visible": {
+    "outline": "none",
+    "boxShadow": "var(--ui-focus-ring)"
+  },
   "[data-ui-workflow]": {
     "fontFamily": "var(--ui-font-family)",
     "color": "var(--ui-color-text)"
