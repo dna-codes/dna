@@ -136,9 +136,18 @@ widget to require a machine. See the `*.machine.stories.tsx` demos.
 - The Tailwind plugin is a **second build entry** in `vite.config.ts` (alongside
   `index`), emitted to `dist/tailwind.{js,cjs,d.ts}`. It is the module's sole
   (default) export so `require("@dna/ui-library/tailwind")` returns the plugin
-  directly. The build also copies `tokens.css`→`dist/ui-library.css` and
-  `skin.css`→`dist/skin.css`. Keep all four `exports` paths in `package.json`
-  in sync when you touch these.
+  directly. The build also copies `tokens.css`→`dist/ui-library.css`,
+  `skin.css`→`dist/skin.css`, and `dna.css`→`dist/dna.css`. Keep all five
+  `exports` paths in `package.json` in sync when you touch these.
+- `src/styles/dna.css` (`@dna/ui-library/dna.css`) is the shipped **DNA.codes
+  theme**: the productionized brand (solid borders, no canvas grid) in two
+  `data-theme` modes (light/dark). It is **self-contained** — it restates every
+  `--ui-*` token the skin reads rather than importing `tokens.css`, so the
+  `dna.css` + `skin.css` pair works without `styles.css` (a source/dist filename
+  mismatch — `tokens.css` vs `ui-library.css` — makes a relative `@import`
+  fragile). Its non-color structural tokens mirror `tokens.css`; if you change a
+  shared structural token there, mirror it here. Colors are the white-label
+  surface — keep every brand value a `--ui-*` token in both mode blocks.
 - When you add or change a component's styling hooks (`data-ui-*`, `data-variant`,
   `data-size`, states), edit **`skin.css`** (and add any new token to `tokens.css`
   + the Tailwind plugin's theme map). The Tailwind plugin's injected skin is

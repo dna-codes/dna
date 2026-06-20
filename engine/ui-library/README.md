@@ -61,6 +61,33 @@ Two ways to evolve it — both are token-only, no component changes:
 }
 ```
 
+### The DNA.codes theme (productionized, light + dark)
+
+Both evolution levers above are already done for you in a shipped, named theme:
+**`@dna/ui-library/dna.css`**. It is the productionized DNA.codes brand — solid
+borders, no canvas grid — in two WCAG-AA-validated modes selected by a
+document-level `data-theme` signal. Pair it with the skin instead of importing
+`styles.css`:
+
+```tsx
+import "@dna/ui-library/dna.css";  // brand tokens, both modes, productionized
+import "@dna/ui-library/skin.css"; // the look, keyed off the [data-ui-*] hooks
+```
+
+```html
+<html>                      <!-- dark mode (the default) -->
+<html data-theme="dark">    <!-- dark mode (explicit) -->
+<html data-theme="light">   <!-- light mode -->
+```
+
+`data-theme` also works on any element, so a subtree can opt into the opposite
+mode (a light card inside a dark app). The theme is **self-contained** — it
+defines every `--ui-*` token the skin reads, so the two imports above are all you
+need. It stays a **white-label override layer**: every brand value is a `--ui-*`
+token, so a consumer overrides any of them (in either mode) *after* the import
+with no component-source edits — DNA.codes is just the default. See the
+`Theme/DNA.codes` story.
+
 ## Tech stack
 
 | Concern        | Tool                          |
@@ -183,8 +210,10 @@ composition pattern, so you can keep the behaviour while rendering your own elem
 `react` and `react-dom` are peer dependencies. `radix-ui` is a runtime
 dependency and is externalized from the bundle so apps dedupe a single Radix
 instance. The skinning artifacts are all opt-in: `@dna/ui-library/styles.css`
-(the `--ui-*` tokens), `@dna/ui-library/skin.css` (the default CSS skin), and
-`@dna/ui-library/tailwind` (the Tailwind plugin). `tailwindcss` is **not** a
+(the `--ui-*` tokens, wireframe defaults), `@dna/ui-library/dna.css` (the
+productionized DNA.codes brand theme, light + dark), `@dna/ui-library/skin.css`
+(the default CSS skin), and `@dna/ui-library/tailwind` (the Tailwind plugin).
+`tailwindcss` is **not** a
 dependency of this package — the plugin is dependency-free and only loaded by
 consumers who use it.
 

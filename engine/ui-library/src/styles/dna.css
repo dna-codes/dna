@@ -1,0 +1,187 @@
+/**
+ * @dna/ui-library — the DNA.codes theme (a named, productionized skin).
+ *
+ * Where `tokens.css` (`@dna/ui-library/styles.css`) is the dark **wireframe /
+ * prototype-engine** default, this file is the shipped **DNA.codes brand**:
+ * productionized (no dashed scaffold, no canvas grid) and offered in two modes
+ * selected by a document-level signal:
+ *
+ *   - <html> (no attribute) or <html data-theme="dark">  → dark mode (default)
+ *   - <html data-theme="light">                          → light mode
+ *
+ * `data-theme` is honored at the document root (the intended document-level
+ * signal) AND on any element, so a subtree can opt into the opposite mode
+ * (e.g. a light card inside a dark app) without extra wiring.
+ *
+ * Both palettes are validated for WCAG-AA contrast. This file is SELF-CONTAINED
+ * — it defines every `--ui-*` token the skin reads, so the documented import
+ * pair is all a consumer needs (no separate `styles.css`):
+ *
+ *   import "@dna/ui-library/dna.css";   // brand tokens, both modes, productionized
+ *   import "@dna/ui-library/skin.css";  // the look, keyed off [data-ui-*] hooks
+ *
+ * WHITE-LABEL: every brand value is a `--ui-*` token. A consumer overrides any
+ * of them (in either mode) AFTER this import with no component-source edits —
+ * DNA.codes is just the default. The non-color structural tokens below mirror
+ * `tokens.css`; they are restated here (rather than imported) so the export is
+ * standalone — the productionized values (solid borders, no grid) are the only
+ * intentional divergence from the wireframe defaults.
+ */
+
+/* ------------------------------------------------------------------ *
+ * Structural tokens (mode-independent) + productionized cues.
+ * ------------------------------------------------------------------ */
+:root {
+  /* Productionize — solid borders, no dotted canvas grid (both modes). */
+  --ui-border-style: solid;
+  --ui-border-width: 1px;
+  --ui-canvas-grid: none;
+  --ui-grid-dot: transparent;
+  --ui-grid-size: 22px;
+
+  /* Typography */
+  --ui-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --ui-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+    monospace;
+  --ui-font-weight-normal: 400;
+  --ui-font-weight-medium: 500;
+  --ui-font-weight-semibold: 600;
+  --ui-font-size-xs: 0.75rem;
+  --ui-font-size-sm: 0.875rem;
+  --ui-font-size-md: 1rem;
+  --ui-font-size-lg: 1.125rem;
+  --ui-font-size-xl: 1.375rem;
+  --ui-line-height: 1.5;
+
+  /* Spacing */
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-5: 1.5rem;
+  --ui-space-6: 2rem;
+
+  /* Radius */
+  --ui-radius-sm: 3px;
+  --ui-radius-md: 5px;
+  --ui-radius-lg: 8px;
+  --ui-radius-xl: 12px;
+  --ui-radius-pill: 9999px;
+
+  /* Control sizing */
+  --ui-control-height-sm: 1.75rem;
+  --ui-control-height-md: 2.25rem;
+  --ui-control-height-lg: 2.75rem;
+  --ui-control-padding-x: var(--ui-space-3);
+
+  /* Elevation */
+  --ui-shadow-sm: 0 1px 0 rgb(31 35 40 / 0.04);
+  --ui-shadow-md: 0 3px 6px rgb(31 35 40 / 0.15);
+  --ui-shadow-lg: 0 8px 24px rgb(31 35 40 / 0.2);
+
+  /* Focus ring */
+  --ui-focus-ring: 0 0 0 3px var(--ui-focus-ring-color);
+
+  /* Motion */
+  --ui-transition: 150ms ease;
+
+  /* Layering */
+  --ui-z-popover: 50;
+  --ui-z-overlay: 60;
+  --ui-z-modal: 70;
+  --ui-z-toast: 80;
+
+  /* App shell */
+  --ui-shell-header-height: 3.5rem;
+  --ui-shell-sidebar-width: 15rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Dark mode (default) — applies with no attribute or data-theme="dark",
+ * and on any element marked data-theme="dark".
+ * ------------------------------------------------------------------ */
+:root,
+:root[data-theme="dark"],
+[data-theme="dark"] {
+  /* Brand / primary */
+  --ui-color-primary: #2dd4bf;
+  --ui-color-primary-hover: #5eead4;
+  --ui-color-primary-active: #14b8a6;
+  --ui-color-on-primary: #042f2a;
+
+  /* Surfaces & text */
+  --ui-color-bg: #0a0f1c;
+  --ui-color-surface: #111a2e;
+  --ui-color-surface-raised: #16213a;
+  --ui-color-surface-sunken: #0c1424;
+  --ui-color-muted: #1b2740;
+  --ui-color-muted-hover: #283750;
+  --ui-color-border: #2f3e58;
+  --ui-color-border-strong: #475569;
+  --ui-color-text: #e2e8f0;
+  --ui-color-text-muted: #94a3b8;
+  --ui-color-text-subtle: #64748b;
+  --ui-color-text-on-muted: #cbd5e1;
+
+  /* Feedback */
+  --ui-color-danger: #fb7185;
+  --ui-color-danger-hover: #fda4af;
+  --ui-color-on-danger: #4c0519;
+  --ui-color-success: #34d399;
+  --ui-color-on-success: #022c22;
+  --ui-color-warning: #fbbf24;
+  --ui-color-on-warning: #2b1d02;
+  --ui-color-info: #60a5fa;
+
+  /* Overlay + selection + planned (mode-appropriate) */
+  --ui-color-overlay: rgb(2 6 23 / 0.72);
+  --ui-color-selection: rgb(45 212 191 / 0.14);
+  --ui-color-selection-line: var(--ui-color-primary);
+  --ui-color-planned: #64748b;
+  --ui-focus-ring-color: rgb(45 212 191 / 0.5);
+}
+
+/* ------------------------------------------------------------------ *
+ * Light mode — applies on data-theme="light" (root or any subtree).
+ * GitHub-style light surfaces with DNA teal darkened for AA on white.
+ * ------------------------------------------------------------------ */
+:root[data-theme="light"],
+[data-theme="light"] {
+  /* Brand / primary */
+  --ui-color-primary: #0d9488;
+  --ui-color-primary-hover: #0f766e;
+  --ui-color-primary-active: #115e59;
+  --ui-color-on-primary: #ffffff;
+
+  /* Surfaces & text */
+  --ui-color-bg: #ffffff;
+  --ui-color-surface: #ffffff;
+  --ui-color-surface-raised: #f6f8fa;
+  --ui-color-surface-sunken: #f6f8fa;
+  --ui-color-muted: #eaeef2;
+  --ui-color-muted-hover: #dfe3e8;
+  --ui-color-border: #d0d7de;
+  --ui-color-border-strong: #afb8c1;
+  --ui-color-text: #1f2328;
+  --ui-color-text-muted: #59636e;
+  --ui-color-text-subtle: #818b98;
+  --ui-color-text-on-muted: #1f2328;
+
+  /* Feedback */
+  --ui-color-danger: #cf222e;
+  --ui-color-danger-hover: #a40e26;
+  --ui-color-on-danger: #ffffff;
+  --ui-color-success: #1a7f37;
+  --ui-color-on-success: #ffffff;
+  --ui-color-warning: #9a6700;
+  --ui-color-on-warning: #ffffff;
+  --ui-color-info: #0969da;
+
+  /* Overlay + selection + planned (mode-appropriate) */
+  --ui-color-overlay: rgb(31 35 40 / 0.4);
+  --ui-color-selection: rgb(13 148 136 / 0.1);
+  --ui-color-selection-line: var(--ui-color-primary);
+  --ui-color-planned: #818b98;
+  --ui-focus-ring-color: rgb(13 148 136 / 0.45);
+}
