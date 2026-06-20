@@ -57,6 +57,22 @@ export * from "./components/Content";
 export * from "./components/Workflow";
 export * from "./components/Container";
 
+// Application chrome — GitHub-style compositions over the structural primitives:
+// the global top bar, the left section-nav rail, and the in-page header.
+export * from "./components/AppBar";
+export * from "./components/NavRail";
+export * from "./components/PageHeader";
+
+// Content patterns — GitHub-style dense rows, the empty-state placeholder, and
+// the command/search palette building blocks (combobox + filterable listbox).
+export * from "./components/List";
+export * from "./components/EmptyState";
+export * from "./components/Command";
+
+// Appearance — the canonical Light/Dark/System control plus the headless
+// `useTheme`/`setTheme` store that drives `data-theme` (read by dna.css).
+export * from "./components/ThemeToggle";
+
 // State-machine engine (XState). Tier-2 backbone: the headless `Machine`
 // component set plus the public machine API (hooks, the sequence-machine
 // factory, Radix-widget binding adapters, and the re-exported XState toolkit).

@@ -28,12 +28,13 @@
       "require": "./dist/tailwind.cjs"
     },
     "./styles.css": "./dist/ui-library.css",
-    "./skin.css": "./dist/skin.css"
+    "./skin.css": "./dist/skin.css",
+    "./dna.css": "./dist/dna.css"
   },
   "scripts": {
     "dev": "storybook dev -p 6006",
     "gen:skin": "node scripts/gen-skin.mjs",
-    "build": "npm run gen:skin && vite build && node -e \"const fs=require('fs');fs.copyFileSync('src/styles/tokens.css','dist/ui-library.css');fs.copyFileSync('src/styles/skin.css','dist/skin.css')\"",
+    "build": "npm run gen:skin && vite build && node -e \"const fs=require('fs');fs.copyFileSync('src/styles/tokens.css','dist/ui-library.css');fs.copyFileSync('src/styles/skin.css','dist/skin.css');fs.copyFileSync('src/styles/dna.css','dist/dna.css')\"",
     "typecheck": "tsc --noEmit",
     "build-storybook": "storybook build",
     "storybook": "storybook dev -p 6006",
