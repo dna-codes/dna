@@ -30,9 +30,9 @@ export const Default: Story = {
 export const ApplicationShell: Story = {
   render: () => (
     <Container style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <Header style={{ padding: "1rem", borderBottom: "1px solid #ddd" }}>
+      <Header.Root style={{ padding: "1rem", borderBottom: "1px solid #ddd" }}>
         Banner
-      </Header>
+      </Header.Root>
       <Container style={{ display: "flex", flex: 1 }}>
         <Sidebar
           aria-label="Primary"

@@ -6,8 +6,10 @@
 up a coherent, good-looking app quickly out of three things:
 
 1. **Structural primitives, up to the app level** — `Application` /
-   `ApplicationModule` / `Page` + layout landmarks (`Header`, `Footer`,
-   `Sidebar`, `Content`, `Container`).
+   `ApplicationModule` / `Page` + layout landmarks (`Footer`, `Sidebar`,
+   `Content`, `Container`), plus the GitHub-style chrome compositions over them:
+   `ApplicationShell` (the full-page arrangement), `Header` (the compound top
+   bar / `banner`), `NavRail`, and `PageHeader`.
 2. **Composable components for state-machine UIs**, powered by **XState v5**.
    The headless `Machine` set (`Machine.Root` / `Machine.State` / `Machine.Send`)
    plus the `useMachine` hook are the engine; `Workflow` (stepper / sequence) is

@@ -1,16 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AppBar } from "./AppBar";
+import { ApplicationShell } from "./ApplicationShell";
+import { Header } from "../Header/Header";
 import { NavRail } from "../NavRail/NavRail";
 import { PageHeader } from "../PageHeader/PageHeader";
-import { Application } from "../Application/Application";
-import { Sidebar } from "../Sidebar/Sidebar";
-import { Page } from "../Page/Page";
 import { Input } from "../Input/Input";
 import { Button } from "../Button/Button";
 import { Avatar } from "../Avatar/Avatar";
 
 const meta = {
-  title: "Structure/AppBar",
+  title: "Structure/ApplicationShell",
   parameters: { layout: "fullscreen" },
 } satisfies Meta;
 
@@ -18,57 +16,26 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The global top bar: brand, primary navigation, a growable global-search slot,
- * and the account/actions cluster pinned to the end. Renders a `banner`
- * landmark.
+ * The whole GitHub-style chrome composed end to end — `Header` + `NavRail`
+ * (inside the `Sidebar`) + `PageHeader` — the canonical full-page arrangement,
+ * now a reusable component instead of a hand-rolled composition.
  */
 export const Default: Story = {
   render: () => (
-    <AppBar.Root>
-      <AppBar.Brand>DNA.codes</AppBar.Brand>
-      <AppBar.Nav>
-        <a href="#repos" aria-current="page">
-          Resources
-        </a>
-        <a href="#issues">Operations</a>
-        <a href="#actions">Processes</a>
-      </AppBar.Nav>
-      <AppBar.Search>
-        <Input type="search" placeholder="Search DNA…" aria-label="Search" />
-      </AppBar.Search>
-      <AppBar.Actions>
-        <Button variant="ghost" size="sm">
-          Docs
-        </Button>
-        <Avatar>
-          <Avatar.Fallback>TK</Avatar.Fallback>
-        </Avatar>
-      </AppBar.Actions>
-    </AppBar.Root>
-  ),
-};
-
-/**
- * The whole GitHub-style chrome composed end to end — `AppBar` + `NavRail`
- * (inside a `Sidebar`) + `PageHeader` — the canonical replacement for an app's
- * interim `AppShell`/`PageHeader` compositions.
- */
-export const ApplicationShell: Story = {
-  render: () => (
-    <Application style={{ minHeight: "100vh" }}>
-      <AppBar.Root>
-        <AppBar.Brand>DNA.codes</AppBar.Brand>
-        <AppBar.Search>
+    <ApplicationShell.Root style={{ minHeight: "100vh" }}>
+      <ApplicationShell.Header>
+        <Header.Brand>DNA.codes</Header.Brand>
+        <Header.Search>
           <Input type="search" placeholder="Search…" aria-label="Search" />
-        </AppBar.Search>
-        <AppBar.Actions>
+        </Header.Search>
+        <Header.Actions>
           <Avatar>
             <Avatar.Fallback>TK</Avatar.Fallback>
           </Avatar>
-        </AppBar.Actions>
-      </AppBar.Root>
-      <div style={{ display: "flex", alignItems: "stretch" }}>
-        <Sidebar asChild>
+        </Header.Actions>
+      </ApplicationShell.Header>
+      <ApplicationShell.Body>
+        <ApplicationShell.Sidebar asChild>
           <NavRail.Root>
             <NavRail.Section>
               <NavRail.Label>Workspace</NavRail.Label>
@@ -84,8 +51,8 @@ export const ApplicationShell: Story = {
               <NavRail.Item href="#settings">Settings</NavRail.Item>
             </NavRail.Section>
           </NavRail.Root>
-        </Sidebar>
-        <Page title="Resources" style={{ flex: 1 }}>
+        </ApplicationShell.Sidebar>
+        <ApplicationShell.Main title="Resources">
           <PageHeader.Root>
             <PageHeader.Breadcrumb>
               <PageHeader.BreadcrumbItem href="#root">
@@ -113,8 +80,8 @@ export const ApplicationShell: Story = {
               The structure templates this domain manages.
             </PageHeader.Description>
           </PageHeader.Root>
-        </Page>
-      </div>
-    </Application>
+        </ApplicationShell.Main>
+      </ApplicationShell.Body>
+    </ApplicationShell.Root>
   ),
 };

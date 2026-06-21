@@ -151,9 +151,9 @@ export interface ThemeToggleProps
  * renders the segmented look and the checked segment.
  *
  * ```tsx
- * <AppBar.Actions>
+ * <Header.Actions>
  *   <ThemeToggle />
- * </AppBar.Actions>
+ * </Header.Actions>
  * ```
  */
 export const ThemeToggle = forwardRef<
