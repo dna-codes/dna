@@ -42,7 +42,6 @@
     "test:watch": "vitest --project unit",
     "test:storybook": "vitest --project storybook run",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\""
   },
   "peerDependencies": {
