@@ -1028,6 +1028,19 @@
   margin-inline: auto;
   padding-inline: var(--ui-space-4);
 }
+[data-ui-inline] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+/* A full-width control (Input/Select trigger) takes the remaining space;
+   fixed-width controls (Button) keep their natural width. min-width:0 lets it
+   shrink instead of overflowing on long placeholder/value. */
+[data-ui-inline] > [data-ui-input],
+[data-ui-inline] > [data-ui-select-trigger] {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 
 /* ------------------------------------------------------------------ *
  * Application chrome — AppBar (global top bar)
