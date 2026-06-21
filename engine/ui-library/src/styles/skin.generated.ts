@@ -888,9 +888,10 @@ export const skinComponents: StyleObject = {
     "alignItems": "center",
     "gap": "var(--ui-space-4)",
     "height": "var(--ui-shell-header-height)",
-    "paddingInline": "var(--ui-space-5)",
+    "paddingInline": "var(--ui-space-4)",
     "background": "var(--ui-color-surface)",
-    "borderBottom": "var(--ui-border-width) var(--ui-border-style) var(--ui-color-border)"
+    "borderBottom": "var(--ui-border-width) var(--ui-border-style)\n    var(--ui-color-border)",
+    "color": "var(--ui-color-text)"
   },
   "[data-ui-footer]": {
     "padding": "var(--ui-space-4) var(--ui-space-5)",
@@ -931,17 +932,7 @@ export const skinComponents: StyleObject = {
     "flex": "1 1 auto",
     "minWidth": "0"
   },
-  "[data-ui-appbar]": {
-    "display": "flex",
-    "alignItems": "center",
-    "gap": "var(--ui-space-4)",
-    "height": "var(--ui-shell-header-height)",
-    "paddingInline": "var(--ui-space-4)",
-    "background": "var(--ui-color-surface)",
-    "borderBottom": "var(--ui-border-width) var(--ui-border-style)\n    var(--ui-color-border)",
-    "color": "var(--ui-color-text)"
-  },
-  "[data-ui-appbar-brand]": {
+  "[data-ui-header-brand]": {
     "display": "inline-flex",
     "alignItems": "center",
     "gap": "var(--ui-space-2)",
@@ -950,12 +941,12 @@ export const skinComponents: StyleObject = {
     "textDecoration": "none",
     "whiteSpace": "nowrap"
   },
-  "[data-ui-appbar-nav]": {
+  "[data-ui-header-nav]": {
     "display": "flex",
     "alignItems": "center",
     "gap": "var(--ui-space-1)"
   },
-  "[data-ui-appbar-nav] a": {
+  "[data-ui-header-nav] a": {
     "display": "inline-flex",
     "alignItems": "center",
     "padding": "var(--ui-space-1) var(--ui-space-3)",
@@ -965,32 +956,46 @@ export const skinComponents: StyleObject = {
     "fontSize": "var(--ui-font-size-sm)",
     "transition": "background-color var(--ui-transition),\n    color var(--ui-transition)"
   },
-  "[data-ui-appbar-nav] a:hover": {
+  "[data-ui-header-nav] a:hover": {
     "background": "var(--ui-color-muted)",
     "color": "var(--ui-color-text)"
   },
-  "[data-ui-appbar-nav] a[aria-current]": {
+  "[data-ui-header-nav] a[aria-current]": {
     "color": "var(--ui-color-text)",
     "boxShadow": "inset 0 -2px 0 0 var(--ui-color-selection-line)"
   },
-  "[data-ui-appbar-search]": {
+  "[data-ui-header-search]": {
     "display": "flex",
     "alignItems": "center",
     "flex": "1 1 auto",
     "minWidth": "0",
     "maxWidth": "22rem"
   },
-  "[data-ui-appbar-search] > *": {
+  "[data-ui-header-search] > *": {
     "width": "100%"
   },
-  "[data-ui-appbar-spacer]": {
+  "[data-ui-header-spacer]": {
     "flex": "1 1 auto"
   },
-  "[data-ui-appbar-actions]": {
+  "[data-ui-header-actions]": {
     "display": "inline-flex",
     "alignItems": "center",
     "gap": "var(--ui-space-2)",
     "marginInlineStart": "auto"
+  },
+  "[data-ui-app-shell]": {
+    "display": "flex",
+    "flexDirection": "column"
+  },
+  "[data-ui-app-shell-body]": {
+    "display": "flex",
+    "alignItems": "stretch",
+    "flex": "1 1 auto",
+    "minHeight": "0"
+  },
+  "[data-ui-app-shell-body] > [data-ui-page]": {
+    "flex": "1 1 auto",
+    "minWidth": "0"
   },
   "[data-ui-navrail]": {
     "display": "flex",

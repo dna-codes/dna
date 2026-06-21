@@ -50,7 +50,6 @@ export * from "./components/Toast";
 export * from "./components/Application";
 export * from "./components/ApplicationModule";
 export * from "./components/Page";
-export * from "./components/Header";
 export * from "./components/Footer";
 export * from "./components/Sidebar";
 export * from "./components/Content";
@@ -59,8 +58,10 @@ export * from "./components/Container";
 export * from "./components/Inline";
 
 // Application chrome — GitHub-style compositions over the structural primitives:
-// the global top bar, the left section-nav rail, and the in-page header.
-export * from "./components/AppBar";
+// the full-page shell, the global top bar (banner), the left section-nav rail,
+// and the in-page header.
+export * from "./components/ApplicationShell";
+export * from "./components/Header";
 export * from "./components/NavRail";
 export * from "./components/PageHeader";
 

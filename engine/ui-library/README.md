@@ -224,47 +224,52 @@ consumers who use it.
 
 ## Application chrome (GitHub-style)
 
-Three compound components compose the structural primitives into a canonical,
+Four compound components compose the structural primitives into a canonical,
 GitHub-style app shell — so apps consume finished chrome instead of re-composing
-it. All are headless (the same `Slot`/`data-ui-*` rules as every component); the
-default skin lays them out.
+it. `ApplicationShell` wires the other three into the standard full-page
+arrangement. All are headless (the same `Slot`/`data-ui-*` rules as every
+component); the default skin lays them out.
 
 | Component | Element / landmark | Parts |
 | --------- | ------------------ | ----- |
-| `AppBar` | `<header>` → `banner` | `Root`, `Brand`, `Nav` (primary `navigation`), `Search` (`search` landmark), `Spacer`, `Actions` |
+| `ApplicationShell` | composition (`Application` wrapper; no landmark of its own) | `Root`, `Header` (the banner slot), `Body` (sidebar + main row), `Sidebar`, `Main` |
+| `Header` | `<header>` → `banner` | `Root`, `Brand`, `Nav` (primary `navigation`), `Search` (`search` landmark), `Spacer`, `Actions` |
 | `NavRail` | `<nav>` → `navigation` | `Root`, `Section`, `Label`, `Item` (active = `aria-current="page"`) |
 | `PageHeader` | `<div>` (non-landmark; lives in `<main>`) | `Root`, `Breadcrumb`, `BreadcrumbItem`, `Heading`, `Title`, `Actions`, `Description` |
 
 ```tsx
-<Application>
-  <AppBar.Root>
-    <AppBar.Brand>DNA.codes</AppBar.Brand>
-    <AppBar.Search><Input type="search" aria-label="Search" /></AppBar.Search>
-    <AppBar.Actions><Avatar><Avatar.Fallback>TK</Avatar.Fallback></Avatar></AppBar.Actions>
-  </AppBar.Root>
-  <Sidebar asChild>
-    <NavRail.Root>
-      <NavRail.Item href="/overview" aria-current="page">Overview</NavRail.Item>
-      <NavRail.Item href="/resources">Resources</NavRail.Item>
-    </NavRail.Root>
-  </Sidebar>
-  <Page title="Resources">
-    <PageHeader.Root>
-      <PageHeader.Breadcrumb>
-        <PageHeader.BreadcrumbItem href="/">DNA.codes</PageHeader.BreadcrumbItem>
-        <PageHeader.BreadcrumbItem asChild aria-current="page"><span>Resources</span></PageHeader.BreadcrumbItem>
-      </PageHeader.Breadcrumb>
-      <PageHeader.Heading>
-        <PageHeader.Title>Resources</PageHeader.Title>
-        <PageHeader.Actions><Button variant="primary">New</Button></PageHeader.Actions>
-      </PageHeader.Heading>
-    </PageHeader.Root>
-  </Page>
-</Application>
+<ApplicationShell.Root>
+  <ApplicationShell.Header>
+    <Header.Brand>DNA.codes</Header.Brand>
+    <Header.Search><Input type="search" aria-label="Search" /></Header.Search>
+    <Header.Actions><Avatar><Avatar.Fallback>TK</Avatar.Fallback></Avatar></Header.Actions>
+  </ApplicationShell.Header>
+  <ApplicationShell.Body>
+    <ApplicationShell.Sidebar asChild>
+      <NavRail.Root>
+        <NavRail.Item href="/overview" aria-current="page">Overview</NavRail.Item>
+        <NavRail.Item href="/resources">Resources</NavRail.Item>
+      </NavRail.Root>
+    </ApplicationShell.Sidebar>
+    <ApplicationShell.Main title="Resources">
+      <PageHeader.Root>
+        <PageHeader.Breadcrumb>
+          <PageHeader.BreadcrumbItem href="/">DNA.codes</PageHeader.BreadcrumbItem>
+          <PageHeader.BreadcrumbItem asChild aria-current="page"><span>Resources</span></PageHeader.BreadcrumbItem>
+        </PageHeader.Breadcrumb>
+        <PageHeader.Heading>
+          <PageHeader.Title>Resources</PageHeader.Title>
+          <PageHeader.Actions><Button variant="primary">New</Button></PageHeader.Actions>
+        </PageHeader.Heading>
+      </PageHeader.Root>
+    </ApplicationShell.Main>
+  </ApplicationShell.Body>
+</ApplicationShell.Root>
 ```
 
-See the `Structure/AppBar`, `Structure/NavRail`, and `Structure/PageHeader`
-stories (the `AppBar` → `ApplicationShell` story composes all three).
+See the `Structure/Header`, `Structure/NavRail`, and `Structure/PageHeader`
+stories; the `Structure/ApplicationShell` story composes all three into the full
+shell.
 
 ## Content patterns (GitHub-style)
 
@@ -308,7 +313,7 @@ Drive appearance from code — without the UI — via the same store:
 ```tsx
 import { ThemeToggle, useTheme, setTheme } from "@dna/ui-library";
 
-<AppBar.Actions><ThemeToggle /></AppBar.Actions>;
+<Header.Actions><ThemeToggle /></Header.Actions>;
 
 const { theme, resolvedTheme, setTheme } = useTheme(); // theme: light|dark|system
 setTheme("dark"); // imperative, no component needed
@@ -326,7 +331,8 @@ interim, app-local compositions a consuming app stands up before they ship:
 | App concern | Interim composition | Canonical component |
 | ----------- | ------------------- | ------------------- |
 | DNA theme (light/dark) | `theme.css` + `BrandStyle.tsx` | `@dna/ui-library/dna.css` |
-| Top app bar | `AppShell.tsx` | `AppBar` |
+| Full app shell | `AppShell.tsx` | `ApplicationShell` |
+| Top app bar | `AppShell.tsx` | `Header` |
 | Left section nav | `AppShell.tsx` (`Sidebar`) | `NavRail` |
 | Page header + breadcrumb | `PageHeader.tsx` | `PageHeader` |
 | Dense rows | `Table.*` | `List` |

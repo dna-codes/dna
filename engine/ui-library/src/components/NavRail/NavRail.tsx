@@ -55,7 +55,7 @@ const Root = forwardRef<HTMLElement, NavRailProps>(function NavRail(
 ) {
   const Comp = asChild ? Slot.Root : "nav";
   // Default a label so this navigation landmark is distinguishable from other
-  // nav regions (e.g. the AppBar's primary nav); consumers override it.
+  // nav regions (e.g. the Header's primary nav); consumers override it.
   return (
     <Comp
       ref={ref}
