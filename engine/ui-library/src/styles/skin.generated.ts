@@ -922,6 +922,15 @@ export const skinComponents: StyleObject = {
     "marginInline": "auto",
     "paddingInline": "var(--ui-space-4)"
   },
+  "[data-ui-inline]": {
+    "display": "flex",
+    "alignItems": "center",
+    "gap": "var(--ui-space-2)"
+  },
+  "[data-ui-inline] > [data-ui-input],\n[data-ui-inline] > [data-ui-select-trigger]": {
+    "flex": "1 1 auto",
+    "minWidth": "0"
+  },
   "[data-ui-appbar]": {
     "display": "flex",
     "alignItems": "center",

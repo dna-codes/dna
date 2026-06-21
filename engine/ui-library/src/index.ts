@@ -56,6 +56,7 @@ export * from "./components/Sidebar";
 export * from "./components/Content";
 export * from "./components/Workflow";
 export * from "./components/Container";
+export * from "./components/Inline";
 
 // Application chrome — GitHub-style compositions over the structural primitives:
 // the global top bar, the left section-nav rail, and the in-page header.
