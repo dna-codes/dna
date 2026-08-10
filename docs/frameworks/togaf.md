@@ -1,5 +1,7 @@
 # DNA ↔ TOGAF
 
+> **Canonical version: [dna.codes/docs/frameworks#togaf](https://dna.codes/docs/frameworks#togaf).** The site carries the reader-facing copy and governs where the two differ. This file is kept for repo and offline readers.
+
 How DNA relates to **TOGAF** (The Open Group Architecture Framework, currently 10th edition). Unlike the [BPMN](./bpmn.md), [DDD](./ddd.md), and [Event Storming](./event-storming.md) docs in this folder, this isn't a notation comparison — TOGAF is a **method** for doing enterprise architecture, not a modeling language. DNA is one kind of artifact a TOGAF practice would produce in the Business / Information Systems Architecture phases.
 
 > **Note (post-reorg, 2026-04):** This doc was written before the People/Structures/Activities reorg. Some examples reference the old "Resources-used-as-Roles" structural-typing model. The current shape splits Person, Role, Group, and Membership into first-class primitives — see [`README.md`](../../README.md) and [`ROADMAP.md`](../../ROADMAP.md). The conceptual mappings below still hold; concrete syntax examples may be outdated.

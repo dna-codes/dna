@@ -1,5 +1,7 @@
 # DNA ↔ AWS Cedar
 
+> **Canonical here.** This comparison has no page on [dna.codes/docs/frameworks](https://dna.codes/docs/frameworks); this file is the governing copy.
+
 How DNA's Operational layer maps to **AWS Cedar** (the open-source policy language released by AWS in 2023). Cedar is an authorization policy language and evaluation engine — you author `permit`/`forbid` policies over `(principal, action, resource)` tuples and Cedar decides whether a given request is allowed. DNA is a description language whose Operational layer is built around the same triad: every `Operation` is a `Target.Action` pair, and every access `Rule.allow` grants a Role permission to perform one. Of all the frameworks DNA touches, Cedar is the closest in *shape* — the surface is almost identical for one slice, and almost completely disjoint for the rest. Teams already running Cedar will ask "isn't this just Cedar?" — the answer is "for one section of one layer, almost; everywhere else, no." This doc draws the line.
 
 ## Concept-by-concept mapping

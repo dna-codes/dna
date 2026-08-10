@@ -1,5 +1,11 @@
 # DNA Resource Types
 
+> **The DSL is authoritative where the vocabularies differ.** This document uses the
+> metamodel vocabulary described in [`README.md`](./README.md); where a name here differs
+> from a DNA language primitive, the primitive defined in the
+> [root `README.md`](../../README.md) governs. This document is canonical here —
+> `dna.codes/docs` carries no equivalent.
+
 This catalog lists every Resource Type defined by DNA, organized by
 [Layer](./README.md#layers) — the top-level zones of the organization that
 DNA describes (Operational, Product, Technology).
@@ -10,10 +16,14 @@ may become `Individual`; `Group` may become `Work Unit`; the role each
 plays in DNA sentences is unchanged.
 
 Each Resource Type carries **Lenses** — named perspectives on its outgoing
-Relationships, the primary unit of navigation into the graph. Lenses are
-published in two forms: a markdown bullet list for humans, and a JSON
-block for machine consumption (e.g. the Neo4j adapter). The JSON `path`
-is an array of pair-anchored
+Relationships, the primary unit of navigation into the graph. Each type below
+lists its Lenses twice: as a bullet list in English, and as a JSON block giving
+the exact traversal path. Both are **illustrative of this document's
+metamodel** — the lens definitions tooling actually consumes (the Neo4j adapter,
+the site) are published as JSON Schema under
+[`packages/core/lenses/`](../../packages/core/lenses) and rendered at
+[dna.codes/docs/lenses](https://dna.codes/docs/lenses). A lens path is a
+sequence of pair-anchored
 [Relationship Type identifiers](./README.md#relationship-types) in
 PascalCase, with `~` prefix for inverse traversal.
 
@@ -21,7 +31,8 @@ The most useful multi-Lens compositions are surfaced as
 [Compositions](./compositions/) (e.g. Access Control).
 
 Conventions: Resource Types appear in `Code`. The "Appears in" line lists
-the Compositions that compose this type into a DNA sentence. Lens bullets
+the Compositions that compose this type into a DNA sentence; only Access
+Control has a doc of its own, so the other names are unlinked. Lens bullets
 use the canonical English sentence as the path field (gerund forms allowed
 for grammatical flow); the JSON path uses pair-anchored type identifiers.
 
@@ -85,7 +96,7 @@ reality. A `Person` may use zero, one, or more `User` accounts.
 }
 ```
 
-*Appears in:* [People](./compositions/people.md).
+*Appears in:* People.
 
 ### User
 An authenticated actor in a system — the principal of an action. Usually
@@ -110,7 +121,7 @@ in some contexts.
 }
 ```
 
-*Appears in:* [Access Control](./compositions/access-control.md), [Execution](./compositions/execution.md).
+*Appears in:* [Access Control](./compositions/access-control.md), Execution.
 
 ### Position
 A named seat in the org structure that a `Person` fills (e.g. "Senior Case
@@ -133,7 +144,7 @@ slot in the organization.
 }
 ```
 
-*Appears in:* [People](./compositions/people.md), [Ownership](./compositions/ownership.md).
+*Appears in:* People, Ownership.
 
 ### Group
 A collection of `Position`s — a team, department, or unit. Groups can own
@@ -157,7 +168,7 @@ A collection of `Position`s — a team, department, or unit. Groups can own
 }
 ```
 
-*Appears in:* [People](./compositions/people.md), [Ownership](./compositions/ownership.md).
+*Appears in:* People, Ownership.
 
 ### Domain
 A hierarchical business area. `Domain`s hold `Process`es, `Resource`s,
@@ -185,7 +196,7 @@ backbone the organization is divided into.
 }
 ```
 
-*Appears in:* [Domain](./compositions/domain.md), [People](./compositions/people.md), [Access Control](./compositions/access-control.md) (as `Scope`).
+*Appears in:* Domain, People, [Access Control](./compositions/access-control.md) (as `Scope`).
 
 #### Scope (as Domain reference)
 `Scope` is not its own Resource Type. It is a node in the `Domain`
@@ -215,7 +226,7 @@ not an assignment — assignment is expressed by `User has Role`.
 }
 ```
 
-*Appears in:* [Access Control](./compositions/access-control.md), [Agent](./compositions/agent.md).
+*Appears in:* [Access Control](./compositions/access-control.md), Agent.
 
 ### Membership
 The binding Resource that connects a `User` to a `Role` at the moment of
@@ -238,7 +249,7 @@ Membership` (Execution) when an action is actually performed.
 }
 ```
 
-*Appears in:* [Execution](./compositions/execution.md).
+*Appears in:* Execution.
 
 ### Action
 A named operation that can be performed against a `Resource` (e.g. `read`,
@@ -267,7 +278,7 @@ performed by `User`s and `Agent`s, implemented by `Story`s.
 }
 ```
 
-*Appears in:* [Access Control](./compositions/access-control.md), [Execution](./compositions/execution.md), [Process](./compositions/process.md), [Product](./compositions/product.md), [Delivery](./compositions/delivery.md), [Agent](./compositions/agent.md).
+*Appears in:* [Access Control](./compositions/access-control.md), Execution, Process, Product, Delivery, Agent.
 
 ### Process
 An orchestrated sequence of `Action`s across `Resource`s, traversing
@@ -292,7 +303,7 @@ An orchestrated sequence of `Action`s across `Resource`s, traversing
 }
 ```
 
-*Appears in:* [Domain](./compositions/domain.md), [Process](./compositions/process.md), [Ownership](./compositions/ownership.md).
+*Appears in:* Domain, Process, Ownership.
 
 ### State
 A named condition a `Resource` can be in (e.g. `Pending`, `Approved`,
@@ -313,7 +324,7 @@ its lifecycle.
 }
 ```
 
-*Appears in:* [Execution](./compositions/execution.md), [Process](./compositions/process.md), [Lifecycle](./compositions/lifecycle.md).
+*Appears in:* Execution, Process, Lifecycle.
 
 ### Resource
 A business object that `Action`s operate on (e.g. `Plaintiff Record`,
@@ -365,7 +376,7 @@ A record of something that happened — the immutable log entry of an
 }
 ```
 
-*Appears in:* [Execution](./compositions/execution.md).
+*Appears in:* Execution.
 
 ### Transition
 A change in `State` of a `Resource`, caused by an `Action`. The
@@ -391,7 +402,7 @@ consequence-bearing object in the Execution sentence.
 }
 ```
 
-*Appears in:* [Execution](./compositions/execution.md), [Lifecycle](./compositions/lifecycle.md).
+*Appears in:* Execution, Lifecycle.
 
 ## Product Layer
 
@@ -418,7 +429,7 @@ Container for `Module`s.
 }
 ```
 
-*Appears in:* [Product](./compositions/product.md).
+*Appears in:* Product.
 
 ### Module
 A capability unit within a `Product` — a feature area composed of `Page`s.
@@ -439,7 +450,7 @@ A capability unit within a `Product` — a feature area composed of `Page`s.
 }
 ```
 
-*Appears in:* [Product](./compositions/product.md).
+*Appears in:* Product.
 
 ### Page
 A UI surface within a `Module` that exposes `Action`s to users.
@@ -458,7 +469,7 @@ A UI surface within a `Module` that exposes `Action`s to users.
 }
 ```
 
-*Appears in:* [Product](./compositions/product.md).
+*Appears in:* Product.
 
 ### Initiative
 A focused effort to deliver an outcome. Composed of `Epic`s. The unit at
@@ -480,7 +491,7 @@ which strategy meets delivery.
 }
 ```
 
-*Appears in:* [Delivery](./compositions/delivery.md).
+*Appears in:* Delivery.
 
 ### Epic
 A large body of delivery work, composed of `Story`s and scoped to an
@@ -502,7 +513,7 @@ A large body of delivery work, composed of `Story`s and scoped to an
 }
 ```
 
-*Appears in:* [Delivery](./compositions/delivery.md).
+*Appears in:* Delivery.
 
 ### Story
 A unit of delivery work. A `Story` `implements` an `Action` against a
@@ -522,7 +533,7 @@ A unit of delivery work. A `Story` `implements` an `Action` against a
 }
 ```
 
-*Appears in:* [Delivery](./compositions/delivery.md).
+*Appears in:* Delivery.
 
 ## Technology Layer
 
@@ -552,7 +563,7 @@ against `Resource`s, with the same Constraint properties as humans.
 }
 ```
 
-*Appears in:* [Agent](./compositions/agent.md).
+*Appears in:* Agent.
 
 ### Capability
 The set of `Action`s an `Agent` is able to perform. Distinct from `Role`:
@@ -573,7 +584,7 @@ is technically possible for this agent).
 }
 ```
 
-*Appears in:* [Agent](./compositions/agent.md).
+*Appears in:* Agent.
 
 ## Open questions
 

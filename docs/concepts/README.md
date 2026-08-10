@@ -1,5 +1,14 @@
 # DNA Concepts
 
+> **The DSL is authoritative where the vocabularies differ.** This directory
+> describes DNA abstractly, as a property graph of Resource Types and
+> Relationship Types. The DNA language itself — layers, primitives, and their
+> JSON shapes — is defined in the [root `README.md`](../../README.md), and its
+> names govern. The difference is a deliberate framing (a metamodel view of the
+> same model), not a reconciliation waiting to happen: read this directory for
+> how the graph is *shaped*, and the root README for what you actually *write*.
+> These documents are canonical here; `dna.codes/docs` carries no equivalent.
+
 DNA is a unified operational graph of an organization. Every claim about the
 org — who reports to whom, who can do what, how work flows, what owns what —
 is expressed as a DNA sentence and stored as graph relationships.
@@ -49,24 +58,17 @@ a "Groups" lens (departments, via Position), and a "Roles" lens (via the
 `User` this Person uses). Lenses are documented per Resource Type in
 [Resource Types](./resource-types.md).
 
-Each Resource Type ships Lenses in two forms: a markdown bullet list for
-humans and a JSON block for machines (the Neo4j adapter and other query
-tooling). JSON schema:
+Lenses are documented here as markdown bullet lists for humans. The
+machine-readable definitions are **not** in this directory: they are published
+as JSON Schema under [`packages/core/lenses/`](../../packages/core/lenses),
+which is what the Neo4j adapter, other query tooling, and
+[dna.codes/docs/lenses](https://dna.codes/docs/lenses) consume. A
+`docs/concepts/lenses.json` once carried a parallel copy in this document's
+vocabulary; it was retired rather than kept in drift with the published
+definitions.
 
-```json
-{
-  "subject": "<Resource Type>",
-  "lenses": [
-    {
-      "name": "<Lens name>",
-      "shows": "<what it shows>",
-      "path": ["<Relationship Type identifier>"]
-    }
-  ]
-}
-```
-
-Each `path` entry is a [Relationship Type](#relationship-types) identifier
+A lens is described as a path — a sequence of Relationship Type hops from the
+subject. Each path entry is a [Relationship Type](#relationship-types) identifier
 in PascalCase (`Person_Position`, `Module_Page`, …). Prefix with `~` to
 walk the relationship inversely — `~Person_Position` walks from a
 Position node back to the Person(s) that fill it. Paths can be any
@@ -78,18 +80,26 @@ The most useful multi-Lens compositions are captured with their own names
 and sentence-templates. Each Composition binds several Lenses
 (sometimes across Layers) into a single recognized pattern.
 
-| Name | What it answers |
-|---|---|
-| [People](./compositions/people.md) | Who works where in the org structure |
-| [Access Control](./compositions/access-control.md) | What an actor is permitted to do |
-| [Execution](./compositions/execution.md) | What an actor actually did |
-| [Domain](./compositions/domain.md) | What business areas exist and what they cover |
-| [Process](./compositions/process.md) | How work flows |
-| [Lifecycle](./compositions/lifecycle.md) | How a `Resource` progresses through `State`s |
-| [Product](./compositions/product.md) | How software is composed |
-| [Delivery](./compositions/delivery.md) | How ideas become shipped capabilities |
-| [Agent](./compositions/agent.md) | The Access Control shape with non-human actors |
-| [Ownership](./compositions/ownership.md) | Who owns what and is accountable for which processes |
+Only Access Control has been written up here. The rest are named — they are
+referenced from the *Appears in* lines in [Resource Types](./resource-types.md)
+— but have no doc of their own, so their names below are unlinked rather than
+pointing at a file that does not exist. Several of them (People, Access
+Control, Execution) also ship as published lens definitions under
+`packages/core/lenses/`, rendered at
+[dna.codes/docs/lenses](https://dna.codes/docs/lenses).
+
+| Name | What it answers | Written up |
+|---|---|---|
+| People | Who works where in the org structure | — |
+| [Access Control](./compositions/access-control.md) | What an actor is permitted to do | yes |
+| Execution | What an actor actually did | — |
+| Domain | What business areas exist and what they cover | — |
+| Process | How work flows | — |
+| Lifecycle | How a `Resource` progresses through `State`s | — |
+| Product | How software is composed | — |
+| Delivery | How ideas become shipped capabilities | — |
+| Agent | The Access Control shape with non-human actors | — |
+| Ownership | Who owns what and is accountable for which processes | — |
 
 ## Relationship Types
 

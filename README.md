@@ -138,11 +138,13 @@ Canonical end-to-end DNA documents demonstrating the model across different busi
 
 ## Framework comparisons
 
-If you already model your domain in DDD, BPMN, ArchiMate, C4, Event Storming, or run a TOGAF practice, see [`docs/frameworks/`](./docs/frameworks) for concept-by-concept mappings, where DNA intentionally differs, and concrete translations using the examples above. Currently covered: [BPMN](./docs/frameworks/bpmn.md), [Domain-Driven Design](./docs/frameworks/ddd.md), [ArchiMate](./docs/frameworks/archimate.md), [C4 Model](./docs/frameworks/c4.md), [Event Storming](./docs/frameworks/event-storming.md), [TOGAF](./docs/frameworks/togaf.md).
+If you already model your domain in DDD, BPMN, ArchiMate, C4, Event Storming, or run a TOGAF practice, those six comparisons are canonical at [dna.codes/docs/frameworks](https://dna.codes/docs/frameworks) — concept-by-concept mappings, where DNA intentionally differs, and concrete translations using the examples above. Two further comparisons are canonical in this repository, with no page on the site: [Cedar](./docs/frameworks/cedar.md) (authorization policy alongside DNA) and [Triggers and events](./docs/frameworks/triggers-and-events.md) (n8n, Zapier, GitHub Actions, EventBridge). [`docs/frameworks/`](./docs/frameworks) indexes all eight and says which home governs each.
 
 ## Concepts reference
 
-A conceptual reference for DNA's metamodel lives in [`docs/concepts/`](./docs/concepts) — the three Layers, the catalog of types with their relationships, perspectives for navigating the graph, and machine-readable schema (`lenses.json`) intended for adapters like `integration/neo4j`. The concepts docs are deliberately abstract (DNA as a graph) and may use names that differ from the DSL primitives documented below; reconciliation is an open thread.
+A conceptual reference for DNA's metamodel lives in [`docs/concepts/`](./docs/concepts) — the three Layers, the catalog of types with their relationships, and perspectives (Lenses) for navigating the graph. It is canonical here; `dna.codes/docs` carries no equivalent.
+
+Those docs are deliberately abstract — DNA as a property graph — and some of their names differ from the DSL primitives documented below. That difference is a deliberate framing, not an open thread: **the DSL primitives in this README are authoritative**, and the concepts docs describe how the same model is shaped as a graph. Read them for the graph view; write DNA against the layers documented here. The machine-readable lens definitions adapters consume are published under [`packages/core/lenses/`](./packages/core/lenses) and rendered at [dna.codes/docs/lenses](https://dna.codes/docs/lenses) — a parallel `docs/concepts/lenses.json` was retired rather than kept in drift with them.
 
 ## Operational Layer
 
@@ -314,7 +316,7 @@ interface Integration {
 
 PDF/Office text extraction is the integration's responsibility — return already-normalized text or bytes, plus a sensible MIME type. The orchestrator routes by MIME glob into the matching `input-*` adapter. See [`packages/ingest/AGENTS.md`](packages/ingest/AGENTS.md) for the full guidance.
 
-**Integrations are pure I/O.** They MUST NOT take or return DNA shapes on their library API. Composition (Epic prose → input-text → DNA → output-text → Stories) lives in caller code or in an integration's CLI — never inside the integration itself. See [`packages/integration-jira/src/cli.ts`](packages/integration-jira/src/cli.ts) for the canonical composition example.
+**Integrations are pure I/O.** They MUST NOT take or return DNA shapes on their library API. Composition (Epic prose → input-text → DNA → output-text → Stories) lives in caller code or in an integration's CLI — never inside the integration itself. See [`packages/adapters/src/integration/jira/cli.ts`](packages/adapters/src/integration/jira/cli.ts) for the canonical composition example.
 
 ### Naming convention
 Pre-1.0, every adapter ships as a subpath inside `@dna-codes/dna-adapters` rather than as a standalone npm package. Each adapter folder under `packages/adapters/src/{input,output,integration}/<name>/` is self-contained and mechanically extractable into its own published package post-1.0.

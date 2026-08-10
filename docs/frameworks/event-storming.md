@@ -1,5 +1,7 @@
 # DNA ↔ Event Storming
 
+> **Canonical version: [dna.codes/docs/frameworks#event-storming](https://dna.codes/docs/frameworks#event-storming).** The site carries the reader-facing copy and governs where the two differ. This file is kept for repo and offline readers.
+
 How **Event Storming** workshop output translates into DNA. Event Storming (Alberto Brandolini, 2013) is a collaborative discovery technique — teams cover a wall with colored sticky notes representing what happens in their domain. The output is structurally close to DNA: the colors map almost 1:1.
 
 > **Note (post-reorg, 2026-04):** This doc was written before the People/Structures/Activities reorg. Some examples reference the old "Resources-used-as-Roles" structural-typing model. The current shape splits Person, Role, Group, and Membership into first-class primitives — see [`README.md`](../../README.md) and [`ROADMAP.md`](../../ROADMAP.md). The conceptual mappings below still hold; concrete syntax examples may be outdated.

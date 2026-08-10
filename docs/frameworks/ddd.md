@@ -1,5 +1,7 @@
 # DNA ↔ Domain-Driven Design
 
+> **Canonical version: [dna.codes/docs/frameworks#ddd](https://dna.codes/docs/frameworks#ddd).** The site carries the reader-facing copy and governs where the two differ. This file is kept for repo and offline readers.
+
 How DNA's operational layer maps to **Domain-Driven Design** (Eric Evans, 2003). DDD is a methodology + vocabulary for modeling business domains in code; DNA is the same vocabulary expressed declaratively as JSON. Of all the frameworks DNA touches, DDD is the closest in spirit — both treat the business domain as the source of truth and code as a downstream concern.
 
 > **Note (post-reorg, 2026-04):** This doc was written before the People/Structures/Activities reorg. Some examples reference the old "Resources-used-as-Roles" structural-typing model. The current shape splits Person, Role, Group, and Membership into first-class primitives — see [`README.md`](../../README.md) and [`ROADMAP.md`](../../ROADMAP.md). The conceptual mappings below still hold; concrete syntax examples may be outdated.

@@ -12,8 +12,8 @@ The capability envelope of an actor — what an identified actor is permitted
 to do, where, and against what.
 
 This composition is the authorization projection of the operational graph.
-It is *not* organizational structure (that's [People](./people.md)) and
-*not* a record of activity (that's [Execution](./execution.md)). It is the
+It is *not* organizational structure (that's People) and
+*not* a record of activity (that's Execution). It is the
 *standing grant*: what *could* happen if the actor chose to act.
 
 ## Slots
@@ -59,17 +59,17 @@ boundary.
 - RBAC / ABAC hybrids
 - Entitlements and policy engines
 - Audit trails and security reviews
-- Agent permissions (see [Agent](./agent.md))
+- Agent permissions (see Agent)
 - Multi-tenant systems
 
 ## Related
 
 | Composition | Relationship |
 |---|---|
-| [People](./people.md) | Resolves *who* a `User` refers to (via `Person fills Position`) |
-| [Execution](./execution.md) | The realised counterpart — what actually got done |
-| [Agent](./agent.md) | Same shape, non-human subject (`Agent assumes Role…`) |
-| [Ownership](./ownership.md) | Often the source of `Scope` — groups that own resources confer scope |
+| People | Resolves *who* a `User` refers to (via `Person fills Position`) |
+| Execution | The realised counterpart — what actually got done |
+| Agent | Same shape, non-human subject (`Agent assumes Role…`) |
+| Ownership | Often the source of `Scope` — groups that own resources confer scope |
 
 ## Resource Types used
 
@@ -79,7 +79,7 @@ see [Resource Types](../resource-types.md) for definitions, organized by
 
 ## Open questions
 
-- **Membership.** [Execution](./execution.md) uses `acting through
+- **Membership.** Execution uses `acting through
   Membership` to bind a `User` to a `Role` at the moment of action. Access
   Control treats `Role` as a standing assignment — `Membership` is the
   binding object that makes both compositions consistent. Worth a dedicated

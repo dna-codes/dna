@@ -1,8 +1,10 @@
 # DNA ↔ Triggers and events (n8n, Zapier, GitHub Actions, EventBridge)
 
+> **Canonical here.** This comparison has no page on [dna.codes/docs/frameworks](https://dna.codes/docs/frameworks); this file is the governing copy.
+
 How DNA's `Trigger` primitive maps to the entry-point concepts in four widely-used event-driven workflow tools: **n8n**, **Zapier**, **GitHub Actions**, and **AWS EventBridge**. All four answer the same question — *what initiates a workflow?* — and all four converge on roughly the same handful of answers (a human, a clock, an inbound HTTP call, an upstream completion). DNA's `Trigger.source` enum (`user | schedule | webhook | operation`) is a deliberate distillation of that shared vocabulary, which is why this doc covers four tools in one page rather than four pages of mostly-identical content.
 
-> Unlike the [BPMN](./bpmn.md) and [DDD](./ddd.md) docs, this one breaks the "one tool per page" pattern. The reasoning is in the change's [design notes](../../openspec/changes/add-cedar-and-trigger-framework-docs/design.md): n8n / Zapier / GHA / EventBridge are *implementations* of the same idea, not different conceptual frameworks, so a side-by-side reading is more useful than four separate pages.
+> Unlike the [BPMN](./bpmn.md) and [DDD](./ddd.md) docs, this one breaks the "one tool per page" pattern. The reasoning is in the change's [design notes](../../openspec/changes/archive/2026-04-25-add-cedar-and-trigger-framework-docs/design.md): n8n / Zapier / GHA / EventBridge are *implementations* of the same idea, not different conceptual frameworks, so a side-by-side reading is more useful than four separate pages.
 
 ## The DNA `Trigger` primitive at a glance
 

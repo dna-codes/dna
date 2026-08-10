@@ -1,5 +1,11 @@
 # Product UI Layer
 
+> **The DSL is authoritative where the vocabularies differ.** This document uses the
+> metamodel vocabulary described in [`README.md`](./README.md); where a name here differs
+> from a DNA language primitive, the primitive defined in the
+> [root `README.md`](../../README.md) governs. This document is canonical here —
+> `dna.codes/docs` carries no equivalent.
+
 The Product UI layer models an application's web surface as **resources and
 relationships** — a graph of typed nodes and typed edges. It has two
 complementary parts:
