@@ -1,0 +1,145 @@
+{
+  "dna": "structure/v1",
+  "id": "commerce",
+  "name": "Commerce",
+  "description": "What is sold and how an order is assembled. Cart lines, prices, and the two addresses on an order live here. Parties live in the parties vocabulary this domain uses.",
+  "uses": ["parties"],
+  "entities": [
+    {
+      "id": "product",
+      "name": "Product",
+      "description": "Something in the catalog.",
+      "attributes": [
+        { "name": "name", "type": "string" },
+        { "name": "listPrice", "type": "number", "description": "The amount of money. Currency is the next attribute." },
+        { "name": "currency", "type": "string", "description": "The currency of listPrice." }
+      ]
+    },
+    {
+      "id": "cart",
+      "name": "Cart",
+      "description": "The shopper's collection of lines before it becomes an order.",
+      "attributes": [
+        {
+          "name": "status",
+          "type": "state",
+          "description": "The states a cart can be in. What moves it between them is behavior.",
+          "states": ["open", "checked-out", "abandoned"],
+          "initial": "open"
+        }
+      ]
+    },
+    {
+      "id": "cart-line",
+      "name": "Cart line",
+      "description": "A cart line is an entity because the connection between a cart and a product carries a variant, a quantity, and a price. A relationship cannot hold those.",
+      "attributes": [
+        { "name": "variant", "type": "string", "description": "The chosen variant." },
+        { "name": "quantity", "type": "integer", "description": "How many of that variant." },
+        { "name": "unitAmount", "type": "number", "description": "The price of one unit." },
+        { "name": "currency", "type": "string", "description": "The currency of unitAmount." },
+        { "name": "cart", "type": "reference", "entity": "cart" },
+        { "name": "product", "type": "reference", "entity": "product" }
+      ]
+    },
+    {
+      "id": "address",
+      "name": "Address",
+      "description": "A postal address. An order ships to one and is billed to one, which is two relationships, not two kinds of address.",
+      "attributes": [
+        { "name": "line", "type": "string" },
+        { "name": "city", "type": "string" },
+        { "name": "region", "type": "string" },
+        { "name": "postalCode", "type": "string" }
+      ]
+    },
+    {
+      "id": "order",
+      "name": "Order",
+      "description": "A placed cart. Money is an amount plus a currency. The shopper is a person in the parties domain. A gift message is one more optional fact on the order, not a kind of order.",
+      "attributes": [
+        {
+          "name": "status",
+          "type": "state",
+          "description": "Where the order is. Transitions between these states are behavior.",
+          "states": ["submitted", "accepted", "fulfilled", "cancelled"],
+          "initial": "submitted"
+        },
+        { "name": "amount", "type": "number", "description": "The order total." },
+        { "name": "currency", "type": "string", "description": "The currency of amount." },
+        { "name": "shopper", "type": "reference", "entity": "parties/person" },
+        { "name": "cart", "type": "reference", "entity": "cart" },
+        { "name": "shipTo", "type": "reference", "entity": "address" },
+        { "name": "billTo", "type": "reference", "entity": "address" },
+        {
+          "name": "giftMessage",
+          "type": "string",
+          "required": false,
+          "description": "A note the shopper asks to be packed with the order. Absent when the order is not a gift."
+        },
+        {
+          "name": "giftWrap",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the shopper asked for the order to be gift-wrapped."
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "cart-holds-line",
+      "name": "holds",
+      "description": "A cart holds its lines.",
+      "from": "cart",
+      "to": "cart-line",
+      "cardinality": "one-to-many",
+      "attribute": "cart-line.cart"
+    },
+    {
+      "id": "line-is-for-product",
+      "name": "is for",
+      "description": "Each line is one product. Variant and quantity sit on the line, not on this edge.",
+      "from": "cart-line",
+      "to": "product",
+      "cardinality": "many-to-one",
+      "attribute": "cart-line.product"
+    },
+    {
+      "id": "shopper-places-order",
+      "name": "places",
+      "description": "A person in the parties vocabulary places the order.",
+      "from": "parties/person",
+      "to": "order",
+      "cardinality": "one-to-many",
+      "attribute": "order.shopper"
+    },
+    {
+      "id": "order-built-from-cart",
+      "name": "built from",
+      "description": "The order is built from the cart the shopper accepted.",
+      "from": "order",
+      "to": "cart",
+      "cardinality": "many-to-one",
+      "attribute": "order.cart"
+    },
+    {
+      "id": "order-ships-to-address",
+      "name": "ships to",
+      "description": "The address the order is shipped to.",
+      "from": "order",
+      "to": "address",
+      "cardinality": "many-to-one",
+      "attribute": "order.shipTo"
+    },
+    {
+      "id": "order-billed-to-address",
+      "name": "billed to",
+      "description": "The address the order is billed to. The same pair of entities as ships to, a different edge.",
+      "from": "order",
+      "to": "address",
+      "cardinality": "many-to-one",
+      "attribute": "order.billTo"
+    }
+  ]
+}

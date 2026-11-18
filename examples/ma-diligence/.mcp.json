@@ -1,0 +1,11 @@
+{
+  "$comment": "DNA remote MCP. Set DNA_ORG and DNA_ACCESS_TOKEN; see https://dna.codes/agents/guides/agent-quickstart.md",
+  "mcpServers": {
+    "dna": {
+      "url": "https://agents.dna.codes/o/${DNA_ORG}/mcp",
+      "headers": {
+        "Authorization": "Bearer ${DNA_ACCESS_TOKEN}"
+      }
+    }
+  }
+}

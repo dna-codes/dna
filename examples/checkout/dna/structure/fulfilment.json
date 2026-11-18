@@ -1,0 +1,78 @@
+{
+  "dna": "structure/v1",
+  "id": "fulfilment",
+  "name": "Fulfilment",
+  "description": "Getting an order to the shopper. An order may leave in more than one shipment, and a shipment line says how much of which order line each one carries. The promise date is a datetime on the shipment.",
+  "uses": ["parties", "commerce"],
+  "entities": [
+    {
+      "id": "shipment",
+      "name": "Shipment",
+      "description": "Goods sent for an order. One order can be split across several shipments; which lines each carries is on its shipment lines.",
+      "attributes": [
+        {
+          "name": "promisedAt",
+          "type": "datetime",
+          "description": "When the shipment is promised. A deadline is a datetime attribute."
+        },
+        {
+          "name": "status",
+          "type": "state",
+          "states": ["pending", "shipped", "delivered"],
+          "initial": "pending"
+        },
+        { "name": "order", "type": "reference", "entity": "commerce/order" },
+        {
+          "name": "trackingNumber",
+          "type": "string",
+          "required": false,
+          "description": "The carrier's tracking number, once the shipment has one."
+        }
+      ]
+    },
+    {
+      "id": "shipment-line",
+      "name": "Shipment line",
+      "description": "A shipment line is an entity because the connection between a shipment and an order line carries a quantity: a split shipment covers some of an order's lines, or part of one. A relationship cannot hold that quantity.",
+      "attributes": [
+        { "name": "quantity", "type": "integer", "description": "How many units of the order line this shipment carries." },
+        { "name": "shipment", "type": "reference", "entity": "shipment" },
+        {
+          "name": "line",
+          "type": "reference",
+          "entity": "commerce/cart-line",
+          "description": "The order line covered. An order's lines are the lines of the cart it was built from."
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "shipment-fulfils-order",
+      "name": "fulfils",
+      "description": "A shipment fulfils an order. An order may have several.",
+      "from": "shipment",
+      "to": "commerce/order",
+      "cardinality": "many-to-one",
+      "attribute": "shipment.order"
+    },
+    {
+      "id": "shipment-includes-line",
+      "name": "includes",
+      "description": "A shipment includes its shipment lines.",
+      "from": "shipment",
+      "to": "shipment-line",
+      "cardinality": "one-to-many",
+      "attribute": "shipment-line.shipment"
+    },
+    {
+      "id": "shipment-line-covers-line",
+      "name": "covers",
+      "description": "A shipment line covers one order line. The quantity stays on the shipment line, not on this edge.",
+      "from": "shipment-line",
+      "to": "commerce/cart-line",
+      "cardinality": "many-to-one",
+      "attribute": "shipment-line.line"
+    }
+  ]
+}

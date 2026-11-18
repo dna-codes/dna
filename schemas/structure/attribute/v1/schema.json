@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/structure/attribute/v1",
+  "version": "v1",
+  "title": "Attribute",
+  "description": "One fact an entity can hold. Money is two attributes, an amount and a currency, never one attribute with a unit folded in. A confidentiality tier is an enum. A deadline is a datetime. A state attribute names the states an entity can be in; movement between those states is behavior and is not part of this schema. A reference names the entity it points at. An enum lists its values.",
+  "type": "object",
+  "required": ["name", "type"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "$ref": "#/$defs/fieldName",
+      "description": "camelCase. Unique among the entity's attributes."
+    },
+    "type": {
+      "enum": ["string", "number", "integer", "boolean", "datetime", "enum", "reference", "state"],
+      "description": "What a value of this attribute is. datetime is a deadline or a moment. enum is a closed tier. state is the set of states, not the transition that moves between them."
+    },
+    "description": { "$ref": "#/$defs/text" },
+    "required": {
+      "type": "boolean",
+      "description": "Whether a value is required. Defaults to true when omitted."
+    },
+    "many": {
+      "type": "boolean",
+      "description": "A list of values rather than one."
+    },
+    "values": {
+      "$ref": "#/$defs/values",
+      "description": "The closed set, present only when type is enum."
+    },
+    "entity": {
+      "$ref": "#/$defs/entityRef",
+      "description": "The entity a reference points at. Present only when type is reference."
+    },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/id" },
+      "description": "The states of a state attribute. Present only when type is state."
+    },
+    "initial": {
+      "$ref": "#/$defs/id",
+      "description": "The state a new instance starts in. One of states."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "enum" } }, "required": ["type"] },
+      "then": { "required": ["values"] },
+      "else": { "not": { "required": ["values"] } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "reference" } }, "required": ["type"] },
+      "then": { "required": ["entity"] },
+      "else": { "not": { "required": ["entity"] } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "state" } }, "required": ["type"] },
+      "then": { "required": ["states"] },
+      "else": { "not": { "anyOf": [{ "required": ["states"] }, { "required": ["initial"] }] } }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "Kebab-case. Never changes once written."
+    },
+    "fieldName": {
+      "type": "string",
+      "pattern": "^[a-z][a-zA-Z0-9]*$",
+      "description": "camelCase."
+    },
+    "text": { "type": "string", "minLength": 1 },
+    "entityRef": {
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "An entity id in this domain, or domain/entity for an entity declared in a domain this one uses."
+    },
+    "values": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

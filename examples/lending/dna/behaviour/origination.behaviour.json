@@ -1,0 +1,581 @@
+{
+  "dna": "behaviour/v1",
+  "id": "origination-behaviour",
+  "name": "Origination behaviour",
+  "description": "How an application becomes a funded loan: the credit pull and appraisal, the two disclosures, underwriting with conditions, closing and funding, and for a refinance the right of rescission and the payoff of the loan it replaces. Each step that moves the application is guarded by the state it runs from. The thresholds are illustrative, not lending advice.",
+  "domain": "origination",
+  "actions": [
+    {
+      "id": "pull-credit",
+      "entity": "application",
+      "name": "Pull credit",
+      "description": "Ask the credit bureau for the borrower's report.",
+      "external": true,
+      "output": [
+        { "name": "creditScore", "type": "integer" },
+        {
+          "name": "usable",
+          "type": "boolean",
+          "description": "False when the bureau has no file or the file is frozen."
+        }
+      ]
+    },
+    {
+      "id": "appraise",
+      "entity": "application",
+      "name": "Appraise",
+      "description": "The appraiser values the home and files the report.",
+      "external": true,
+      "input": [{ "name": "report", "type": "reference", "entity": "document" }],
+      "output": [
+        { "name": "appraisedValue", "type": "number" },
+        {
+          "name": "supportsValue",
+          "type": "boolean",
+          "description": "Whether the value supports the amount requested."
+        }
+      ]
+    },
+    {
+      "id": "issue-loan-estimate",
+      "entity": "document",
+      "name": "Issue loan estimate",
+      "description": "Send the borrower the loan estimate.",
+      "input": [{ "name": "issuedAt", "type": "datetime" }]
+    },
+    {
+      "id": "submit",
+      "entity": "application",
+      "name": "Submit to underwriting",
+      "description": "Hand a complete file to underwriting.",
+      "transition": { "from": ["received"], "to": "underwriting" }
+    },
+    {
+      "id": "approve",
+      "entity": "application",
+      "name": "Approve",
+      "description": "Approve the application outright.",
+      "input": [
+        { "name": "creditScore", "type": "integer" },
+        { "name": "debtToIncome", "type": "number" },
+        { "name": "loanToValue", "type": "number" }
+      ],
+      "transition": { "from": ["underwriting"], "to": "clear-to-close" }
+    },
+    {
+      "id": "approve-with-conditions",
+      "entity": "application",
+      "name": "Approve with conditions",
+      "description": "Approve the application once the listed conditions are cleared.",
+      "input": [
+        { "name": "creditScore", "type": "integer" },
+        { "name": "debtToIncome", "type": "number" },
+        { "name": "loanToValue", "type": "number" },
+        {
+          "name": "conditions",
+          "type": "string",
+          "many": true,
+          "description": "The wording of each condition to open."
+        }
+      ],
+      "transition": { "from": ["underwriting"], "to": "conditional" }
+    },
+    {
+      "id": "decline",
+      "entity": "application",
+      "name": "Decline",
+      "description": "Decline the application, with the reason the borrower is given.",
+      "input": [{ "name": "reason", "type": "string" }],
+      "transition": { "from": ["underwriting", "conditional"], "to": "declined" }
+    },
+    {
+      "id": "clear-condition",
+      "entity": "condition",
+      "name": "Clear condition",
+      "description": "Mark a condition satisfied, citing the documents that satisfy it.",
+      "input": [{ "name": "evidence", "type": "reference", "entity": "document", "many": true }],
+      "transition": { "from": ["open"], "to": "cleared" }
+    },
+    {
+      "id": "sign-off",
+      "entity": "application",
+      "name": "Sign off",
+      "description": "The underwriter confirms every condition is cleared.",
+      "transition": { "from": ["conditional"], "to": "clear-to-close" }
+    },
+    {
+      "id": "issue-closing-disclosure",
+      "entity": "document",
+      "name": "Issue closing disclosure",
+      "description": "Send the borrower the closing disclosure. Closing waits on its acknowledgement.",
+      "input": [{ "name": "issuedAt", "type": "datetime" }]
+    },
+    {
+      "id": "close",
+      "entity": "application",
+      "name": "Close",
+      "description": "The borrowers sign at the title company. The signed documents are the evidence, and the answer says whether a rescission period must pass before funding.",
+      "input": [
+        { "name": "closedAt", "type": "datetime" },
+        { "name": "evidence", "type": "reference", "entity": "document", "many": true }
+      ],
+      "output": [
+        {
+          "name": "rescindable",
+          "type": "boolean",
+          "description": "Whether the borrower has a right of rescission: true for a refinance of a principal residence."
+        }
+      ]
+    },
+    {
+      "id": "fund",
+      "entity": "application",
+      "name": "Fund",
+      "description": "Wire the loan amount. Only an application that is clear to close can fund.",
+      "external": true,
+      "input": [{ "name": "amount", "type": "number" }],
+      "output": [
+        { "name": "loan", "type": "reference", "entity": "loan" },
+        {
+          "name": "retiresLoan",
+          "type": "boolean",
+          "description": "Whether this loan refinances one that must now be paid off."
+        }
+      ],
+      "transition": { "from": ["clear-to-close"], "to": "funded" }
+    },
+    {
+      "id": "lapse-rescission",
+      "entity": "application",
+      "name": "Lapse rescission",
+      "description": "Record that the rescission period ended without the borrower rescinding."
+    },
+    {
+      "id": "rescind",
+      "entity": "application",
+      "name": "Rescind",
+      "description": "The borrower exercises the right of rescission. Nothing has been funded.",
+      "transition": { "from": ["clear-to-close"], "to": "rescinded" }
+    },
+    {
+      "id": "request-payoff",
+      "entity": "payoff",
+      "name": "Request payoff",
+      "description": "Ask the servicer of the existing loan for a payoff statement.",
+      "external": true,
+      "input": [{ "name": "loan", "type": "reference", "entity": "loan" }],
+      "transition": { "to": "requested" }
+    },
+    {
+      "id": "receive-payoff",
+      "entity": "payoff",
+      "name": "Receive payoff",
+      "description": "Record the servicer's payoff statement.",
+      "input": [{ "name": "amount", "type": "number" }, { "name": "goodThrough", "type": "datetime" }],
+      "transition": { "from": ["requested"], "to": "received" }
+    },
+    {
+      "id": "pay-off",
+      "entity": "payoff",
+      "name": "Pay off",
+      "description": "Wire the payoff amount to the servicer before it expires.",
+      "external": true,
+      "transition": { "from": ["received"], "to": "paid" }
+    },
+    {
+      "id": "retire",
+      "entity": "loan",
+      "name": "Retire",
+      "description": "Mark the refinanced loan repaid.",
+      "transition": { "from": ["active"], "to": "repaid" }
+    },
+    {
+      "id": "withdraw",
+      "entity": "application",
+      "name": "Withdraw",
+      "description": "The borrower withdraws before funding.",
+      "input": [{ "name": "reason", "type": "string", "required": false }],
+      "transition": {
+        "from": ["received", "underwriting", "conditional", "clear-to-close"],
+        "to": "withdrawn"
+      }
+    }
+  ],
+  "operations": [
+    {
+      "id": "bureau-reports-credit",
+      "name": "Bureau reports credit",
+      "description": "Summit Credit returns the report.",
+      "action": "pull-credit",
+      "actor": { "entity": "parties/organization", "instance": "summit-credit" }
+    },
+    {
+      "id": "appraiser-appraises",
+      "name": "Appraiser appraises",
+      "description": "Field Appraisal values the home.",
+      "action": "appraise",
+      "actor": { "entity": "parties/organization", "instance": "field-appraisal" }
+    },
+    {
+      "id": "lender-issues-loan-estimate",
+      "name": "Lender issues the loan estimate",
+      "description": "Harbor Lending sends the loan estimate.",
+      "action": "issue-loan-estimate",
+      "actor": { "entity": "parties/organization", "instance": "harbor-lending" },
+      "target": { "entity": "document" }
+    },
+    {
+      "id": "lender-submits",
+      "name": "Lender submits",
+      "description": "Harbor Lending submits the file to underwriting.",
+      "action": "submit",
+      "actor": { "entity": "parties/organization", "instance": "harbor-lending" }
+    },
+    {
+      "id": "underwriter-approves",
+      "name": "Underwriter approves",
+      "description": "Lee approves the application.",
+      "action": "approve",
+      "actor": { "entity": "parties/person", "instance": "lee" }
+    },
+    {
+      "id": "underwriter-conditions",
+      "name": "Underwriter approves with conditions",
+      "description": "Lee approves, subject to conditions.",
+      "action": "approve-with-conditions",
+      "actor": { "entity": "parties/person", "instance": "lee" }
+    },
+    {
+      "id": "underwriter-declines",
+      "name": "Underwriter declines",
+      "description": "Lee declines the application.",
+      "action": "decline",
+      "actor": { "entity": "parties/person", "instance": "lee" }
+    },
+    {
+      "id": "underwriter-clears-condition",
+      "name": "Underwriter clears a condition",
+      "description": "Lee clears one condition on the evidence filed.",
+      "action": "clear-condition",
+      "actor": { "entity": "parties/person", "instance": "lee" },
+      "target": { "entity": "condition" }
+    },
+    {
+      "id": "underwriter-signs-off",
+      "name": "Underwriter signs off",
+      "description": "Lee confirms the conditions are cleared.",
+      "action": "sign-off",
+      "actor": { "entity": "parties/person", "instance": "lee" }
+    },
+    {
+      "id": "lender-issues-closing-disclosure",
+      "name": "Lender issues the closing disclosure",
+      "description": "Harbor Lending sends the closing disclosure.",
+      "action": "issue-closing-disclosure",
+      "actor": { "entity": "parties/organization", "instance": "harbor-lending" },
+      "target": { "entity": "document" }
+    },
+    {
+      "id": "title-closes",
+      "name": "Title company closes",
+      "description": "Clear Title runs the signing.",
+      "action": "close",
+      "actor": { "entity": "parties/organization", "instance": "clear-title" }
+    },
+    {
+      "id": "lender-funds",
+      "name": "Lender funds",
+      "description": "Harbor Lending wires the loan.",
+      "action": "fund",
+      "actor": { "entity": "parties/organization", "instance": "harbor-lending" }
+    },
+    {
+      "id": "lender-records-lapse",
+      "name": "Lender records the lapse",
+      "description": "Harbor Lending records that the rescission period passed.",
+      "action": "lapse-rescission",
+      "actor": { "entity": "parties/organization", "instance": "harbor-lending" }
+    },
+    {
+      "id": "borrower-rescinds",
+      "name": "Borrower rescinds",
+      "description": "Sam rescinds within the period.",
+      "action": "rescind",
+      "actor": { "entity": "parties/person", "instance": "sam" }
+    },
+    {
+      "id": "lender-requests-payoff",
+      "name": "Lender requests the payoff",
+      "description": "Harbor Lending asks the existing loan's servicer for a payoff statement.",
+      "action": "request-payoff",
+      "actor": { "entity": "parties/organization", "instance": "harbor-lending" },
+      "target": { "entity": "payoff" }
+    },
+    {
+      "id": "servicer-quotes-payoff",
+      "name": "Servicer quotes the payoff",
+      "description": "The servicer's statement is recorded. Harbor Lending services the existing loan.",
+      "action": "receive-payoff",
+      "actor": { "entity": "parties/organization", "instance": "harbor-lending" },
+      "target": { "entity": "payoff" }
+    },
+    {
+      "id": "lender-pays-off",
+      "name": "Lender pays off",
+      "description": "Harbor Lending wires the payoff.",
+      "action": "pay-off",
+      "actor": { "entity": "parties/organization", "instance": "harbor-lending" },
+      "target": { "entity": "payoff" }
+    },
+    {
+      "id": "lender-retires-loan",
+      "name": "Lender retires the old loan",
+      "description": "Harbor Lending marks the refinanced loan repaid.",
+      "action": "retire",
+      "actor": { "entity": "parties/organization", "instance": "harbor-lending" },
+      "target": { "entity": "loan" }
+    },
+    {
+      "id": "borrower-withdraws",
+      "name": "Borrower withdraws",
+      "description": "Sam withdraws the application.",
+      "action": "withdraw",
+      "actor": { "entity": "parties/person", "instance": "sam" }
+    }
+  ],
+  "workflows": [
+    {
+      "id": "origination",
+      "name": "Origination",
+      "description": "From a received application to funded, declined, withdrawn or rescinded. A refinance waits out rescission, and pays off the loan it replaces before it is done.",
+      "initial": "received",
+      "states": [
+        {
+          "id": "received",
+          "name": "Received",
+          "operations": ["bureau-reports-credit", "borrower-withdraws"],
+          "transitions": [
+            {
+              "on": "bureau-reports-credit",
+              "when": { "field": "usable", "equals": true },
+              "to": "appraising"
+            },
+            {
+              "on": "bureau-reports-credit",
+              "when": { "field": "usable", "equals": false },
+              "to": "declined"
+            },
+            { "on": "bureau-reports-credit", "status": "failed", "to": "received" },
+            { "on": "borrower-withdraws", "to": "withdrawn" }
+          ]
+        },
+        {
+          "id": "appraising",
+          "name": "Appraising",
+          "operations": ["appraiser-appraises", "borrower-withdraws"],
+          "transitions": [
+            {
+              "on": "appraiser-appraises",
+              "when": { "field": "supportsValue", "equals": true },
+              "to": "disclosing"
+            },
+            {
+              "on": "appraiser-appraises",
+              "when": { "field": "supportsValue", "equals": false },
+              "to": "declined"
+            },
+            { "on": "borrower-withdraws", "to": "withdrawn" }
+          ]
+        },
+        {
+          "id": "disclosing",
+          "name": "Loan estimate",
+          "description": "The loan estimate goes out before underwriting starts.",
+          "operations": ["lender-issues-loan-estimate"],
+          "transitions": [{ "on": "lender-issues-loan-estimate", "to": "submitting" }]
+        },
+        {
+          "id": "submitting",
+          "name": "Ready for underwriting",
+          "operations": ["lender-submits", "borrower-withdraws"],
+          "transitions": [
+            { "on": "lender-submits", "to": "underwriting" },
+            { "on": "borrower-withdraws", "to": "withdrawn" }
+          ]
+        },
+        {
+          "id": "underwriting",
+          "name": "Underwriting",
+          "operations": ["underwriter-approves", "underwriter-conditions", "underwriter-declines", "borrower-withdraws"],
+          "transitions": [
+            { "on": "underwriter-approves", "to": "clear-to-close" },
+            { "on": "underwriter-conditions", "to": "conditional" },
+            { "on": "underwriter-declines", "to": "declined" },
+            { "on": "borrower-withdraws", "to": "withdrawn" }
+          ]
+        },
+        {
+          "id": "conditional",
+          "name": "Conditionally approved",
+          "operations": [
+            "underwriter-clears-condition",
+            "underwriter-signs-off",
+            "underwriter-declines",
+            "borrower-withdraws"
+          ],
+          "transitions": [
+            { "on": "underwriter-clears-condition", "to": "conditional" },
+            { "on": "underwriter-signs-off", "to": "clear-to-close" },
+            { "on": "underwriter-declines", "to": "declined" },
+            { "on": "borrower-withdraws", "to": "withdrawn" }
+          ]
+        },
+        {
+          "id": "clear-to-close",
+          "name": "Clear to close",
+          "operations": ["lender-issues-closing-disclosure", "borrower-withdraws"],
+          "transitions": [
+            { "on": "lender-issues-closing-disclosure", "to": "closing" },
+            { "on": "borrower-withdraws", "to": "withdrawn" }
+          ]
+        },
+        {
+          "id": "closing",
+          "name": "Closing",
+          "operations": ["title-closes"],
+          "transitions": [
+            { "on": "title-closes", "when": { "field": "rescindable", "equals": true }, "to": "rescission" },
+            { "on": "title-closes", "when": { "field": "rescindable", "equals": false }, "to": "funding" }
+          ]
+        },
+        {
+          "id": "rescission",
+          "name": "Right of rescission",
+          "description": "Three business days in which the borrower may rescind a refinance.",
+          "operations": ["borrower-rescinds", "lender-records-lapse"],
+          "transitions": [
+            { "on": "borrower-rescinds", "to": "rescinded" },
+            { "on": "lender-records-lapse", "to": "funding" }
+          ]
+        },
+        {
+          "id": "funding",
+          "name": "Funding",
+          "operations": ["lender-funds"],
+          "transitions": [
+            { "on": "lender-funds", "when": { "field": "retiresLoan", "equals": true }, "to": "paying-off" },
+            { "on": "lender-funds", "when": { "field": "retiresLoan", "equals": false }, "to": "funded" },
+            { "on": "lender-funds", "status": "failed", "to": "funding" }
+          ]
+        },
+        {
+          "id": "paying-off",
+          "name": "Paying off the old loan",
+          "workflow": "payoff",
+          "transitions": [{ "on": "payoff", "when": { "final": "paid" }, "to": "funded" }]
+        },
+        { "id": "funded", "name": "Funded", "final": true },
+        { "id": "declined", "name": "Declined", "final": true },
+        { "id": "withdrawn", "name": "Withdrawn", "final": true },
+        { "id": "rescinded", "name": "Rescinded", "final": true }
+      ]
+    },
+    {
+      "id": "payoff",
+      "name": "Payoff",
+      "description": "Retiring the loan a refinance replaces.",
+      "initial": "requesting",
+      "states": [
+        {
+          "id": "requesting",
+          "name": "Requesting",
+          "operations": ["lender-requests-payoff"],
+          "transitions": [{ "on": "lender-requests-payoff", "to": "quoted" }]
+        },
+        {
+          "id": "quoted",
+          "name": "Awaiting the statement",
+          "operations": ["servicer-quotes-payoff"],
+          "transitions": [{ "on": "servicer-quotes-payoff", "to": "paying" }]
+        },
+        {
+          "id": "paying",
+          "name": "Paying",
+          "operations": ["lender-pays-off"],
+          "transitions": [
+            { "on": "lender-pays-off", "status": "completed", "to": "retiring" },
+            { "on": "lender-pays-off", "status": "failed", "to": "requesting" }
+          ]
+        },
+        {
+          "id": "retiring",
+          "name": "Retiring",
+          "operations": ["lender-retires-loan"],
+          "transitions": [{ "on": "lender-retires-loan", "to": "paid" }]
+        },
+        { "id": "paid", "name": "Paid", "final": true }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "credit-score-floor",
+      "description": "No approval below a credit score of 620.",
+      "actions": ["approve", "approve-with-conditions"],
+      "when": { "subject": "input", "path": "creditScore", "op": "lt", "value": 620 },
+      "effect": { "effect": "deny" }
+    },
+    {
+      "id": "debt-to-income-approval",
+      "description": "Approving above a debt-to-income ratio of 0.43 needs a senior underwriter.",
+      "actions": ["approve", "approve-with-conditions"],
+      "when": { "subject": "input", "path": "debtToIncome", "op": "gt", "value": 0.43 },
+      "effect": { "effect": "require_approval", "performer": "position", "refs": ["senior-underwriter"] }
+    },
+    {
+      "id": "mortgage-insurance-review",
+      "description": "At or above 80% loan-to-value the file goes to the mortgage-insurance desk before approval.",
+      "actions": ["approve", "approve-with-conditions"],
+      "when": { "subject": "input", "path": "loanToValue", "op": "gte", "value": 0.8 },
+      "effect": { "effect": "route", "performer": "position", "refs": ["mortgage-insurance-desk"] }
+    },
+    {
+      "id": "closing-disclosure-wait",
+      "description": "No closing until three business days after the borrower acknowledged the closing disclosure. The evaluator supplies the count in context.",
+      "actions": ["close"],
+      "when": { "subject": "context", "path": "businessDaysSinceClosingDisclosure", "op": "lte", "value": 2 },
+      "effect": { "effect": "deny" }
+    },
+    {
+      "id": "underwriters-clear-conditions",
+      "description": "Only an underwriter clears a condition.",
+      "actions": ["clear-condition"],
+      "when": { "subject": "actor", "path": "role", "op": "neq", "value": "underwriter" },
+      "effect": { "effect": "deny" }
+    },
+    {
+      "id": "lender-funds",
+      "description": "The lender's funders may fund.",
+      "actions": ["fund"],
+      "when": {
+        "allOf": [
+          { "subject": "actor", "path": "organization", "op": "in", "value": ["harbor-lending"] },
+          { "subject": "actor", "path": "role", "op": "eq", "value": "funder" }
+        ]
+      },
+      "effect": { "effect": "allow" }
+    },
+    {
+      "id": "cash-out-loan-to-value",
+      "description": "A cash-out refinance may not exceed 80% loan-to-value.",
+      "actions": ["approve", "approve-with-conditions"],
+      "when": {
+        "allOf": [
+          { "subject": "target", "path": "purpose", "op": "eq", "value": "cash-out-refinance" },
+          { "subject": "input", "path": "loanToValue", "op": "gt", "value": 0.8 }
+        ]
+      },
+      "effect": { "effect": "deny" }
+    }
+  ]
+}

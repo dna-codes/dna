@@ -1,0 +1,42 @@
+{
+  "dna": "structure/v1",
+  "id": "parties",
+  "name": "Parties",
+  "description": "Who takes part in a checkout. The merchant, the payment processor and the carrier are instances of one organization entity. This domain is that vocabulary. It is not any of the firms.",
+  "entities": [
+    {
+      "id": "organization",
+      "name": "Organization",
+      "description": "A firm. Juniper & Pine sells. Northwind Pay captures payment. Swift Parcel carries shipments. Same entity, three instances.",
+      "attributes": [
+        { "name": "legalName", "type": "string", "description": "The firm's legal name." }
+      ],
+      "instances": [
+        { "id": "juniper-and-pine", "name": "Juniper & Pine", "values": { "legalName": "Juniper & Pine" } },
+        { "id": "northwind-pay", "name": "Northwind Pay", "values": { "legalName": "Northwind Pay" } },
+        { "id": "swift-parcel", "name": "Swift Parcel", "values": { "legalName": "Swift Parcel" } }
+      ]
+    },
+    {
+      "id": "person",
+      "name": "Person",
+      "description": "A person. A shopper is an instance of person, not a separate kind.",
+      "attributes": [
+        { "name": "fullName", "type": "string", "description": "The person's name." }
+      ],
+      "instances": [
+        { "id": "ada", "name": "Ada", "values": { "fullName": "Ada Lovelace" } }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "person-customer-of-organization",
+      "name": "customer of",
+      "description": "A person shops with an organization. The edge carries no data of its own, so it stays a relationship.",
+      "from": "person",
+      "to": "organization",
+      "cardinality": "many-to-many"
+    }
+  ]
+}

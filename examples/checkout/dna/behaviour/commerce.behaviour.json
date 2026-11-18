@@ -1,0 +1,267 @@
+{
+  "dna": "behaviour/v1",
+  "id": "commerce-behaviour",
+  "name": "Commerce behaviour",
+  "description": "What a shopper and a merchant do with a cart and an order, and the purchase they both follow from an open cart to a final state. Payment and shipping are performed through the payments and fulfilment behaviour this document uses.",
+  "domain": "commerce",
+  "uses": ["payments-behaviour", "fulfilment-behaviour"],
+  "actions": [
+    {
+      "id": "add-line",
+      "entity": "cart-line",
+      "name": "Add line",
+      "description": "Put a quantity of a product variant in an open cart. Storefronts call this at volume; a retry under the same idempotency key adds the line once.",
+      "input": [
+        { "name": "cart", "type": "reference", "entity": "cart" },
+        { "name": "product", "type": "reference", "entity": "product" },
+        { "name": "variant", "type": "string" },
+        { "name": "quantity", "type": "integer" }
+      ]
+    },
+    {
+      "id": "check-out",
+      "entity": "cart",
+      "name": "Check out",
+      "description": "Turn an open cart into a submitted order.",
+      "input": [
+        { "name": "shipTo", "type": "reference", "entity": "address" },
+        { "name": "billTo", "type": "reference", "entity": "address" },
+        { "name": "giftMessage", "type": "string", "required": false }
+      ],
+      "output": [{ "name": "order", "type": "reference", "entity": "order" }],
+      "transition": { "from": ["open"], "to": "checked-out" }
+    },
+    {
+      "id": "abandon",
+      "entity": "cart",
+      "name": "Abandon",
+      "description": "Close a cart the shopper left without checking out.",
+      "transition": { "from": ["open"], "to": "abandoned" }
+    },
+    {
+      "id": "quote",
+      "entity": "order",
+      "name": "Quote",
+      "description": "Read the amount and currency an order will be charged. Called on every page view of the order.",
+      "readOnly": true,
+      "output": [
+        { "name": "amount", "type": "number" },
+        { "name": "currency", "type": "string" }
+      ]
+    },
+    {
+      "id": "accept",
+      "entity": "order",
+      "name": "Accept",
+      "description": "The merchant accepts a submitted order and commits to fulfilling it.",
+      "transition": { "from": ["submitted"], "to": "accepted" }
+    },
+    {
+      "id": "fulfil",
+      "entity": "order",
+      "name": "Fulfil",
+      "description": "Record that every line of an accepted order has shipped and been paid for.",
+      "input": [{ "name": "shippedAt", "type": "datetime" }],
+      "transition": { "from": ["accepted"], "to": "fulfilled" }
+    },
+    {
+      "id": "cancel",
+      "entity": "order",
+      "name": "Cancel",
+      "description": "Cancel an order that has not been fulfilled.",
+      "input": [{ "name": "reason", "type": "string", "required": false }],
+      "transition": { "from": ["submitted", "accepted"], "to": "cancelled" }
+    }
+  ],
+  "operations": [
+    {
+      "id": "shopper-adds-line",
+      "name": "Shopper adds a line",
+      "description": "Ada adds a product to her cart.",
+      "action": "add-line",
+      "actor": { "entity": "parties/person", "instance": "ada" }
+    },
+    {
+      "id": "shopper-checks-out",
+      "name": "Shopper checks out",
+      "description": "Ada checks out her cart.",
+      "action": "check-out",
+      "actor": { "entity": "parties/person", "instance": "ada" }
+    },
+    {
+      "id": "shopper-abandons",
+      "name": "Shopper abandons",
+      "description": "Ada's cart is closed without an order.",
+      "action": "abandon",
+      "actor": { "entity": "parties/person", "instance": "ada" }
+    },
+    {
+      "id": "processor-authorizes",
+      "name": "Processor authorizes",
+      "description": "Northwind Pay answers the authorization.",
+      "action": "payments-behaviour/authorize",
+      "actor": { "entity": "parties/organization", "instance": "northwind-pay" }
+    },
+    {
+      "id": "merchant-accepts",
+      "name": "Merchant accepts",
+      "description": "Juniper & Pine accepts the order.",
+      "action": "accept",
+      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+    },
+    {
+      "id": "merchant-ships",
+      "name": "Merchant ships",
+      "description": "Juniper & Pine ships the order.",
+      "action": "fulfilment-behaviour/ship",
+      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+    },
+    {
+      "id": "merchant-captures",
+      "name": "Merchant captures",
+      "description": "Juniper & Pine captures what a shipment carries, with more shipments to follow.",
+      "action": "payments-behaviour/capture",
+      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+    },
+    {
+      "id": "merchant-captures-final",
+      "name": "Merchant captures the last shipment",
+      "description": "Juniper & Pine captures what the last shipment carries and closes the authorization.",
+      "action": "payments-behaviour/capture-final",
+      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+    },
+    {
+      "id": "merchant-fulfils",
+      "name": "Merchant fulfils",
+      "description": "Juniper & Pine closes the order as fulfilled.",
+      "action": "fulfil",
+      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+    },
+    {
+      "id": "shopper-cancels",
+      "name": "Shopper cancels",
+      "description": "Ada cancels before her order has shipped.",
+      "action": "cancel",
+      "actor": { "entity": "parties/person", "instance": "ada" }
+    },
+    {
+      "id": "merchant-voids",
+      "name": "Merchant voids",
+      "description": "Juniper & Pine releases the authorization of a cancelled order.",
+      "action": "payments-behaviour/void",
+      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+    }
+  ],
+  "workflows": [
+    {
+      "id": "pay",
+      "name": "Pay",
+      "description": "The processor's answer to an authorization.",
+      "initial": "authorizing",
+      "states": [
+        {
+          "id": "authorizing",
+          "operations": ["processor-authorizes"],
+          "transitions": [
+            { "on": "processor-authorizes", "when": { "field": "approved", "equals": true }, "to": "authorized" },
+            { "on": "processor-authorizes", "when": { "field": "approved", "equals": false }, "to": "declined" },
+            { "on": "processor-authorizes", "status": "failed", "to": "declined" }
+          ]
+        },
+        { "id": "authorized", "final": true },
+        { "id": "declined", "final": true }
+      ]
+    },
+    {
+      "id": "purchase",
+      "name": "Purchase",
+      "description": "From an open cart to a fulfilled, cancelled, declined or abandoned purchase. An order may leave in several shipments; each is captured as it ships, and the shopper can cancel only until the first one leaves.",
+      "initial": "shopping",
+      "states": [
+        {
+          "id": "shopping",
+          "operations": ["shopper-adds-line", "shopper-checks-out", "shopper-abandons"],
+          "transitions": [
+            { "on": "shopper-adds-line", "to": "shopping" },
+            { "on": "shopper-checks-out", "to": "paying" },
+            { "on": "shopper-abandons", "to": "abandoned" }
+          ]
+        },
+        {
+          "id": "paying",
+          "workflow": "pay",
+          "transitions": [
+            { "on": "pay", "when": { "final": "authorized" }, "to": "accepting" },
+            { "on": "pay", "when": { "final": "declined" }, "to": "declined" }
+          ]
+        },
+        {
+          "id": "accepting",
+          "operations": ["merchant-accepts", "shopper-cancels"],
+          "transitions": [
+            { "on": "merchant-accepts", "to": "shipping" },
+            { "on": "shopper-cancels", "to": "voiding" }
+          ]
+        },
+        {
+          "id": "shipping",
+          "operations": ["merchant-ships", "shopper-cancels"],
+          "transitions": [
+            { "on": "merchant-ships", "to": "capturing" },
+            { "on": "shopper-cancels", "to": "voiding" }
+          ]
+        },
+        {
+          "id": "capturing",
+          "operations": ["merchant-captures", "merchant-captures-final"],
+          "transitions": [
+            { "on": "all", "status": "failed", "to": "voiding" },
+            { "on": "merchant-captures", "to": "shipping-rest" },
+            { "on": "merchant-captures-final", "to": "fulfilling" }
+          ]
+        },
+        {
+          "id": "shipping-rest",
+          "description": "Part of the order has shipped and been captured; the rest is still to go, and it can no longer be cancelled.",
+          "operations": ["merchant-ships"],
+          "transitions": [{ "on": "merchant-ships", "to": "capturing" }]
+        },
+        {
+          "id": "fulfilling",
+          "operations": ["merchant-fulfils"],
+          "transitions": [{ "on": "merchant-fulfils", "to": "fulfilled" }]
+        },
+        {
+          "id": "voiding",
+          "operations": ["merchant-voids"],
+          "transitions": [{ "on": "merchant-voids", "to": "cancelled" }]
+        },
+        { "id": "fulfilled", "final": true },
+        { "id": "cancelled", "final": true },
+        { "id": "declined", "final": true },
+        { "id": "abandoned", "final": true }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "line-quantity-limit",
+      "description": "A storefront line may hold at most 20 of a variant. Wholesale orders are not held to it.",
+      "actions": ["add-line"],
+      "when": {
+        "allOf": [
+          { "subject": "input", "path": "quantity", "op": "gt", "value": 20 },
+          { "not": { "subject": "context", "path": "channel", "op": "eq", "value": "wholesale" } }
+        ]
+      },
+      "effect": { "effect": "deny" }
+    },
+    {
+      "id": "large-cancellation-approval",
+      "description": "Cancelling an order above 250 needs a position's approval. The threshold was 500 before split shipments made late cancellations costlier.",
+      "actions": ["cancel"],
+      "when": { "subject": "target", "path": "amount", "op": "gt", "value": 250 },
+      "effect": { "effect": "require_approval", "performer": "position" }
+    }
+  ]
+}

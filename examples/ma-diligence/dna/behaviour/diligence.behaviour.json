@@ -1,0 +1,389 @@
+{
+  "dna": "behaviour/v1",
+  "id": "diligence-behaviour",
+  "name": "Diligence behaviour",
+  "description": "How a buyer's advisors review the target under the target's delegation: the grant and its extension, reading the room, recording and citing findings, a second review, red-flag escalation, closing workstreams and the investment committee's decision. Who may act is policy over what the identity adapter resolves the actor to; deciding it is the evaluator's job.",
+  "domain": "diligence",
+  "actions": [
+    {
+      "id": "grant-delegation",
+      "entity": "delegation",
+      "name": "Grant delegation",
+      "description": "The target opens its room to an advisor firm, up to a scope and until an expiry.",
+      "input": [
+        { "name": "grantee", "type": "reference", "entity": "parties/organization" },
+        { "name": "room", "type": "reference", "entity": "data-room" },
+        { "name": "workstream", "type": "reference", "entity": "workstream" },
+        { "name": "scope", "type": "enum", "values": ["read", "cite", "record-findings"] },
+        { "name": "expiresAt", "type": "datetime" }
+      ],
+      "transition": { "to": "granted" }
+    },
+    {
+      "id": "revoke-delegation",
+      "entity": "delegation",
+      "name": "Revoke delegation",
+      "description": "The target withdraws a delegation it granted.",
+      "input": [{ "name": "reason", "type": "string", "required": false }],
+      "transition": { "from": ["granted"], "to": "revoked" }
+    },
+    {
+      "id": "expire-delegation",
+      "entity": "delegation",
+      "name": "Expire delegation",
+      "description": "A delegation lapses at its expiry. The clock performs it, not a person.",
+      "transition": { "from": ["granted"], "to": "expired" }
+    },
+    {
+      "id": "extend-delegation",
+      "entity": "delegation",
+      "name": "Extend delegation",
+      "description": "The target moves a live delegation's expiry without granting it again.",
+      "input": [{ "name": "expiresAt", "type": "datetime" }],
+      "transition": { "from": ["granted"], "to": "granted" }
+    },
+    {
+      "id": "read-document",
+      "entity": "document",
+      "name": "Read document",
+      "description": "Open a document in the room. It changes nothing, and it is still governed: the confidentiality tier decides who may.",
+      "readOnly": true
+    },
+    {
+      "id": "record-finding",
+      "entity": "finding",
+      "name": "Record finding",
+      "description": "Record what the review found, under the delegation the advisor acts on. The answer says whether it is material.",
+      "input": [
+        { "name": "statement", "type": "string" },
+        { "name": "materiality", "type": "enum", "values": ["minor", "material"] },
+        {
+          "name": "confidentiality",
+          "type": "enum",
+          "values": ["public", "internal", "clean-team"]
+        },
+        { "name": "workstream", "type": "reference", "entity": "workstream" },
+        { "name": "delegation", "type": "reference", "entity": "delegation" }
+      ],
+      "output": [
+        {
+          "name": "material",
+          "type": "boolean",
+          "description": "True when the finding is material: a red flag for the deal."
+        }
+      ],
+      "transition": { "to": "submitted" }
+    },
+    {
+      "id": "cite",
+      "entity": "citation",
+      "name": "Cite",
+      "description": "Pin a finding to the page of a document it rests on.",
+      "input": [
+        { "name": "finding", "type": "reference", "entity": "finding" },
+        { "name": "document", "type": "reference", "entity": "document" },
+        { "name": "page", "type": "integer" }
+      ]
+    },
+    {
+      "id": "escalate",
+      "entity": "finding",
+      "name": "Escalate",
+      "description": "The deal lead takes a red flag to the buyer's principals.",
+      "input": [{ "name": "note", "type": "string" }],
+      "transition": { "from": ["submitted"], "to": "escalated" }
+    },
+    {
+      "id": "review-finding",
+      "entity": "finding",
+      "name": "Review finding",
+      "description": "A second person checks a finding before the deal lead may accept it.",
+      "input": [{ "name": "reviewer", "type": "reference", "entity": "parties/person" }],
+      "transition": { "from": ["submitted", "escalated"], "to": "reviewed" }
+    },
+    {
+      "id": "accept-finding",
+      "entity": "finding",
+      "name": "Accept finding",
+      "description": "The deal lead accepts a reviewed finding into the diligence report.",
+      "transition": { "from": ["reviewed"], "to": "accepted" }
+    },
+    {
+      "id": "close-workstream",
+      "entity": "workstream",
+      "name": "Close workstream",
+      "description": "Sign off a workstream's review.",
+      "transition": { "from": ["open", "findings"], "to": "signed-off" }
+    },
+    {
+      "id": "sign-off-deal",
+      "entity": "deal",
+      "name": "Sign off deal",
+      "description": "Diligence is complete and the buyer proceeds.",
+      "input": [{ "name": "dealValue", "type": "number" }],
+      "transition": { "from": ["open"], "to": "signed-off" }
+    },
+    {
+      "id": "decline-deal",
+      "entity": "deal",
+      "name": "Decline deal",
+      "description": "The buyer walks away.",
+      "input": [{ "name": "reason", "type": "string" }],
+      "transition": { "from": ["open"], "to": "declined" }
+    }
+  ],
+  "operations": [
+    {
+      "id": "target-grants",
+      "name": "Target grants",
+      "description": "Northline opens its room to an advisor.",
+      "action": "grant-delegation",
+      "actor": { "entity": "parties/organization", "instance": "northline-target" }
+    },
+    {
+      "id": "target-revokes",
+      "name": "Target revokes",
+      "description": "Northline withdraws a delegation.",
+      "action": "revoke-delegation",
+      "actor": { "entity": "parties/organization", "instance": "northline-target" }
+    },
+    {
+      "id": "delegation-lapses",
+      "name": "Delegation lapses",
+      "description": "A delegation reaches its expiry.",
+      "action": "expire-delegation",
+      "actor": { "entity": "parties/organization", "instance": "northline-target" }
+    },
+    {
+      "id": "target-extends",
+      "name": "Target extends",
+      "description": "Northline extends a delegation.",
+      "action": "extend-delegation",
+      "actor": { "entity": "parties/organization", "instance": "northline-target" }
+    },
+    {
+      "id": "advisor-reads",
+      "name": "Advisor reads",
+      "description": "An advisor opens a document.",
+      "action": "read-document",
+      "actor": { "entity": "parties/person" },
+      "target": { "entity": "document" }
+    },
+    {
+      "id": "advisor-records",
+      "name": "Advisor records",
+      "description": "An advisor records a finding in a workstream.",
+      "action": "record-finding",
+      "actor": { "entity": "parties/person", "instance": "renee" },
+      "target": { "entity": "workstream" }
+    },
+    {
+      "id": "advisor-cites",
+      "name": "Advisor cites",
+      "description": "An advisor cites the document a finding rests on.",
+      "action": "cite",
+      "actor": { "entity": "parties/person", "instance": "renee" },
+      "target": { "entity": "document" }
+    },
+    {
+      "id": "lead-escalates",
+      "name": "Lead escalates",
+      "description": "Harbor's deal lead escalates a red flag.",
+      "action": "escalate",
+      "actor": { "entity": "parties/organization", "instance": "harbor-buyer" },
+      "target": { "entity": "finding" }
+    },
+    {
+      "id": "counsel-reviews",
+      "name": "Counsel reviews",
+      "description": "Omar at Ledger & Kline reviews a finding.",
+      "action": "review-finding",
+      "actor": { "entity": "parties/person", "instance": "omar" },
+      "target": { "entity": "finding" }
+    },
+    {
+      "id": "lead-accepts",
+      "name": "Lead accepts",
+      "description": "Harbor's deal lead accepts a finding.",
+      "action": "accept-finding",
+      "actor": { "entity": "parties/organization", "instance": "harbor-buyer" },
+      "target": { "entity": "finding" }
+    },
+    {
+      "id": "lead-closes",
+      "name": "Lead closes workstreams",
+      "description": "Harbor's deal lead signs off the workstreams.",
+      "action": "close-workstream",
+      "actor": { "entity": "parties/organization", "instance": "harbor-buyer" },
+      "target": { "entity": "workstream" }
+    },
+    {
+      "id": "committee-signs-off",
+      "name": "Committee signs off",
+      "description": "Harbor's investment committee signs off the deal.",
+      "action": "sign-off-deal",
+      "actor": { "entity": "parties/organization", "instance": "harbor-buyer" }
+    },
+    {
+      "id": "committee-declines",
+      "name": "Committee declines",
+      "description": "Harbor's investment committee declines the deal.",
+      "action": "decline-deal",
+      "actor": { "entity": "parties/organization", "instance": "harbor-buyer" }
+    }
+  ],
+  "workflows": [
+    {
+      "id": "diligence",
+      "name": "Diligence",
+      "description": "From the target's grant to the committee's decision.",
+      "initial": "granting",
+      "states": [
+        {
+          "id": "granting",
+          "name": "Granting access",
+          "description": "No advisor acts until the target grants a delegation.",
+          "operations": ["target-grants"],
+          "transitions": [{ "on": "target-grants", "to": "reviewing" }]
+        },
+        {
+          "id": "reviewing",
+          "name": "Reviewing",
+          "description": "Advisors read, record and cite under their delegations.",
+          "operations": [
+            "advisor-reads",
+            "advisor-records",
+            "advisor-cites",
+            "counsel-reviews",
+            "lead-accepts",
+            "lead-closes",
+            "target-revokes",
+            "delegation-lapses",
+            "target-extends"
+          ],
+          "transitions": [
+            { "on": "advisor-reads", "to": "reviewing" },
+            {
+              "on": "advisor-records",
+              "when": { "field": "material", "equals": true },
+              "to": "red-flag"
+            },
+            {
+              "on": "advisor-records",
+              "when": { "field": "material", "equals": false },
+              "to": "reviewing"
+            },
+            { "on": "advisor-cites", "to": "reviewing" },
+            { "on": "counsel-reviews", "to": "reviewing" },
+            { "on": "lead-accepts", "to": "reviewing" },
+            { "on": "lead-closes", "to": "committee" },
+            { "on": "target-revokes", "to": "granting" },
+            { "on": "delegation-lapses", "to": "granting" },
+            { "on": "target-extends", "to": "reviewing" }
+          ]
+        },
+        {
+          "id": "red-flag",
+          "name": "Red flag",
+          "description": "A material finding waits for the deal lead. Review resumes only once it is escalated.",
+          "operations": ["lead-escalates"],
+          "transitions": [{ "on": "lead-escalates", "to": "reviewing" }]
+        },
+        {
+          "id": "committee",
+          "name": "Investment committee",
+          "operations": ["committee-signs-off", "committee-declines"],
+          "transitions": [
+            { "on": "committee-signs-off", "to": "signed-off" },
+            { "on": "committee-declines", "to": "declined" }
+          ]
+        },
+        { "id": "signed-off", "name": "Signed off", "final": true },
+        { "id": "declined", "name": "Declined", "final": true }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "advisor-under-delegation",
+      "description": "An advisor records and cites under a live delegation the target granted, and only within its scope.",
+      "actions": ["record-finding", "cite"],
+      "when": {
+        "allOf": [
+          {
+            "subject": "actor",
+            "path": "delegation.grantor",
+            "op": "eq",
+            "value": "northline-target"
+          },
+          { "subject": "actor", "path": "delegation.status", "op": "eq", "value": "granted" },
+          {
+            "subject": "actor",
+            "path": "delegation.scope",
+            "op": "in",
+            "value": ["cite", "record-findings"]
+          }
+        ]
+      },
+      "effect": { "effect": "allow" }
+    },
+    {
+      "id": "outsider-refused",
+      "description": "Nobody acts on the target's room who is neither the target nor under its delegation.",
+      "actions": ["read-document", "record-finding", "cite"],
+      "when": {
+        "allOf": [
+          {
+            "not": { "subject": "actor", "path": "organization", "op": "eq", "value": "northline-target" }
+          },
+          {
+            "not": {
+              "subject": "actor",
+              "path": "delegation.grantor",
+              "op": "eq",
+              "value": "northline-target"
+            }
+          }
+        ]
+      },
+      "effect": { "effect": "deny" }
+    },
+    {
+      "id": "clean-team-only",
+      "description": "A clean-team document is read only with clean-team clearance. The rule never reads the organization, so it holds for the target's own staff as it does for an advisor.",
+      "actions": ["read-document"],
+      "when": {
+        "allOf": [
+          { "subject": "target", "path": "confidentiality", "op": "eq", "value": "clean-team" },
+          { "not": { "subject": "actor", "path": "clearance", "op": "eq", "value": "clean-team" } }
+        ]
+      },
+      "effect": { "effect": "deny" }
+    },
+    {
+      "id": "late-workstream-to-lead",
+      "description": "Closing a workstream past its due date goes to the deal lead. The evaluator supplies the days past due in context.",
+      "actions": ["close-workstream"],
+      "when": { "subject": "context", "path": "daysPastDue", "op": "gt", "value": 0 },
+      "effect": { "effect": "route", "performer": "position", "refs": ["deal-lead"] }
+    },
+    {
+      "id": "committee-sign-off",
+      "description": "Signing off a deal needs the investment committee's approval.",
+      "actions": ["sign-off-deal"],
+      "effect": { "effect": "require_approval", "performer": "position", "refs": ["investment-committee"] }
+    },
+    {
+      "id": "board-sign-off",
+      "description": "A deal above the committee's limit, or one signed off with red flags still open, also needs the board. The evaluator supplies both in context.",
+      "actions": ["sign-off-deal"],
+      "when": {
+        "anyOf": [
+          { "subject": "context", "path": "dealValue", "op": "gt", "value": 500000000 },
+          { "subject": "context", "path": "openRedFlags", "op": "gt", "value": 0 }
+        ]
+      },
+      "effect": { "effect": "require_approval", "performer": "position", "refs": ["board"] }
+    }
+  ]
+}

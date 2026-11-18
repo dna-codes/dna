@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/structure/entity/v1",
+  "version": "v1",
+  "title": "Entity",
+  "description": "A kind of thing a domain knows about. It owns its attributes and its named instances. A shopper, a borrower, and an advisor are instances of person. A merchant, a processor, a lender, a buyer, a target, and an advisory firm are instances of organization. They are not separate entities, and they are not domains. A connection that carries data of its own, such as a cart line, a loan condition, a citation, or a membership, is an entity too. Actions this entity can take are behavior and are not part of this schema.",
+  "type": "object",
+  "required": ["id", "name", "description"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/id",
+      "description": "Stable id of this kind of thing."
+    },
+    "name": { "$ref": "#/$defs/name" },
+    "description": { "$ref": "#/$defs/text" },
+    "attributes": {
+      "type": "array",
+      "items": { "$ref": "https://dna.codes/schemas/structure/attribute/v1" },
+      "description": "Facts each instance of this entity can hold."
+    },
+    "instances": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/instance" },
+      "description": "Named particulars of this entity. Buyer, target, and advisor are three instances of one organization entity."
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "Kebab-case. Never changes once written."
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "text": { "type": "string", "minLength": 1 },
+    "instance": {
+      "type": "object",
+      "description": "One particular thing of this entity, such as one firm or one person.",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/name" },
+        "description": { "$ref": "#/$defs/text" },
+        "values": {
+          "type": "object",
+          "description": "Attribute values, keyed by attribute name."
+        }
+      }
+    }
+  }
+}

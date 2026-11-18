@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/structure/domain/v1",
+  "version": "v1",
+  "title": "Domain",
+  "description": "A vocabulary: the entities and relationships of one subject, versioned together. uses names other domains whose entities this one may refer to. It names a vocabulary, never an organization. Three firms in one deal share a parties vocabulary and differ by instances of organization. A domain is not a tenant and not a database. Actions, rules, effects, and workflows are not part of this schema.",
+  "type": "object",
+  "required": ["dna", "id", "name", "description"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "dna": {
+      "const": "structure/v1",
+      "description": "The structure vocabulary this document is written in."
+    },
+    "id": {
+      "$ref": "#/$defs/id",
+      "description": "Stable id of this vocabulary. Other domains name it from uses."
+    },
+    "name": { "$ref": "#/$defs/name" },
+    "description": { "$ref": "#/$defs/text" },
+    "uses": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/id" },
+      "description": "Other domains whose entities this one refers to. Each item is a domain id. An organization is an instance in a parties domain, not an entry here."
+    },
+    "entities": {
+      "type": "array",
+      "items": { "$ref": "https://dna.codes/schemas/structure/entity/v1" },
+      "description": "The kinds of thing in this vocabulary."
+    },
+    "relationships": {
+      "type": "array",
+      "items": { "$ref": "https://dna.codes/schemas/structure/relationship/v1" },
+      "description": "The edges between those entities, including edges into domains named by uses."
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "Kebab-case. Never changes once written."
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "text": { "type": "string", "minLength": 1 }
+  }
+}

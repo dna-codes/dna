@@ -1,0 +1,365 @@
+{
+  "dna": "structure/v1",
+  "id": "diligence",
+  "name": "Diligence",
+  "description": "A buyer's review of a target. The firms are instances in the parties vocabulary this domain uses. The target's documents, the clean team, the findings, and which advisor is engaged on which workstream are entities and relationships here, not a separate schema per firm. A confidentiality tier is one enum, used on documents and on findings alike. From v3 the target's grant of access is a delegation, an entity of its own, and a finding names the delegation it was recorded under. From v4 a delegation is narrowed to one workstream, and a finding is reviewed by a second person before it is accepted.",
+  "uses": ["parties"],
+  "entities": [
+    {
+      "id": "deal",
+      "name": "Deal",
+      "description": "The acquisition. Buyer and target are two relationships to the same organization entity.",
+      "attributes": [
+        { "name": "codename", "type": "string" },
+        {
+          "name": "status",
+          "type": "state",
+          "states": ["open", "signed-off", "declined"],
+          "initial": "open"
+        },
+        {
+          "name": "buyer",
+          "type": "reference",
+          "entity": "parties/organization",
+          "description": "The acquiring firm. An instance such as Harbor."
+        },
+        {
+          "name": "target",
+          "type": "reference",
+          "entity": "parties/organization",
+          "description": "The firm being acquired. An instance such as Northline."
+        }
+      ]
+    },
+    {
+      "id": "data-room",
+      "name": "Data room",
+      "description": "The target's room of documents. Owned by one organization instance.",
+      "attributes": [
+        { "name": "name", "type": "string" },
+        { "name": "owner", "type": "reference", "entity": "parties/organization" }
+      ]
+    },
+    {
+      "id": "document",
+      "name": "Document",
+      "description": "A file in the data room. Confidentiality is an enum on the document. Which team it is restricted to is a relationship.",
+      "attributes": [
+        { "name": "title", "type": "string" },
+        {
+          "name": "confidentiality",
+          "type": "enum",
+          "description": "A confidentiality tier is an enum. Who may read it is behavior.",
+          "values": ["public", "internal", "clean-team"]
+        },
+        { "name": "room", "type": "reference", "entity": "data-room" },
+        {
+          "name": "restrictedTo",
+          "type": "reference",
+          "entity": "parties/team",
+          "required": false,
+          "description": "The team a restricted document is limited to, such as the clean team."
+        }
+      ]
+    },
+    {
+      "id": "workstream",
+      "name": "Workstream",
+      "description": "A line of review over the data room. Its deadline is a datetime.",
+      "attributes": [
+        { "name": "name", "type": "string" },
+        {
+          "name": "due",
+          "type": "datetime",
+          "description": "When the workstream is due. A deadline is a datetime."
+        },
+        {
+          "name": "status",
+          "type": "state",
+          "states": ["open", "findings", "signed-off"],
+          "initial": "open"
+        },
+        { "name": "room", "type": "reference", "entity": "data-room" }
+      ]
+    },
+    {
+      "id": "finding",
+      "name": "Finding",
+      "description": "Something the review found. Materiality is an enum, and so is its confidentiality tier: a finding drawn from a clean-team document is clean-team itself. The page it rests on lives on a citation, because that connection has a page.",
+      "attributes": [
+        { "name": "statement", "type": "string" },
+        {
+          "name": "materiality",
+          "type": "enum",
+          "values": ["minor", "material"],
+          "description": "How material the finding is."
+        },
+        {
+          "name": "confidentiality",
+          "type": "enum",
+          "values": ["public", "internal", "clean-team"],
+          "description": "The finding's confidentiality tier, the same tiers as a document's. Who may read it is behavior."
+        },
+        {
+          "name": "status",
+          "type": "state",
+          "states": ["submitted", "escalated", "reviewed", "accepted"],
+          "initial": "submitted"
+        },
+        { "name": "workstream", "type": "reference", "entity": "workstream" },
+        { "name": "author", "type": "reference", "entity": "parties/person" },
+        {
+          "name": "delegation",
+          "type": "reference",
+          "entity": "delegation",
+          "description": "The delegation the finding was recorded under. Through it the record names the target that granted access, as well as the advisor's firm."
+        },
+        {
+          "name": "reviewer",
+          "type": "reference",
+          "entity": "parties/person",
+          "required": false,
+          "description": "The second person who reviewed the finding. Not its author; that is the reviewer's to honour and the evaluator's to check."
+        }
+      ]
+    },
+    {
+      "id": "citation",
+      "name": "Citation",
+      "description": "A citation is an entity because the connection between a finding and a document carries a page. A relationship cannot hold that page.",
+      "attributes": [
+        { "name": "page", "type": "integer", "description": "The page the finding cites." },
+        { "name": "finding", "type": "reference", "entity": "finding" },
+        { "name": "document", "type": "reference", "entity": "document" }
+      ]
+    },
+    {
+      "id": "engagement",
+      "name": "Engagement",
+      "description": "An engagement is an entity because the connection between an advisor firm and a workstream carries a scope and the highest confidentiality tier the firm is cleared to. A relationship cannot hold those. Vale on the financial workstream and Ledger & Kline on the legal one are two engagements, not two kinds of advisor.",
+      "attributes": [
+        {
+          "name": "scope",
+          "type": "string",
+          "description": "What the advisor is engaged to review."
+        },
+        {
+          "name": "clearance",
+          "type": "enum",
+          "values": ["public", "internal", "clean-team"],
+          "description": "The highest confidentiality tier the engaged firm is cleared to on this workstream."
+        },
+        { "name": "workstream", "type": "reference", "entity": "workstream" },
+        {
+          "name": "advisor",
+          "type": "reference",
+          "entity": "parties/organization",
+          "description": "The engaged firm. An instance such as Vale or Ledger & Kline."
+        }
+      ]
+    },
+    {
+      "id": "delegation",
+      "name": "Delegation",
+      "description": "The target's grant of access to its room. It is not the engagement: the engagement is the buyer's arrangement with its advisor, and only the target can open its room. A delegation is an entity because the grant carries a scope, an expiry and a state.",
+      "attributes": [
+        {
+          "name": "grantor",
+          "type": "reference",
+          "entity": "parties/organization",
+          "description": "The firm granting access. For this deal, the target."
+        },
+        {
+          "name": "grantee",
+          "type": "reference",
+          "entity": "parties/organization",
+          "description": "The advisor firm the access is granted to."
+        },
+        { "name": "room", "type": "reference", "entity": "data-room" },
+        {
+          "name": "workstream",
+          "type": "reference",
+          "entity": "workstream",
+          "description": "The one workstream the delegation opens the room for."
+        },
+        {
+          "name": "scope",
+          "type": "enum",
+          "values": ["read", "cite", "record-findings"],
+          "description": "The widest act the delegation allows. Each scope includes the ones before it."
+        },
+        { "name": "expiresAt", "type": "datetime" },
+        {
+          "name": "status",
+          "type": "state",
+          "states": ["granted", "revoked", "expired"],
+          "initial": "granted"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "deal-buys",
+      "name": "buys",
+      "description": "The deal's buyer. A second relationship joins this same pair of entities for the target.",
+      "from": "deal",
+      "to": "parties/organization",
+      "cardinality": "many-to-one",
+      "attribute": "deal.buyer"
+    },
+    {
+      "id": "deal-acquires",
+      "name": "acquires",
+      "description": "The deal's target. The same pair of entities as buys, a different edge.",
+      "from": "deal",
+      "to": "parties/organization",
+      "cardinality": "many-to-one",
+      "attribute": "deal.target"
+    },
+    {
+      "id": "organization-owns-room",
+      "name": "owns",
+      "description": "An organization owns the data room. For this deal that instance is the target.",
+      "from": "parties/organization",
+      "to": "data-room",
+      "cardinality": "one-to-many",
+      "attribute": "data-room.owner"
+    },
+    {
+      "id": "room-contains-document",
+      "name": "contains",
+      "description": "The data room contains documents.",
+      "from": "data-room",
+      "to": "document",
+      "cardinality": "one-to-many",
+      "attribute": "document.room"
+    },
+    {
+      "id": "document-restricted-to-team",
+      "name": "restricted to",
+      "description": "A document is restricted to a team. The clean team is an instance of team in the parties vocabulary.",
+      "from": "document",
+      "to": "parties/team",
+      "cardinality": "many-to-one",
+      "attribute": "document.restrictedTo"
+    },
+    {
+      "id": "workstream-reviews-room",
+      "name": "reviews",
+      "description": "A workstream reviews a data room.",
+      "from": "workstream",
+      "to": "data-room",
+      "cardinality": "many-to-one",
+      "attribute": "workstream.room"
+    },
+    {
+      "id": "finding-in-workstream",
+      "name": "in",
+      "description": "A finding is raised in a workstream.",
+      "from": "finding",
+      "to": "workstream",
+      "cardinality": "many-to-one",
+      "attribute": "finding.workstream"
+    },
+    {
+      "id": "finding-raised-by",
+      "name": "raised by",
+      "description": "A person raises the finding. Which firm they act for is their membership, in the parties vocabulary.",
+      "from": "parties/person",
+      "to": "finding",
+      "cardinality": "one-to-many",
+      "attribute": "finding.author"
+    },
+    {
+      "id": "citation-of-finding",
+      "name": "of",
+      "description": "The citation is of a finding. The page stays on the citation.",
+      "from": "citation",
+      "to": "finding",
+      "cardinality": "many-to-one",
+      "attribute": "citation.finding"
+    },
+    {
+      "id": "citation-cites-document",
+      "name": "cites",
+      "description": "The citation cites a document.",
+      "from": "citation",
+      "to": "document",
+      "cardinality": "many-to-one",
+      "attribute": "citation.document"
+    },
+    {
+      "id": "workstream-engages",
+      "name": "engages",
+      "description": "A workstream engages advisors through its engagements.",
+      "from": "workstream",
+      "to": "engagement",
+      "cardinality": "one-to-many",
+      "attribute": "engagement.workstream"
+    },
+    {
+      "id": "advisor-engaged-as",
+      "name": "engaged as",
+      "description": "An organization is engaged as an advisor. The scope and clearance stay on the engagement, not on this edge.",
+      "from": "parties/organization",
+      "to": "engagement",
+      "cardinality": "one-to-many",
+      "attribute": "engagement.advisor"
+    },
+    {
+      "id": "delegation-granted-by",
+      "name": "granted by",
+      "description": "The firm that granted the delegation.",
+      "from": "delegation",
+      "to": "parties/organization",
+      "cardinality": "many-to-one",
+      "attribute": "delegation.grantor"
+    },
+    {
+      "id": "delegation-granted-to",
+      "name": "granted to",
+      "description": "The firm the delegation is granted to. The same pair of entities as granted by, a different edge.",
+      "from": "delegation",
+      "to": "parties/organization",
+      "cardinality": "many-to-one",
+      "attribute": "delegation.grantee"
+    },
+    {
+      "id": "delegation-opens-room",
+      "name": "opens",
+      "description": "The data room the delegation opens.",
+      "from": "delegation",
+      "to": "data-room",
+      "cardinality": "many-to-one",
+      "attribute": "delegation.room"
+    },
+    {
+      "id": "finding-under-delegation",
+      "name": "recorded under",
+      "description": "The delegation a finding was recorded under.",
+      "from": "finding",
+      "to": "delegation",
+      "cardinality": "many-to-one",
+      "attribute": "finding.delegation"
+    },
+    {
+      "id": "delegation-for-workstream",
+      "name": "for",
+      "description": "The workstream a delegation is narrowed to.",
+      "from": "delegation",
+      "to": "workstream",
+      "cardinality": "many-to-one",
+      "attribute": "delegation.workstream"
+    },
+    {
+      "id": "finding-reviewed-by",
+      "name": "reviewed by",
+      "description": "The person who reviewed the finding.",
+      "from": "parties/person",
+      "to": "finding",
+      "cardinality": "one-to-many",
+      "attribute": "finding.reviewer"
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/behaviour/workflow/v1",
+  "version": "v1",
+  "title": "Workflow",
+  "description": "A state machine over Operations. A run starts in initial. In each state, its Operations may run any number of times; only a transition moves the run, when the Operation it names completes or fails, optionally guarded by a value in that Operation's output or by the final state a sub-workflow ended in. A final state ends the run and has no transitions.",
+  "type": "object",
+  "required": ["id", "name", "description", "initial", "states"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "allOf": [{ "$ref": "#/$defs/id" }, { "not": { "const": "all" } }],
+      "description": "Kebab-case. Unique among the workflows of its behaviour document. all is reserved."
+    },
+    "name": { "$ref": "#/$defs/text" },
+    "description": { "$ref": "#/$defs/text" },
+    "initial": {
+      "$ref": "#/$defs/id",
+      "description": "The state a run starts in. One of states."
+    },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/state" }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "Kebab-case. Never changes once written."
+    },
+    "text": { "type": "string", "minLength": 1 },
+    "state": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/text" },
+        "description": { "$ref": "#/$defs/text" },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" },
+          "description": "Operations of this behaviour document available in this state."
+        },
+        "workflow": {
+          "$ref": "#/$defs/id",
+          "description": "A workflow of this behaviour document this state runs."
+        },
+        "final": {
+          "type": "boolean",
+          "description": "Ends the run. Defaults to false."
+        },
+        "transitions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/transition" }
+        }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "required": ["on", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "on": {
+          "$ref": "#/$defs/id",
+          "description": "An Operation available in the state, the state's sub-workflow, or all, for every Operation of the state."
+        },
+        "status": {
+          "enum": ["completed", "failed"],
+          "description": "Defaults to completed."
+        },
+        "when": { "$ref": "#/$defs/guard" },
+        "to": {
+          "$ref": "#/$defs/id",
+          "description": "A state of this workflow."
+        }
+      }
+    },
+    "guard": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["field", "equals"],
+          "additionalProperties": false,
+          "description": "A value in the output of the Operation the transition is on.",
+          "properties": {
+            "field": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$" },
+            "equals": {}
+          }
+        },
+        {
+          "type": "object",
+          "required": ["final"],
+          "additionalProperties": false,
+          "description": "The final state the state's sub-workflow ended in.",
+          "properties": { "final": { "$ref": "#/$defs/id" } }
+        }
+      ]
+    }
+  }
+}

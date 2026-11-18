@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/structure/relationship/v1",
+  "version": "v1",
+  "title": "Relationship",
+  "description": "A named edge between two entities, read as from, name, to. A relationship has no attributes of its own. When the connection carries data of its own — a cart line's variant and quantity, a loan condition's wording, a citation's page, a membership's role — that connection is an entity, and relationships join it to the things it connects. Two relationships may join the same pair: an order ships to an address and is billed to an address. The edge is the fact. The optional attribute names the reference attribute that stores the edge, on one end, pointing at the other.",
+  "type": "object",
+  "required": ["id", "name", "description", "from", "to"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "name": {
+      "$ref": "#/$defs/name",
+      "description": "What the edge reads as between its ends: owns, ships to, refinanced by."
+    },
+    "description": { "$ref": "#/$defs/text" },
+    "from": {
+      "$ref": "#/$defs/entityRef",
+      "description": "The entity the edge is read from."
+    },
+    "to": {
+      "$ref": "#/$defs/entityRef",
+      "description": "The entity the edge is read to."
+    },
+    "cardinality": {
+      "enum": ["one-to-one", "one-to-many", "many-to-one", "many-to-many"],
+      "description": "How many of each end. one-to-many is one from to many to. Omit it when nobody stated it."
+    },
+    "attribute": {
+      "$ref": "#/$defs/attributeRef",
+      "description": "The reference attribute that stores this edge. It sits on one end and points at the other. Omit it when the edge is not stored on either end."
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "Kebab-case. Never changes once written."
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "text": { "type": "string", "minLength": 1 },
+    "entityRef": {
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "An entity id in this domain, or domain/entity for an entity declared in a domain this one uses."
+    },
+    "attributeRef": {
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*\\.[a-z][a-zA-Z0-9]*$",
+      "description": "entity.attribute, or domain/entity.attribute when the attribute is on an entity in a used domain."
+    }
+  }
+}
