@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/behaviour/operation/v1",
+  "version": "v1",
+  "title": "Operation",
+  "description": "One Action, performed by one actor on one target. It inherits the Action's contract. A workflow is written over Operations, so the same Action can appear in it twice with different performers.",
+  "type": "object",
+  "required": ["id", "name", "description", "action", "actor"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "allOf": [{ "$ref": "#/$defs/id" }, { "not": { "const": "all" } }],
+      "description": "Kebab-case. Unique among the Operations of its behaviour document. all is reserved."
+    },
+    "name": { "$ref": "#/$defs/text" },
+    "description": { "$ref": "#/$defs/text" },
+    "action": {
+      "$ref": "#/$defs/actionRef",
+      "description": "The Action performed."
+    },
+    "actor": {
+      "$ref": "#/$defs/party",
+      "description": "Who performs it."
+    },
+    "target": {
+      "$ref": "#/$defs/party",
+      "description": "What it is performed on. Defaults to the Action's entity."
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "Kebab-case. Never changes once written."
+    },
+    "text": { "type": "string", "minLength": 1 },
+    "actionRef": {
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "An Action in this behaviour document, or behaviour/action for one in a behaviour document this one uses."
+    },
+    "party": {
+      "type": "object",
+      "required": ["entity"],
+      "additionalProperties": false,
+      "properties": {
+        "entity": {
+          "type": "string",
+          "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "An entity id in the described domain, or domain/entity for one in a domain it uses."
+        },
+        "instance": {
+          "$ref": "#/$defs/id",
+          "description": "One named instance of that entity, such as a specific team."
+        }
+      }
+    }
+  }
+}

@@ -1,1 +1,0 @@
-{"version":3,"file":"operation.d.ts","sourceRoot":"","sources":["../../../src/output/text/operation.ts"],"names":[],"mappings":"AAAA;;;;;;;;;GASG;AAEH,OAAO,EACL,SAAS,EAET,cAAc,EAGd,KAAK,EAEN,MAAM,SAAS,CAAA;AAGhB,wBAAgB,cAAc,CAAC,EAAE,EAAE,SAAS,GAAG,MAAM,CAEpD;AAED,wBAAgB,eAAe,CAAC,EAAE,EAAE,SAAS,EAAE,GAAG,EAAE,cAAc,EAAE,KAAK,EAAE,KAAK,GAAG,MAAM,CAIxF"}

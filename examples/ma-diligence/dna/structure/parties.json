@@ -1,0 +1,139 @@
+{
+  "dna": "structure/v1",
+  "id": "parties",
+  "name": "Parties",
+  "description": "Who is in a deal. Buyer, target, and each advisor are instances of one organization. They share this vocabulary. They are not separate domains, and a second advisor is a fourth instance, not a new kind.",
+  "entities": [
+    {
+      "id": "organization",
+      "name": "Organization",
+      "description": "A firm. Harbor buys, Northline is acquired, Vale advises on the financials, Ledger & Kline is the buyer's counsel. One entity, four instances.",
+      "attributes": [
+        { "name": "legalName", "type": "string", "description": "The firm's legal name." }
+      ],
+      "instances": [
+        { "id": "harbor-buyer", "name": "Harbor", "description": "The buyer.", "values": { "legalName": "Harbor Holdings" } },
+        { "id": "northline-target", "name": "Northline", "description": "The target.", "values": { "legalName": "Northline Inc." } },
+        { "id": "vale-advisors", "name": "Vale", "description": "The financial advisor.", "values": { "legalName": "Vale Advisors" } },
+        {
+          "id": "ledger-kline",
+          "name": "Ledger & Kline",
+          "description": "The buyer's legal counsel.",
+          "values": { "legalName": "Ledger & Kline LLP" }
+        }
+      ]
+    },
+    {
+      "id": "person",
+      "name": "Person",
+      "description": "A person who acts for one of the firms.",
+      "attributes": [
+        { "name": "fullName", "type": "string" }
+      ],
+      "instances": [
+        { "id": "renee", "name": "Renee", "description": "An advisor at Vale.", "values": { "fullName": "Renee Cho" } },
+        { "id": "omar", "name": "Omar", "description": "Counsel at Ledger & Kline.", "values": { "fullName": "Omar Haddad" } }
+      ]
+    },
+    {
+      "id": "team",
+      "name": "Team",
+      "description": "A group inside an organization. The clean team is an instance, not a kind of its own.",
+      "attributes": [
+        { "name": "name", "type": "string" },
+        {
+          "name": "organization",
+          "type": "reference",
+          "entity": "organization",
+          "description": "The firm this team belongs to."
+        }
+      ],
+      "instances": [
+        {
+          "id": "clean-team",
+          "name": "Clean team",
+          "description": "The target's clean team.",
+          "values": { "name": "Clean team", "organization": "northline-target" }
+        }
+      ]
+    },
+    {
+      "id": "membership",
+      "name": "Membership",
+      "description": "A membership is an entity because the connection between a person and an organization carries a role, and may name a team. A relationship has no attributes of its own to hold the role.",
+      "attributes": [
+        {
+          "name": "role",
+          "type": "enum",
+          "values": ["member", "advisor", "counsel"],
+          "description": "The role this membership grants."
+        },
+        { "name": "person", "type": "reference", "entity": "person" },
+        { "name": "organization", "type": "reference", "entity": "organization" },
+        {
+          "name": "team",
+          "type": "reference",
+          "entity": "team",
+          "required": false,
+          "description": "The team, when the membership is to one. Absent for a firm-wide membership."
+        }
+      ],
+      "instances": [
+        {
+          "id": "renee-at-vale",
+          "name": "Renee at Vale",
+          "values": { "role": "advisor", "person": "renee", "organization": "vale-advisors" }
+        },
+        {
+          "id": "renee-on-clean-team",
+          "name": "Renee on the clean team",
+          "description": "The same person, on the target's clean team.",
+          "values": { "role": "advisor", "person": "renee", "organization": "northline-target", "team": "clean-team" }
+        },
+        {
+          "id": "omar-at-ledger",
+          "name": "Omar at Ledger & Kline",
+          "values": { "role": "counsel", "person": "omar", "organization": "ledger-kline" }
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "membership-of-person",
+      "name": "of",
+      "description": "The membership is of a person.",
+      "from": "membership",
+      "to": "person",
+      "cardinality": "many-to-one",
+      "attribute": "membership.person"
+    },
+    {
+      "id": "membership-in-organization",
+      "name": "in",
+      "description": "The membership is in an organization.",
+      "from": "membership",
+      "to": "organization",
+      "cardinality": "many-to-one",
+      "attribute": "membership.organization"
+    },
+    {
+      "id": "membership-on-team",
+      "name": "on",
+      "description": "The membership is on a team, when it names one.",
+      "from": "membership",
+      "to": "team",
+      "cardinality": "many-to-one",
+      "attribute": "membership.team"
+    },
+    {
+      "id": "team-within-organization",
+      "name": "within",
+      "description": "A team sits within an organization.",
+      "from": "team",
+      "to": "organization",
+      "cardinality": "many-to-one",
+      "attribute": "team.organization"
+    }
+  ]
+}

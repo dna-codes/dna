@@ -1,0 +1,152 @@
+{
+  "dna": "behaviour/v1",
+  "id": "payments-behaviour",
+  "name": "Payments behaviour",
+  "description": "Authorizing a payment, capturing it shipment by shipment, voiding it, and refunding part of it. Every effect on the processor is external.",
+  "domain": "payments",
+  "actions": [
+    {
+      "id": "authorize",
+      "entity": "payment",
+      "name": "Authorize",
+      "description": "Ask the processor to hold an amount against an order. A declined authorization creates no payment, so the Action moves no state; the answer is its output.",
+      "external": true,
+      "input": [
+        { "name": "order", "type": "reference", "entity": "commerce/order" },
+        { "name": "amount", "type": "number" },
+        { "name": "currency", "type": "string" }
+      ],
+      "output": [{ "name": "approved", "type": "boolean" }]
+    },
+    {
+      "id": "capture",
+      "entity": "payment",
+      "name": "Capture",
+      "description": "Collect the part of the authorized amount that one shipment carries. More shipments are to follow.",
+      "external": true,
+      "input": [
+        { "name": "amount", "type": "number" },
+        { "name": "shipment", "type": "reference", "entity": "fulfilment/shipment" }
+      ],
+      "transition": { "from": ["authorized", "partially-captured"], "to": "partially-captured" }
+    },
+    {
+      "id": "capture-final",
+      "entity": "payment",
+      "name": "Capture final",
+      "description": "Collect what the last shipment carries, and close the authorization.",
+      "external": true,
+      "input": [
+        { "name": "amount", "type": "number" },
+        { "name": "shipment", "type": "reference", "entity": "fulfilment/shipment" }
+      ],
+      "transition": { "from": ["authorized", "partially-captured"], "to": "captured" }
+    },
+    {
+      "id": "void",
+      "entity": "payment",
+      "name": "Void",
+      "description": "Release an authorization that will not be captured.",
+      "external": true,
+      "input": [{ "name": "reason", "type": "string", "required": false }],
+      "transition": { "from": ["authorized"], "to": "voided" }
+    },
+    {
+      "id": "request-refund",
+      "entity": "refund",
+      "name": "Request refund",
+      "description": "Ask for part of a captured payment back.",
+      "input": [
+        { "name": "payment", "type": "reference", "entity": "payment" },
+        { "name": "amount", "type": "number" },
+        { "name": "reason", "type": "enum", "values": ["damaged", "wrong-item", "not-received", "changed-mind"] }
+      ],
+      "transition": { "to": "requested" }
+    },
+    {
+      "id": "issue-refund",
+      "entity": "refund",
+      "name": "Issue refund",
+      "description": "Return a requested refund to the shopper through the processor.",
+      "external": true,
+      "transition": { "from": ["requested"], "to": "issued" }
+    },
+    {
+      "id": "decline-refund",
+      "entity": "refund",
+      "name": "Decline refund",
+      "description": "Refuse a requested refund, with the reason the shopper is told.",
+      "input": [{ "name": "explanation", "type": "string" }],
+      "transition": { "from": ["requested"], "to": "declined" }
+    }
+  ],
+  "operations": [
+    {
+      "id": "shopper-requests-refund",
+      "name": "Shopper requests a refund",
+      "description": "Ada asks for money back on a shipment.",
+      "action": "request-refund",
+      "actor": { "entity": "parties/person", "instance": "ada" }
+    },
+    {
+      "id": "merchant-issues-refund",
+      "name": "Merchant issues the refund",
+      "description": "Juniper & Pine returns the money.",
+      "action": "issue-refund",
+      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+    },
+    {
+      "id": "merchant-declines-refund",
+      "name": "Merchant declines the refund",
+      "description": "Juniper & Pine refuses the request.",
+      "action": "decline-refund",
+      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+    }
+  ],
+  "workflows": [
+    {
+      "id": "refund",
+      "name": "Refund",
+      "description": "One refund, from the shopper's request to issued or declined, run on its own after the purchase has ended.",
+      "initial": "requesting",
+      "states": [
+        {
+          "id": "requesting",
+          "operations": ["shopper-requests-refund"],
+          "transitions": [{ "on": "shopper-requests-refund", "to": "reviewing" }]
+        },
+        {
+          "id": "reviewing",
+          "operations": ["merchant-issues-refund", "merchant-declines-refund"],
+          "transitions": [
+            { "on": "merchant-issues-refund", "to": "issued" },
+            { "on": "merchant-declines-refund", "to": "declined" }
+          ]
+        },
+        { "id": "issued", "final": true },
+        { "id": "declined", "final": true }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "capture-limit",
+      "description": "A capture above 10000 is routed to an agent for review rather than performed, whether or not more shipments follow.",
+      "actions": ["capture", "capture-final"],
+      "when": { "subject": "input", "path": "amount", "op": "gt", "value": 10000 },
+      "effect": { "effect": "route", "performer": "agent" }
+    },
+    {
+      "id": "refund-approval",
+      "description": "Issuing a refund needs the customer-care lead's approval when it is above 200, or when the reason is not one the merchant accepts on sight.",
+      "actions": ["issue-refund"],
+      "when": {
+        "anyOf": [
+          { "subject": "target", "path": "amount", "op": "gt", "value": 200 },
+          { "subject": "target", "path": "reason", "op": "notIn", "value": ["damaged", "wrong-item", "not-received"] }
+        ]
+      },
+      "effect": { "effect": "require_approval", "performer": "position", "refs": ["customer-care-lead"] }
+    }
+  ]
+}

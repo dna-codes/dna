@@ -1,19 +1,35 @@
-# Lending — example DNA
+# Home-loan lending
 
-Consumer lending domain. The "default" example most readers will see first — covers the standard end-to-end flow without exotic shapes.
+A worked DNA example: loan application, underwriting, approval authority, conditions and disbursement.
 
-## What this example demonstrates
+<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/origination/v4. -->
 
-- **Operations**: Resource.Action atomic units (`Loan.Apply`, `Loan.Approve`, `Loan.Disburse`).
-- **Triggers** at both granularities: an Operation-level trigger (Borrower invokes `Loan.Apply` directly) AND a Process-level trigger (the full `LoanOrigination` SOP fires from a CRM webhook). Same first-step Operation, two distinct entry points.
-- **System actor**: `NightlyDelinquencySweep` is a Resource referenced from a `schedule`-source Trigger and the `Loan.Default` access rule. No special primitive needed — system actors are Resources like any other.
-- **Role with scope**: `Underwriter.scope = BankDepartment` — the Underwriter Role can only be exercised within a BankDepartment Group.
-- **Step-level conditions referencing Rules**: `step.conditions: ["ApplicationIsPending"]` instead of inline expressions.
-- **Step-level `else` routing**: `disburse` aborts the Process if `LoanIsApproved` doesn't hold.
-- **Process with explicit `startStep`**.
+## Start
 
-## What this example deliberately omits
+1. Copy this folder, or run `npx degit dna-codes/dna/examples/lending my-lending`.
+2. Register and connect: `npx @dna-codes/cli register --json`, then set `DNA_ORG` and `DNA_ACCESS_TOKEN` for `.mcp.json`.
+3. Read the [agent quickstart](https://dna.codes/agents/guides/agent-quickstart.md). Authentication and the pre-claim cap are in [auth.md](https://dna.codes/agents/auth.md).
+4. `validate` the documents in `dna/`, then `apply` them when you want them saved.
 
-- Memberships (no User-Resources are declared — see `mass-tort` and `marketplace` for that).
-- Resource/Role duality (see `marketplace` — Customer is both).
-- Multi-Group scoping (see `marketplace` — same User in multiple Groups).
+## What is here
+
+| Path | What |
+| --- | --- |
+| `dna/structure/origination.json` | structure/v1 domain |
+| `dna/structure/parties.json` | structure/v1 domain |
+| `dna/structure/property.json` | structure/v1 domain |
+| `dna/behaviour/origination.behaviour.json` | behaviour/v1: actions, workflows and policies |
+| `.mcp.json` | The remote DNA MCP server, with environment references only |
+| `AGENTS.md` | The rule that sends an agent to DNA before it changes these rules |
+
+## Scenarios the DNA covers
+
+- Submit an application and move it through underwriting.
+- Approve a loan within an underwriter's authority, and route one above it.
+- Block disbursement while a condition is open.
+
+## More
+
+- [Schemas](../../schemas/) — the JSON Schema for every document here
+- [Agent front door](https://dna.codes/agents/)
+- [Skills](https://github.com/dna-codes/skills) — `npx skills add dna-codes/skills` (`dna-operational`, `dna-sync`)

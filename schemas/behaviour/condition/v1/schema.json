@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/behaviour/condition/v1",
+  "version": "v1",
+  "title": "Condition",
+  "description": "A test a policy applies: one predicate, or predicates composed with allOf, anyOf and not. A predicate reads a path off one subject and compares it with a value. The grammar is closed. It has no expressions, scripts or queries, and nothing in it names a business. target is the resource acted on, actor is who is acting, context is the time and environment supplied to the evaluator, and input is the arguments the Action was called with.",
+  "oneOf": [
+    { "$ref": "#/$defs/predicate" },
+    {
+      "type": "object",
+      "required": ["allOf"],
+      "additionalProperties": false,
+      "properties": { "allOf": { "type": "array", "minItems": 1, "items": { "$ref": "#" } } }
+    },
+    {
+      "type": "object",
+      "required": ["anyOf"],
+      "additionalProperties": false,
+      "properties": { "anyOf": { "type": "array", "minItems": 1, "items": { "$ref": "#" } } }
+    },
+    {
+      "type": "object",
+      "required": ["not"],
+      "additionalProperties": false,
+      "properties": { "not": { "$ref": "#" } }
+    }
+  ],
+  "$defs": {
+    "predicate": {
+      "type": "object",
+      "required": ["subject", "path", "op", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "subject": {
+          "enum": ["target", "actor", "context", "input"],
+          "description": "Which subject the path is read from."
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9]*(\\.[a-zA-Z][a-zA-Z0-9]*)*$",
+          "description": "A dotted property path, such as debtToIncome or groups."
+        },
+        "op": {
+          "enum": ["lt", "lte", "gt", "gte", "eq", "neq", "in", "notIn"],
+          "description": "The comparison. in and notIn compare against a list."
+        },
+        "value": {
+          "oneOf": [
+            { "type": "number" },
+            { "type": "string" },
+            { "type": "array", "minItems": 1, "items": { "type": ["number", "string"] } }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "op": { "enum": ["in", "notIn"] } }, "required": ["op"] },
+          "then": { "properties": { "value": { "type": "array" } } },
+          "else": { "properties": { "value": { "type": ["number", "string"] } } }
+        }
+      ]
+    }
+  }
+}

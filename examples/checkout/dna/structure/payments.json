@@ -1,0 +1,80 @@
+{
+  "dna": "structure/v1",
+  "id": "payments",
+  "name": "Payments",
+  "description": "Money taken for an order. The processor is an organization in the parties vocabulary, not a domain of its own. A payment is captured shipment by shipment, and returned in refunds of their own.",
+  "uses": ["parties", "commerce", "fulfilment"],
+  "entities": [
+    {
+      "id": "payment",
+      "name": "Payment",
+      "description": "Money authorized and captured against an order. Amount and currency are two attributes; how much has been captured so far is a third.",
+      "attributes": [
+        { "name": "amount", "type": "number", "description": "How much was authorized." },
+        { "name": "currency", "type": "string", "description": "The currency of amount." },
+        { "name": "capturedAmount", "type": "number", "description": "How much of amount has been captured, across the order's shipments." },
+        {
+          "name": "status",
+          "type": "state",
+          "description": "The states of a payment. Capture and refund are behavior.",
+          "states": ["authorized", "voided", "partially-captured", "captured", "refunded"],
+          "initial": "authorized"
+        },
+        { "name": "order", "type": "reference", "entity": "commerce/order" },
+        {
+          "name": "processor",
+          "type": "reference",
+          "entity": "parties/organization",
+          "description": "The firm that handles the payment. An instance of organization, such as Northwind Pay."
+        }
+      ]
+    },
+    {
+      "id": "refund",
+      "name": "Refund",
+      "description": "Money returned against a captured payment. A payment can have several, each for part of what was captured.",
+      "attributes": [
+        { "name": "amount", "type": "number", "description": "How much is returned." },
+        { "name": "currency", "type": "string", "description": "The currency of amount." },
+        { "name": "reason", "type": "enum", "values": ["damaged", "wrong-item", "not-received", "changed-mind"] },
+        {
+          "name": "status",
+          "type": "state",
+          "description": "Where the refund is. Requesting, issuing and declining it are behavior.",
+          "states": ["requested", "issued", "declined"],
+          "initial": "requested"
+        },
+        { "name": "payment", "type": "reference", "entity": "payment" }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "payment-settles-order",
+      "name": "settles",
+      "description": "A payment settles an order.",
+      "from": "payment",
+      "to": "commerce/order",
+      "cardinality": "many-to-one",
+      "attribute": "payment.order"
+    },
+    {
+      "id": "processor-issues-payment",
+      "name": "issues",
+      "description": "An organization issues the payment. Which firm is the processor is an instance, not a new entity.",
+      "from": "parties/organization",
+      "to": "payment",
+      "cardinality": "one-to-many",
+      "attribute": "payment.processor"
+    },
+    {
+      "id": "refund-returns-payment",
+      "name": "returns",
+      "description": "A refund returns part of a payment.",
+      "from": "refund",
+      "to": "payment",
+      "cardinality": "many-to-one",
+      "attribute": "refund.payment"
+    }
+  ]
+}

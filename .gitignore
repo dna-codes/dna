@@ -1,15 +1,4 @@
-.DS_STORE
+.DS_Store
 node_modules
 .env
 .env.*
-!.env.example
-
-# Conductor local workspace settings (any level).
-.conductor/
-
-# Local-dev DNA copies that the api docker-compose mounts.
-packages/api/dna.json
-
-# Private/client DNA fixtures — real data not committed; stubs are committed for build compatibility.
-# Replace the stub locally with the real fixture; don't stage changes to it.
-examples/audiobook-distributor/dna.json

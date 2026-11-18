@@ -1,0 +1,74 @@
+{
+  "dna": "behaviour/v1",
+  "id": "fulfilment-behaviour",
+  "name": "Fulfilment behaviour",
+  "description": "How a shipment leaves the merchant and reaches the shopper. The carrier's delivery scan is an effect outside the merchant.",
+  "domain": "fulfilment",
+  "actions": [
+    {
+      "id": "ship",
+      "entity": "shipment",
+      "name": "Ship",
+      "description": "Hand a pending shipment to the carrier.",
+      "input": [{ "name": "trackingNumber", "type": "string", "description": "The carrier's tracking number." }],
+      "transition": { "from": ["pending"], "to": "shipped" }
+    },
+    {
+      "id": "deliver",
+      "entity": "shipment",
+      "name": "Deliver",
+      "description": "The carrier records that a shipment reached the shopper.",
+      "external": true,
+      "input": [{ "name": "deliveredAt", "type": "datetime" }],
+      "transition": { "from": ["shipped"], "to": "delivered" }
+    },
+    {
+      "id": "track",
+      "entity": "shipment",
+      "name": "Track",
+      "description": "Read where a shipment is promised and how to follow it.",
+      "readOnly": true,
+      "output": [
+        { "name": "trackingNumber", "type": "string", "required": false },
+        { "name": "promisedAt", "type": "datetime" }
+      ]
+    }
+  ],
+  "operations": [
+    {
+      "id": "merchant-ships",
+      "name": "Merchant ships",
+      "description": "Juniper & Pine hands the shipment to the carrier.",
+      "action": "ship",
+      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+    },
+    {
+      "id": "carrier-delivers",
+      "name": "Carrier delivers",
+      "description": "Swift Parcel scans the shipment as delivered.",
+      "action": "deliver",
+      "actor": { "entity": "parties/organization", "instance": "swift-parcel" }
+    }
+  ],
+  "workflows": [
+    {
+      "id": "shipment",
+      "name": "Shipment",
+      "description": "One shipment from the warehouse to the door.",
+      "initial": "pending",
+      "states": [
+        {
+          "id": "pending",
+          "operations": ["merchant-ships"],
+          "transitions": [{ "on": "merchant-ships", "to": "in-transit" }]
+        },
+        {
+          "id": "in-transit",
+          "operations": ["carrier-delivers"],
+          "transitions": [{ "on": "carrier-delivers", "to": "delivered" }]
+        },
+        { "id": "delivered", "final": true }
+      ]
+    }
+  ]
+}

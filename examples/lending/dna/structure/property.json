@@ -1,0 +1,19 @@
+{
+  "dna": "structure/v1",
+  "id": "property",
+  "name": "Property",
+  "description": "The home that can secure a loan. A separate vocabulary from the parties and from the application.",
+  "entities": [
+    {
+      "id": "home",
+      "name": "Home",
+      "description": "A residential property.",
+      "attributes": [
+        { "name": "street", "type": "string" },
+        { "name": "city", "type": "string" },
+        { "name": "region", "type": "string" },
+        { "name": "postalCode", "type": "string" }
+      ]
+    }
+  ]
+}

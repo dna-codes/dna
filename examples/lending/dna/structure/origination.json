@@ -1,0 +1,203 @@
+{
+  "dna": "structure/v1",
+  "id": "origination",
+  "name": "Origination",
+  "description": "From an application to a loan. A condition is its own entity because it has wording and a status. A later application can name an existing loan, which is the refinance edge, and a payoff records how much of the new loan retires the old one. Borrower, co-borrowers, and lender are parties, not shapes of the application.",
+  "uses": ["parties", "property"],
+  "entities": [
+    {
+      "id": "application",
+      "name": "Application",
+      "description": "A request for a loan. Money is an amount plus a currency. The borrower and the home are references into other vocabularies.",
+      "attributes": [
+        { "name": "amount", "type": "number", "description": "The amount requested." },
+        { "name": "currency", "type": "string", "description": "The currency of amount." },
+        {
+          "name": "status",
+          "type": "state",
+          "description": "The states of an application. Guards that refuse a move are behavior.",
+          "states": ["received", "underwriting", "conditional", "clear-to-close", "funded", "declined", "withdrawn", "rescinded"],
+          "initial": "received"
+        },
+        { "name": "borrower", "type": "reference", "entity": "parties/person" },
+        {
+          "name": "coBorrowers",
+          "type": "reference",
+          "entity": "parties/person",
+          "many": true,
+          "required": false,
+          "description": "Other people who apply alongside the borrower and share the obligation. The edge carries no terms of its own, so it stays a reference."
+        },
+        {
+          "name": "purpose",
+          "type": "enum",
+          "values": ["purchase", "rate-and-term-refinance", "cash-out-refinance"],
+          "description": "Why the loan is wanted. A refinance is a purpose and a reference to the existing loan, not a second kind of application."
+        },
+        { "name": "home", "type": "reference", "entity": "property/home" },
+        { "name": "creditScore", "type": "integer", "required": false, "description": "The borrower's score from the credit pull. Absent until credit is pulled." },
+        { "name": "debtToIncome", "type": "number", "required": false, "description": "Monthly debt over monthly income, as a ratio such as 0.38." },
+        { "name": "appraisedValue", "type": "number", "required": false, "description": "The home's value from the appraisal, in currency." },
+        { "name": "loanToValue", "type": "number", "required": false, "description": "Amount over appraised value, as a ratio such as 0.8." },
+        {
+          "name": "existingLoan",
+          "type": "reference",
+          "entity": "loan",
+          "required": false,
+          "description": "The loan a refinance application is against. Absent on a first loan."
+        }
+      ]
+    },
+    {
+      "id": "condition",
+      "name": "Condition",
+      "description": "A condition is an entity because the connection between an application and what still must be done carries wording and a status. A relationship cannot hold those.",
+      "attributes": [
+        { "name": "wording", "type": "string", "description": "What must be satisfied." },
+        {
+          "name": "status",
+          "type": "state",
+          "states": ["open", "cleared", "waived"],
+          "initial": "open"
+        },
+        { "name": "application", "type": "reference", "entity": "application" }
+      ]
+    },
+    {
+      "id": "document",
+      "name": "Document",
+      "description": "Evidence filed with an application. Credit, appraisal, and disclosure are values of one enum, not three entities.",
+      "attributes": [
+        { "name": "title", "type": "string" },
+        {
+          "name": "kind",
+          "type": "enum",
+          "values": ["credit", "appraisal", "disclosure", "loan-estimate", "closing-disclosure", "signed-note"],
+          "description": "Which kind of evidence this document is. The loan estimate and the closing disclosure are the two disclosures a borrower must receive, each with its own deadline."
+        },
+        { "name": "issuedAt", "type": "datetime", "required": false, "description": "When the document was issued to the borrower." },
+        { "name": "acknowledgedAt", "type": "datetime", "required": false, "description": "When the borrower acknowledged receiving it. Waiting periods run from here." },
+        { "name": "application", "type": "reference", "entity": "application" }
+      ]
+    },
+    {
+      "id": "loan",
+      "name": "Loan",
+      "description": "The loan that exists once an application is funded.",
+      "attributes": [
+        { "name": "amount", "type": "number" },
+        { "name": "currency", "type": "string" },
+        {
+          "name": "status",
+          "type": "state",
+          "states": ["active", "repaid", "defaulted"],
+          "initial": "active"
+        },
+        { "name": "application", "type": "reference", "entity": "application" },
+        { "name": "borrower", "type": "reference", "entity": "parties/person" }
+      ]
+    },
+    {
+      "id": "payoff",
+      "name": "Payoff",
+      "description": "A payoff is an entity because the connection between a refinance application and the loan it retires carries an amount and a date. The refinanced-by edge says which loan; it cannot hold how much was paid to close it.",
+      "attributes": [
+        { "name": "amount", "type": "number", "description": "The amount that retires the existing loan." },
+        { "name": "currency", "type": "string", "description": "The currency of amount." },
+        { "name": "goodThrough", "type": "datetime", "description": "The date the payoff amount is good through." },
+        {
+          "name": "status",
+          "type": "state",
+          "description": "Where the payoff is. Requesting, quoting and paying it are behavior.",
+          "states": ["requested", "received", "paid"],
+          "initial": "requested"
+        },
+        { "name": "application", "type": "reference", "entity": "application" },
+        { "name": "loan", "type": "reference", "entity": "loan", "description": "The existing loan this payoff retires." }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "borrower-applies",
+      "name": "applies",
+      "description": "A person applies.",
+      "from": "parties/person",
+      "to": "application",
+      "cardinality": "one-to-many",
+      "attribute": "application.borrower"
+    },
+    {
+      "id": "application-secured-by-home",
+      "name": "secured by",
+      "description": "The application is secured by a home in the property vocabulary.",
+      "from": "application",
+      "to": "property/home",
+      "cardinality": "many-to-one",
+      "attribute": "application.home"
+    },
+    {
+      "id": "application-has-condition",
+      "name": "has",
+      "description": "An application has conditions. The condition's wording stays on the condition entity.",
+      "from": "application",
+      "to": "condition",
+      "cardinality": "one-to-many",
+      "attribute": "condition.application"
+    },
+    {
+      "id": "document-supports-application",
+      "name": "supports",
+      "description": "A document supports an application.",
+      "from": "document",
+      "to": "application",
+      "cardinality": "many-to-one",
+      "attribute": "document.application"
+    },
+    {
+      "id": "application-becomes-loan",
+      "name": "becomes",
+      "description": "A funded application becomes a loan.",
+      "from": "application",
+      "to": "loan",
+      "cardinality": "one-to-one",
+      "attribute": "loan.application"
+    },
+    {
+      "id": "loan-refinanced-by",
+      "name": "refinanced by",
+      "description": "A loan is refinanced by a later application. The link is a reference on that application, not a new kind of loan.",
+      "from": "loan",
+      "to": "application",
+      "cardinality": "one-to-many",
+      "attribute": "application.existingLoan"
+    },
+    {
+      "id": "co-borrower-joins",
+      "name": "co-borrows on",
+      "description": "A person co-borrows on an application. The same pair of entities as applies, a different edge.",
+      "from": "parties/person",
+      "to": "application",
+      "cardinality": "many-to-many",
+      "attribute": "application.coBorrowers"
+    },
+    {
+      "id": "application-funds-payoff",
+      "name": "funds",
+      "description": "A refinance application funds a payoff of the loan it names.",
+      "from": "application",
+      "to": "payoff",
+      "cardinality": "one-to-many",
+      "attribute": "payoff.application"
+    },
+    {
+      "id": "payoff-retires-loan",
+      "name": "retires",
+      "description": "A payoff retires an existing loan. The amount stays on the payoff, not on this edge.",
+      "from": "payoff",
+      "to": "loan",
+      "cardinality": "many-to-one",
+      "attribute": "payoff.loan"
+    }
+  ]
+}

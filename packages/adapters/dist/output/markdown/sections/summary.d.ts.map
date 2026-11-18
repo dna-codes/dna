@@ -1,1 +1,0 @@
-{"version":3,"file":"summary.d.ts","sourceRoot":"","sources":["../../../../src/output/markdown/sections/summary.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAoD,MAAM,UAAU,CAAA;AAGrF,UAAU,cAAc;IACtB,MAAM,CAAC,EAAE,MAAM,CAAC,MAAM,EAAE,MAAM,CAAC,CAAA;CAChC;AAED,wBAAgB,aAAa,CAAC,GAAG,EAAE,QAAQ,EAAE,CAAC,EAAE,MAAM,EAAE,OAAO,GAAE,cAAmB,GAAG,MAAM,GAAG,IAAI,CAoCnG"}

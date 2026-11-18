@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/behaviour/policy/v1",
+  "version": "v1",
+  "title": "Policy",
+  "description": "A decision about the Actions it names: allow, deny, route the work to another performer, or require someone else's approval, when its condition holds or always when it has none. A rule on an Action's input is a policy whose condition reads input, so permissions and business rules are written in one grammar.",
+  "type": "object",
+  "required": ["id", "description", "actions", "effect"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/id",
+      "description": "Kebab-case. Unique among the policies of its behaviour document."
+    },
+    "description": {
+      "$ref": "#/$defs/text",
+      "description": "What the policy decides and why. A refusal cites it."
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+      },
+      "description": "The Actions it governs: in this behaviour document, or behaviour/action for one in a document this one uses."
+    },
+    "when": {
+      "$ref": "https://dna.codes/schemas/behaviour/condition/v1",
+      "description": "When the effect applies. Without it, the effect always applies."
+    },
+    "effect": { "$ref": "#/$defs/effect" }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "Kebab-case. Never changes once written."
+    },
+    "text": { "type": "string", "minLength": 1 },
+    "effect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["effect"],
+          "additionalProperties": false,
+          "properties": { "effect": { "enum": ["allow", "deny"] } }
+        },
+        {
+          "type": "object",
+          "required": ["effect", "performer"],
+          "additionalProperties": false,
+          "description": "route reassigns the work. require_approval leaves it with the requester and gates it on someone else's authorization.",
+          "properties": {
+            "effect": { "enum": ["route", "require_approval"] },
+            "performer": {
+              "enum": ["agent", "position"],
+              "description": "The kind of performer the work goes to."
+            },
+            "refs": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 },
+              "description": "Any one of these performers satisfies the effect. Absent pins nobody specific."
+            }
+          }
+        }
+      ]
+    }
+  }
+}

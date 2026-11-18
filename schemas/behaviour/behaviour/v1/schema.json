@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/behaviour/behaviour/v1",
+  "version": "v1",
+  "title": "Behaviour",
+  "description": "What a business does with the structure one domain describes: its Actions, the Operations that say who performs them on what, the workflows that sequence those Operations, and the policies that decide them. It names its domain and never changes it, so a business can be modelled structure first and given behaviour later. A set holds at most one behaviour document per domain.",
+  "type": "object",
+  "required": ["dna", "id", "name", "description", "domain"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "dna": {
+      "const": "behaviour/v1",
+      "description": "The behaviour vocabulary this document is written in."
+    },
+    "id": {
+      "$ref": "#/$defs/id",
+      "description": "Kebab-case. Unique among the documents of a set."
+    },
+    "name": { "$ref": "#/$defs/text" },
+    "description": { "$ref": "#/$defs/text" },
+    "domain": {
+      "$ref": "#/$defs/id",
+      "description": "The structure domain this document describes."
+    },
+    "uses": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/id" },
+      "description": "Other behaviour documents whose Actions this one refers to."
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "https://dna.codes/schemas/behaviour/action/v1" }
+    },
+    "operations": {
+      "type": "array",
+      "items": { "$ref": "https://dna.codes/schemas/behaviour/operation/v1" }
+    },
+    "workflows": {
+      "type": "array",
+      "items": { "$ref": "https://dna.codes/schemas/behaviour/workflow/v1" }
+    },
+    "policies": {
+      "type": "array",
+      "items": { "$ref": "https://dna.codes/schemas/behaviour/policy/v1" }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "Kebab-case. Never changes once written."
+    },
+    "text": { "type": "string", "minLength": 1 }
+  }
+}
