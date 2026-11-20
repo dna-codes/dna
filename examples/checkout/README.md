@@ -9,7 +9,7 @@ A worked DNA example: cart, order, payment authorization, refund, and who can ap
 1. Copy this folder, or run `npx degit dna-codes/dna/examples/checkout my-checkout`.
 2. Register and connect: `npx @dna-codes/cli register --json`, then set `DNA_ORG` and `DNA_ACCESS_TOKEN` for `.mcp.json`.
 3. Read the [agent quickstart](https://dna.codes/agents/guides/agent-quickstart.md). Authentication and the pre-claim cap are in [auth.md](https://dna.codes/agents/auth.md).
-4. `validate` the documents in `dna/`, then `apply` them when you want them saved.
+4. Dry-run `apply` on the documents in `dna/` to check them, then `apply` them when you want them saved.
 
 ## What is here
 
