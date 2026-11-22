@@ -45,6 +45,12 @@
           "entity": "loan",
           "required": false,
           "description": "The loan a refinance application is against. Absent on a first loan."
+        },
+        {
+          "name": "rateLockExpiresAt",
+          "type": "datetime",
+          "required": false,
+          "description": "When the interest rate locked for this application stops being honoured. Absent until the rate is locked."
         }
       ]
     },
@@ -114,6 +120,21 @@
         },
         { "name": "application", "type": "reference", "entity": "application" },
         { "name": "loan", "type": "reference", "entity": "loan", "description": "The existing loan this payoff retires." }
+      ]
+    }
+  ],
+  "extensions": [
+    {
+      "entity": "parties/person",
+      "description": "A borrower as the lender sees them. Parties still owns the person; origination adds the credit tier underwriting reads.",
+      "attributes": [
+        {
+          "name": "creditProfile",
+          "type": "enum",
+          "values": ["prime", "near-prime", "subprime"],
+          "required": false,
+          "description": "The person's credit tier from the last credit pull. Absent for a person never pulled."
+        }
       ]
     }
   ],

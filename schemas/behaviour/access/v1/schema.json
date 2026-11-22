@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dna.codes/schemas/behaviour/access/v1",
+  "version": "v1",
+  "title": "Access",
+  "description": "Who may do what across one workspace: the organization's roles, the grants at the organization and workspace scopes, and the orientation of each. A workspace holds at most one access document, beside its structure and behaviour documents, and it names no domain. Domain, entity and Action grants are written in the domain's behaviour document, and use the roles defined here by name. Roles are defined here alone: a behaviour document cannot define one.",
+  "type": "object",
+  "required": ["dna", "id", "name", "description"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "dna": {
+      "const": "access/v1",
+      "description": "The access vocabulary this document is written in."
+    },
+    "id": {
+      "$ref": "#/$defs/id",
+      "description": "Kebab-case. Unique among the documents of a set."
+    },
+    "name": { "$ref": "#/$defs/text" },
+    "description": { "$ref": "#/$defs/text" },
+    "orientation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The orientation declared at the organization and at this workspace. A new workspace declares least-privilege. A domain, entity or Action may declare its own in its behaviour document; the narrowest declaration decides.",
+      "properties": {
+        "organization": { "$ref": "#/$defs/orientation" },
+        "workspace": { "$ref": "#/$defs/orientation" }
+      }
+    },
+    "roles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/role" },
+      "description": "The organization's named roles. Ids are unique. A grant here or in a behaviour document uses one as { \"role\": id } in its when."
+    },
+    "grants": {
+      "type": "array",
+      "items": {
+        "$ref": "https://dna.codes/schemas/behaviour/policy/v1",
+        "required": ["scope"],
+        "not": { "properties": { "scope": { "properties": { "level": { "enum": ["domain", "entity", "action"] } } } } }
+      },
+      "description": "Grants at the organization and workspace scopes. Each applies to everything inside its scope, and names its rights."
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "Kebab-case. Never changes once written."
+    },
+    "text": { "type": "string", "minLength": 1 },
+    "orientation": {
+      "enum": ["least-privilege", "most-privilege"],
+      "description": "least-privilege: an ungoverned subject is denied, so only what is allowed proceeds. most-privilege: an ungoverned subject is allowed, so all proceeds except what is denied. A policy reference that does not resolve denies under both."
+    },
+    "role": {
+      "type": "object",
+      "required": ["id", "description", "when"],
+      "additionalProperties": false,
+      "description": "A named, reusable condition over actor. A role check is an attribute check.",
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "description": {
+          "$ref": "#/$defs/text",
+          "description": "Who holds the role."
+        },
+        "when": {
+          "$ref": "https://dna.codes/schemas/behaviour/condition/v1",
+          "description": "The condition, over the actor subject alone. It uses no other role."
+        }
+      }
+    }
+  }
+}

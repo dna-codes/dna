@@ -2,7 +2,7 @@
 
 A worked DNA example: loan application, underwriting, approval authority, conditions and disbursement.
 
-<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/origination/v4. -->
+<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/origination/v5. -->
 
 ## Start
 
@@ -15,6 +15,7 @@ A worked DNA example: loan application, underwriting, approval authority, condit
 
 | Path | What |
 | --- | --- |
+| `dna/structure/access.json` | structure/v1 domain |
 | `dna/structure/origination.json` | structure/v1 domain |
 | `dna/structure/parties.json` | structure/v1 domain |
 | `dna/structure/property.json` | structure/v1 domain |

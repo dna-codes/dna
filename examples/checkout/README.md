@@ -2,7 +2,7 @@
 
 A worked DNA example: cart, order, payment authorization, refund, and who can approve a refund.
 
-<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/checkout/v4. -->
+<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/checkout/v5. -->
 
 ## Start
 
@@ -15,6 +15,7 @@ A worked DNA example: cart, order, payment authorization, refund, and who can ap
 
 | Path | What |
 | --- | --- |
+| `dna/structure/access.json` | structure/v1 domain |
 | `dna/structure/commerce.json` | structure/v1 domain |
 | `dna/structure/fulfilment.json` | structure/v1 domain |
 | `dna/structure/parties.json` | structure/v1 domain |

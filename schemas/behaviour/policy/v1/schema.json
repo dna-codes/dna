@@ -3,14 +3,14 @@
   "$id": "https://dna.codes/schemas/behaviour/policy/v1",
   "version": "v1",
   "title": "Policy",
-  "description": "A decision about the Actions it names: allow, deny, route the work to another performer, or require someone else's approval, when its condition holds or always when it has none. A rule on an Action's input is a policy whose condition reads input, so permissions and business rules are written in one grammar.",
+  "description": "A decision about the Actions it names, or about a scope: allow, deny, route the work to another performer, or require someone else's approval, when its condition holds or always when it has none. A rule on an Action's input is a policy whose condition reads input, so permissions and business rules are written in one grammar. A policy names either actions or a scope, never both. A policy with a scope is a grant: it names the rights it decides and applies to everything inside its scope. Combination: any applicable deny, at any scope, overrides every other outcome. Among the other effects the narrowest scope decides, in the order action, entity, domain, workspace, organization, where a policy that names actions is at the action scope. Where scopes tie, the higher priority decides; a tie in priority with different effects is an unresolved conflict.",
   "type": "object",
-  "required": ["id", "description", "actions", "effect"],
+  "required": ["id", "description", "effect"],
   "additionalProperties": false,
   "properties": {
     "id": {
       "$ref": "#/$defs/id",
-      "description": "Kebab-case. Unique among the policies of its behaviour document."
+      "description": "Kebab-case. Unique among the policies and grants of its document."
     },
     "description": {
       "$ref": "#/$defs/text",
@@ -24,14 +24,39 @@
         "type": "string",
         "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$"
       },
-      "description": "The Actions it governs: in this behaviour document, or behaviour/action for one in a document this one uses."
+      "description": "The Actions it governs: in this behaviour document, or behaviour/action for one in a document this one uses. Absent when the policy has a scope."
+    },
+    "scope": {
+      "$ref": "#/$defs/scope",
+      "description": "What the grant governs instead of a list of Actions. It applies to every subject inside the scope."
+    },
+    "rights": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/right" },
+      "description": "What the grant decides inside its scope. Present exactly when scope is. A right to change the model implies no right to act on records, and the reverse."
+    },
+    "priority": {
+      "type": "integer",
+      "description": "Breaks a tie between policies at the same scope, neither of which denies: the higher priority decides. Absent is 0. A deny needs none, since any applicable deny overrides."
     },
     "when": {
       "$ref": "https://dna.codes/schemas/behaviour/condition/v1",
-      "description": "When the effect applies. Without it, the effect always applies."
+      "description": "When the effect applies. Without it, the effect always applies. For a grant, it names the principals the grant admits, with predicates over actor and with roles."
     },
     "effect": { "$ref": "#/$defs/effect" }
   },
+  "oneOf": [
+    {
+      "required": ["actions"],
+      "not": { "anyOf": [{ "required": ["scope"] }, { "required": ["rights"] }] }
+    },
+    {
+      "required": ["scope", "rights"],
+      "not": { "required": ["actions"] }
+    }
+  ],
   "$defs": {
     "id": {
       "type": "string",
@@ -39,6 +64,54 @@
       "description": "Kebab-case. Never changes once written."
     },
     "text": { "type": "string", "minLength": 1 },
+    "scope": {
+      "type": "object",
+      "required": ["level"],
+      "additionalProperties": false,
+      "description": "A level of the model and the subject at that level. organization and workspace name no subject: they are the organization and the workspace the document belongs to. Organization and workspace grants are written in the workspace's access document, and domain, entity and action grants in the domain's behaviour document.",
+      "properties": {
+        "level": {
+          "enum": ["organization", "workspace", "domain", "entity", "action"],
+          "description": "From the widest to the narrowest."
+        },
+        "subject": {
+          "type": "string",
+          "description": "domain at the domain level, domain/entity at the entity level, domain/entity.action at the action level."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "level": { "enum": ["organization", "workspace"] } }, "required": ["level"] },
+          "then": { "not": { "required": ["subject"] } },
+          "else": { "required": ["subject"] }
+        },
+        {
+          "if": { "properties": { "level": { "const": "domain" } }, "required": ["level"] },
+          "then": { "properties": { "subject": { "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" } } }
+        },
+        {
+          "if": { "properties": { "level": { "const": "entity" } }, "required": ["level"] },
+          "then": { "properties": { "subject": { "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/[a-z][a-z0-9]*(-[a-z0-9]+)*$" } } }
+        },
+        {
+          "if": { "properties": { "level": { "const": "action" } }, "required": ["level"] },
+          "then": { "properties": { "subject": { "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/[a-z][a-z0-9]*(-[a-z0-9]+)*\\.[a-z][a-z0-9]*(-[a-z0-9]+)*$" } } }
+        }
+      ]
+    },
+    "right": {
+      "anyOf": [
+        {
+          "enum": ["design:read", "design:write", "run:read", "run:write", "administer"],
+          "description": "design:read reads the model and design:write changes it. run:read reads records and run:write performs Actions on them. administer creates, changes and removes grants at the scope and inside it, never wider."
+        },
+        {
+          "type": "string",
+          "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "A named Action inside the scope, as in actions: the right to perform that Action alone. administer is always the right above, never an Action."
+        }
+      ]
+    },
     "effect": {
       "oneOf": [
         {

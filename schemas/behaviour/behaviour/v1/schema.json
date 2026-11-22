@@ -3,7 +3,7 @@
   "$id": "https://dna.codes/schemas/behaviour/behaviour/v1",
   "version": "v1",
   "title": "Behaviour",
-  "description": "What a business does with the structure one domain describes: its Actions, the Operations that say who performs them on what, the workflows that sequence those Operations, and the policies that decide them. It names its domain and never changes it, so a business can be modelled structure first and given behaviour later. A set holds at most one behaviour document per domain.",
+  "description": "What a business does with the structure one domain describes: its Actions, the Operations that say who performs them on what, the workflows that sequence those Operations, and the policies and grants that decide them. It names its domain and never changes it, so a business can be modelled structure first and given behaviour later. A set holds at most one behaviour document per domain.",
   "type": "object",
   "required": ["dna", "id", "name", "description", "domain"],
   "additionalProperties": false,
@@ -43,7 +43,26 @@
     },
     "policies": {
       "type": "array",
-      "items": { "$ref": "https://dna.codes/schemas/behaviour/policy/v1" }
+      "items": { "$ref": "https://dna.codes/schemas/behaviour/policy/v1", "required": ["actions"] },
+      "description": "Policies over named Actions, each at the action scope."
+    },
+    "grants": {
+      "type": "array",
+      "items": {
+        "$ref": "https://dna.codes/schemas/behaviour/policy/v1",
+        "required": ["scope"],
+        "not": { "properties": { "scope": { "properties": { "level": { "enum": ["organization", "workspace"] } } } } }
+      },
+      "description": "Policies over a scope inside this domain: the domain itself, one of its entities, or one of their Actions. Each names its rights. Grants are kept apart from policies so a reader that knows only policies over named Actions reads them unchanged. Organization and workspace grants belong to the workspace's access document."
+    },
+    "orientation": {
+      "$ref": "#/$defs/orientation",
+      "description": "The domain's orientation, for a subject in it that no policy or grant governs. Absent leaves the workspace's orientation in force."
+    },
+    "orientations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/scopedOrientation" },
+      "description": "Orientations declared at an entity or an Action of this domain. The effective orientation of a subject is the one declared at the narrowest scope that declares one."
     }
   },
   "$defs": {
@@ -52,6 +71,23 @@
       "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
       "description": "Kebab-case. Never changes once written."
     },
-    "text": { "type": "string", "minLength": 1 }
+    "text": { "type": "string", "minLength": 1 },
+    "orientation": {
+      "enum": ["least-privilege", "most-privilege"],
+      "description": "least-privilege: an ungoverned subject is denied, so only what is allowed proceeds. most-privilege: an ungoverned subject is allowed, so all proceeds except what is denied. A policy reference that does not resolve denies under both."
+    },
+    "scopedOrientation": {
+      "type": "object",
+      "required": ["subject", "orientation"],
+      "additionalProperties": false,
+      "properties": {
+        "subject": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*(\\.[a-z][a-z0-9]*(-[a-z0-9]+)*)?$",
+          "description": "entity, or entity.action, in this document's domain."
+        },
+        "orientation": { "$ref": "#/$defs/orientation" }
+      }
+    }
   }
 }

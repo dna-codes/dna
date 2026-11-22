@@ -28,6 +28,12 @@
           "type": "reference",
           "entity": "parties/organization",
           "description": "The firm being acquired. An instance such as Northline."
+        },
+        {
+          "name": "closingTarget",
+          "type": "datetime",
+          "required": false,
+          "description": "The date the buyer aims to close by. Absent until the deal lead sets one."
         }
       ]
     },
@@ -194,6 +200,20 @@
           "type": "state",
           "states": ["granted", "revoked", "expired"],
           "initial": "granted"
+        }
+      ]
+    }
+  ],
+  "extensions": [
+    {
+      "entity": "parties/organization",
+      "description": "A firm as diligence sees it. Parties still owns the organization; diligence records whether the firm has signed the deal's confidentiality agreement.",
+      "attributes": [
+        {
+          "name": "ndaSignedAt",
+          "type": "datetime",
+          "required": false,
+          "description": "When the firm signed the confidentiality agreement. Absent until it has."
         }
       ]
     }

@@ -2,7 +2,7 @@
 
 A worked DNA example: diligence request, finding, risk rating and sign-off authority.
 
-<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/diligence/v4. -->
+<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/diligence/v5. -->
 
 ## Start
 
@@ -15,6 +15,7 @@ A worked DNA example: diligence request, finding, risk rating and sign-off autho
 
 | Path | What |
 | --- | --- |
+| `dna/structure/access.json` | structure/v1 domain |
 | `dna/structure/diligence.json` | structure/v1 domain |
 | `dna/structure/parties.json` | structure/v1 domain |
 | `dna/behaviour/diligence.behaviour.json` | behaviour/v1: actions, workflows and policies |

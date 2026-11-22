@@ -3,7 +3,7 @@
   "$id": "https://dna.codes/schemas/behaviour/condition/v1",
   "version": "v1",
   "title": "Condition",
-  "description": "A test a policy applies: one predicate, or predicates composed with allOf, anyOf and not. A predicate reads a path off one subject and compares it with a value. The grammar is closed. It has no expressions, scripts or queries, and nothing in it names a business. target is the resource acted on, actor is who is acting, context is the time and environment supplied to the evaluator, and input is the arguments the Action was called with.",
+  "description": "A test a policy applies: one predicate, or predicates composed with allOf, anyOf and not. A predicate reads a path off one subject and compares it with a value. The grammar is closed. It has no expressions, scripts or queries, and nothing in it names a business. target is the resource acted on, actor is who is acting, context is the time and environment supplied to the evaluator, and input is the arguments the Action was called with. A role names a reusable condition over actor, kept in the access document.",
   "oneOf": [
     { "$ref": "#/$defs/predicate" },
     {
@@ -23,6 +23,23 @@
       "required": ["not"],
       "additionalProperties": false,
       "properties": { "not": { "$ref": "#" } }
+    },
+    {
+      "type": "object",
+      "required": ["role"],
+      "additionalProperties": false,
+      "description": "A named role: a reusable condition over actor, defined once in the workspace's access document. Using a role is the same as writing its condition in place.",
+      "properties": {
+        "role": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "The id of a role in the access document. A domain cannot define a role."
+        },
+        "principal": {
+          "enum": ["actor", "actingFor"],
+          "description": "Which principal the role is tested on. actor, the default, is who is acting. actingFor is the person or organization an agent acts for, read at actor.actingFor, so a grant can test an agent and the principal it acts for separately."
+        }
+      }
     }
   ],
   "$defs": {

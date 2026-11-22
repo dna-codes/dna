@@ -71,6 +71,13 @@
       "description": "Cancel an order that has not been fulfilled.",
       "input": [{ "name": "reason", "type": "string", "required": false }],
       "transition": { "from": ["submitted", "accepted"], "to": "cancelled" }
+    },
+    {
+      "id": "apply-coupon",
+      "entity": "order",
+      "name": "Apply coupon",
+      "description": "Record a promotion code on an order. It moves no state.",
+      "input": [{ "name": "couponCode", "type": "string" }]
     }
   ],
   "operations": [
@@ -263,5 +270,24 @@
       "when": { "subject": "target", "path": "amount", "op": "gt", "value": 250 },
       "effect": { "effect": "require_approval", "performer": "position" }
     }
-  ]
+  ],
+  "grants": [
+    {
+      "id": "merchandisers-design-commerce",
+      "description": "Merchandisers read and change the commerce model. It gives them no right to act on carts or orders.",
+      "scope": { "level": "domain", "subject": "commerce" },
+      "rights": ["design:read", "design:write"],
+      "when": { "role": "merchandiser" },
+      "effect": { "effect": "allow" }
+    },
+    {
+      "id": "shoppers-apply-coupons",
+      "description": "A shopper may apply a coupon to an order.",
+      "scope": { "level": "action", "subject": "commerce/order.apply-coupon" },
+      "rights": ["apply-coupon"],
+      "when": { "role": "shopper", "principal": "actor" },
+      "effect": { "effect": "allow" }
+    }
+  ],
+  "orientation": "most-privilege"
 }

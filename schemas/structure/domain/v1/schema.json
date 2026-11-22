@@ -34,6 +34,11 @@
       "type": "array",
       "items": { "$ref": "https://dna.codes/schemas/structure/relationship/v1" },
       "description": "The edges between those entities, including edges into domains named by uses."
+    },
+    "extensions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/extension" },
+      "description": "Entities of domains named by uses that this domain extends with attributes of its own. An entity has one owning domain, which keeps its attributes, its states and its Actions. An extension adds beside them and never changes them. This domain's behaviour document may declare Actions on an extended entity, and those Actions change only this extension's attributes. To change the owner's attributes or state, an Operation applies an Action the owner declares."
     }
   },
   "$defs": {
@@ -43,6 +48,32 @@
       "description": "Kebab-case. Never changes once written."
     },
     "name": { "type": "string", "minLength": 1 },
-    "text": { "type": "string", "minLength": 1 }
+    "text": { "type": "string", "minLength": 1 },
+    "extension": {
+      "type": "object",
+      "required": ["entity", "attributes"],
+      "additionalProperties": false,
+      "description": "One entity of another domain, extended by this one. Records of that entity carry these attributes under this domain's extension.",
+      "properties": {
+        "entity": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "domain/entity: an entity declared in a domain named by uses. A domain extends an entity at most once."
+        },
+        "description": {
+          "$ref": "#/$defs/text",
+          "description": "Why this domain extends the entity."
+        },
+        "attributes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://dna.codes/schemas/structure/attribute/v1",
+            "not": { "required": ["type"], "properties": { "type": { "const": "state" } } }
+          },
+          "description": "The attributes this domain adds. A name repeats none of the owner's attributes and none of another extension's on the same entity. None is a state attribute: the owner's state moves only through the owner's Actions."
+        }
+      }
+    }
   }
 }

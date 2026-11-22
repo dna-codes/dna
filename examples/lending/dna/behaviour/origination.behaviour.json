@@ -199,6 +199,13 @@
         "from": ["received", "underwriting", "conditional", "clear-to-close"],
         "to": "withdrawn"
       }
+    },
+    {
+      "id": "lock-rate",
+      "entity": "application",
+      "name": "Lock rate",
+      "description": "Lock the application's interest rate until a date. It moves no state.",
+      "input": [{ "name": "rateLockExpiresAt", "type": "datetime" }]
     }
   ],
   "operations": [
@@ -577,5 +584,35 @@
       },
       "effect": { "effect": "deny" }
     }
-  ]
+  ],
+  "grants": [
+    {
+      "id": "loan-officers-read-applications",
+      "description": "Loan officers read every application and its history.",
+      "scope": { "level": "entity", "subject": "origination/application" },
+      "rights": ["run:read"],
+      "priority": 10,
+      "when": { "role": "loan-officer" },
+      "effect": { "effect": "allow" }
+    },
+    {
+      "id": "loan-officers-lock-rates",
+      "description": "A loan officer, or an agent acting for one, locks an application's rate.",
+      "scope": { "level": "action", "subject": "origination/application.lock-rate" },
+      "rights": ["run:write"],
+      "when": {
+        "anyOf": [
+          { "role": "loan-officer" },
+          {
+            "allOf": [
+              { "subject": "actor", "path": "kind", "op": "eq", "value": "agent" },
+              { "role": "loan-officer", "principal": "actingFor" }
+            ]
+          }
+        ]
+      },
+      "effect": { "effect": "allow" }
+    }
+  ],
+  "orientations": [{ "subject": "application.lock-rate", "orientation": "most-privilege" }]
 }

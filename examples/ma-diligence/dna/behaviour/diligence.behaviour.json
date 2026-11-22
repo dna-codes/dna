@@ -130,6 +130,13 @@
       "description": "The buyer walks away.",
       "input": [{ "name": "reason", "type": "string" }],
       "transition": { "from": ["open"], "to": "declined" }
+    },
+    {
+      "id": "set-closing-target",
+      "entity": "deal",
+      "name": "Set closing target",
+      "description": "The deal lead sets the date the buyer aims to close by. It moves no state.",
+      "input": [{ "name": "closingTarget", "type": "datetime" }]
     }
   ],
   "operations": [
@@ -385,5 +392,34 @@
       },
       "effect": { "effect": "require_approval", "performer": "position", "refs": ["board"] }
     }
-  ]
+  ],
+  "grants": [
+    {
+      "id": "deal-lead-administers-diligence",
+      "description": "The buyer's deal lead administers grants on the diligence domain and inside it, and reads its model and records.",
+      "scope": { "level": "domain", "subject": "diligence" },
+      "rights": ["administer", "design:read", "run:read"],
+      "when": { "role": "deal-lead" },
+      "effect": { "effect": "allow" }
+    },
+    {
+      "id": "deal-lead-sets-closing-target",
+      "description": "The deal lead, or an agent acting for the deal lead, sets a deal's closing target.",
+      "scope": { "level": "action", "subject": "diligence/deal.set-closing-target" },
+      "rights": ["set-closing-target"],
+      "when": {
+        "anyOf": [
+          { "role": "deal-lead" },
+          {
+            "allOf": [
+              { "subject": "actor", "path": "kind", "op": "eq", "value": "agent" },
+              { "role": "deal-lead", "principal": "actingFor" }
+            ]
+          }
+        ]
+      },
+      "effect": { "effect": "allow" }
+    }
+  ],
+  "orientation": "most-privilege"
 }

@@ -1,0 +1,29 @@
+{
+  "dna": "access/v1",
+  "id": "diligence-access",
+  "name": "Diligence access",
+  "description": "Who may do what in the buyer's diligence workspace. It was governed before orientation existed, so it stays most privilege until an owner opts in: whatever no policy denies proceeds, as it did through v4.",
+  "orientation": { "workspace": "most-privilege" },
+  "roles": [
+    {
+      "id": "deal-lead",
+      "description": "The buyer's deal lead at Harbor.",
+      "when": {
+        "allOf": [
+          { "subject": "actor", "path": "organization", "op": "eq", "value": "harbor-buyer" },
+          { "subject": "actor", "path": "role", "op": "eq", "value": "deal-lead" }
+        ]
+      }
+    }
+  ],
+  "grants": [
+    {
+      "id": "deal-lead-designs-the-workspace",
+      "description": "The deal lead reads and changes the workspace's model.",
+      "scope": { "level": "workspace" },
+      "rights": ["design:read", "design:write"],
+      "when": { "role": "deal-lead" },
+      "effect": { "effect": "allow" }
+    }
+  ]
+}

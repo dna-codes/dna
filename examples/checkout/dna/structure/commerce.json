@@ -82,6 +82,27 @@
           "type": "boolean",
           "required": false,
           "description": "Whether the shopper asked for the order to be gift-wrapped."
+        },
+        {
+          "name": "couponCode",
+          "type": "string",
+          "required": false,
+          "description": "A promotion code the shopper applied to the order. Absent when none was applied."
+        }
+      ]
+    }
+  ],
+  "extensions": [
+    {
+      "entity": "parties/person",
+      "description": "A person as a store sees them. Parties still owns the person; commerce adds the loyalty tier it prices by.",
+      "attributes": [
+        {
+          "name": "loyaltyTier",
+          "type": "enum",
+          "values": ["standard", "silver", "gold"],
+          "required": false,
+          "description": "The shopper's loyalty tier. Absent for a shopper who has not joined."
         }
       ]
     }
