@@ -1,0 +1,25 @@
+{
+  "dna": "access/v1",
+  "id": "checkout-workspace-access",
+  "name": "Checkout workspace access",
+  "description": "Who may do what in the checkout workspace. It was governed before defaults existed, so it allows what no policy governs until an owner opts in: whatever no policy denies proceeds, as it did through v4.",
+  "home": "workspace",
+  "defaults": [{ "default": "allow" }, { "target": "commerce", "default": "allow" }],
+  "policies": [
+    {
+      "id": "merchandisers-read-the-store",
+      "description": "Merchandisers read the whole checkout model and its records.",
+      "actions": ["design:read", "run:read"],
+      "when": { "group": "merchandiser" },
+      "effect": { "effect": "allow" }
+    },
+    {
+      "id": "merchandisers-design-commerce",
+      "description": "Merchandisers change the commerce model. It gives them no right to act on carts or orders.",
+      "target": "commerce",
+      "actions": ["design:write"],
+      "when": { "group": "merchandiser" },
+      "effect": { "effect": "allow" }
+    }
+  ]
+}

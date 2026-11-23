@@ -3,60 +3,50 @@
   "$id": "https://dna.codes/schemas/behaviour/policy/v1",
   "version": "v1",
   "title": "Policy",
-  "description": "A decision about the Actions it names, or about a scope: allow, deny, route the work to another performer, or require someone else's approval, when its condition holds or always when it has none. A rule on an Action's input is a policy whose condition reads input, so permissions and business rules are written in one grammar. A policy names either actions or a scope, never both. A policy with a scope is a grant: it names the rights it decides and applies to everything inside its scope. Combination: any applicable deny, at any scope, overrides every other outcome. Among the other effects the narrowest scope decides, in the order action, entity, domain, workspace, organization, where a policy that names actions is at the action scope. Where scopes tie, the higher priority decides; a tie in priority with different effects is an unresolved conflict.",
+  "description": "A decision about the actions it names at its target: allow, deny, route the work to another performer, or require someone else's approval, when its condition holds or always when it has none. A rule on an Action's input is a policy whose condition reads input, so permissions and business rules are written in one grammar. A policy applies to every request at or under its target, wherever it is written. Combination: every applicable policy contributes, at any target, and the most restrictive decision wins, in the order deny, then require_approval, then allow. A narrower allow removes neither a wider deny nor a wider approval requirement; an exception is written on the policy it relaxes, as a not in its condition. route allows the act and adds an obligation naming the performer: where more than one route applies, the route at the deepest target is taken, then the higher priority. Approvals required by more than one policy accumulate. Where no policy governs a request, the effective default decides.",
   "type": "object",
-  "required": ["id", "description", "effect"],
+  "required": ["id", "description", "actions", "effect"],
   "additionalProperties": false,
   "properties": {
     "id": {
       "$ref": "#/$defs/id",
-      "description": "Kebab-case. Unique among the policies and grants of its document."
+      "description": "Kebab-case. Unique among the policies of its document."
     },
     "description": {
       "$ref": "#/$defs/text",
       "description": "What the policy decides and why. A refusal cites it."
+    },
+    "target": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*(/[a-z][a-z0-9]*(-[a-z0-9]+)*)?$",
+      "description": "The address the policy applies to, relative to the workspace: a domain (lending) or an entity (lending/application). It covers everything under it. Omitted, it is the home of the document that holds the policy: its organization, its workspace, or its domain. It never names a record or an Action: an Action is named in actions, and a record id is Run data. Cedar and IAM call this the resource."
     },
     "actions": {
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
       "items": {
-        "type": "string",
-        "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+        "anyOf": [
+          { "$ref": "#/$defs/actionGroup" },
+          {
+            "type": "string",
+            "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+            "description": "A named Action: in this behaviour document, or behaviour/action for one in a document this one uses."
+          }
+        ]
       },
-      "description": "The Actions it governs: in this behaviour document, or behaviour/action for one in a document this one uses. Absent when the policy has a scope."
-    },
-    "scope": {
-      "$ref": "#/$defs/scope",
-      "description": "What the grant governs instead of a list of Actions. It applies to every subject inside the scope."
-    },
-    "rights": {
-      "type": "array",
-      "minItems": 1,
-      "uniqueItems": true,
-      "items": { "$ref": "#/$defs/right" },
-      "description": "What the grant decides inside its scope. Present exactly when scope is. A right to change the model implies no right to act on records, and the reverse."
-    },
-    "priority": {
-      "type": "integer",
-      "description": "Breaks a tie between policies at the same scope, neither of which denies: the higher priority decides. Absent is 0. A deny needs none, since any applicable deny overrides."
+      "description": "What the policy decides: named Actions, the built-in action groups, or both."
     },
     "when": {
       "$ref": "https://dna.codes/schemas/behaviour/condition/v1",
-      "description": "When the effect applies. Without it, the effect always applies. For a grant, it names the principals the grant admits, with predicates over actor and with roles."
+      "description": "When the policy applies. Without it, it always applies. It tests the actor, the target record, the input and the context, and names the principals it admits with groups, path references and relations."
     },
-    "effect": { "$ref": "#/$defs/effect" }
-  },
-  "oneOf": [
-    {
-      "required": ["actions"],
-      "not": { "anyOf": [{ "required": ["scope"] }, { "required": ["rights"] }] }
-    },
-    {
-      "required": ["scope", "rights"],
-      "not": { "required": ["actions"] }
+    "effect": { "$ref": "#/$defs/effect" },
+    "priority": {
+      "type": "integer",
+      "description": "Breaks a tie only between routes at the same target: when two route policies apply at one target, the higher priority names the performer. It has no other use: it never orders deny, require_approval or allow, and a route at a deeper target is taken whatever its priority. Absent is 0. Two applicable routes at one target with equal priority and different performers are a conflict that validation reports."
     }
-  ],
+  },
   "$defs": {
     "id": {
       "type": "string",
@@ -64,55 +54,12 @@
       "description": "Kebab-case. Never changes once written."
     },
     "text": { "type": "string", "minLength": 1 },
-    "scope": {
-      "type": "object",
-      "required": ["level"],
-      "additionalProperties": false,
-      "description": "A level of the model and the subject at that level. organization and workspace name no subject: they are the organization and the workspace the document belongs to. Organization and workspace grants are written in the workspace's access document, and domain, entity and action grants in the domain's behaviour document.",
-      "properties": {
-        "level": {
-          "enum": ["organization", "workspace", "domain", "entity", "action"],
-          "description": "From the widest to the narrowest."
-        },
-        "subject": {
-          "type": "string",
-          "description": "domain at the domain level, domain/entity at the entity level, domain/entity.action at the action level."
-        }
-      },
-      "allOf": [
-        {
-          "if": { "properties": { "level": { "enum": ["organization", "workspace"] } }, "required": ["level"] },
-          "then": { "not": { "required": ["subject"] } },
-          "else": { "required": ["subject"] }
-        },
-        {
-          "if": { "properties": { "level": { "const": "domain" } }, "required": ["level"] },
-          "then": { "properties": { "subject": { "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" } } }
-        },
-        {
-          "if": { "properties": { "level": { "const": "entity" } }, "required": ["level"] },
-          "then": { "properties": { "subject": { "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/[a-z][a-z0-9]*(-[a-z0-9]+)*$" } } }
-        },
-        {
-          "if": { "properties": { "level": { "const": "action" } }, "required": ["level"] },
-          "then": { "properties": { "subject": { "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/[a-z][a-z0-9]*(-[a-z0-9]+)*\\.[a-z][a-z0-9]*(-[a-z0-9]+)*$" } } }
-        }
-      ]
-    },
-    "right": {
-      "anyOf": [
-        {
-          "enum": ["design:read", "design:write", "run:read", "run:write", "administer"],
-          "description": "design:read reads the model and design:write changes it. run:read reads records and run:write performs Actions on them. administer creates, changes and removes grants at the scope and inside it, never wider."
-        },
-        {
-          "type": "string",
-          "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
-          "description": "A named Action inside the scope, as in actions: the right to perform that Action alone. administer is always the right above, never an Action."
-        }
-      ]
+    "actionGroup": {
+      "enum": ["design:read", "design:write", "run:read", "run:write", "administer"],
+      "description": "A built-in action group over the tool surface, fixed by the engine; a domain cannot define one, and an Action of its own should not be named administer. design:read reads the model and design:write changes it. run:read reads records and run:write performs Actions on them. A right to change the model implies no right to act on records, and the reverse. administer creates, changes and removes policies and defaults whose target is at or under the policy's own target, never wider."
     },
     "effect": {
+      "description": "What follows when the policy applies. allow and require_approval and deny are decisions, ordered by restriction: deny wins over require_approval, which wins over allow, at any target. route is an obligation that allows the act and names who performs it; among applicable routes the deepest target decides, then priority.",
       "oneOf": [
         {
           "type": "object",
@@ -124,7 +71,7 @@
           "type": "object",
           "required": ["effect", "performer"],
           "additionalProperties": false,
-          "description": "route reassigns the work. require_approval leaves it with the requester and gates it on someone else's authorization.",
+          "description": "route reassigns the work and allows it. require_approval leaves it with the requester and gates it on someone else's authorization; approvals required by more than one policy accumulate.",
           "properties": {
             "effect": { "enum": ["route", "require_approval"] },
             "performer": {

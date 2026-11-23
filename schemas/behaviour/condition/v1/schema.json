@@ -3,7 +3,7 @@
   "$id": "https://dna.codes/schemas/behaviour/condition/v1",
   "version": "v1",
   "title": "Condition",
-  "description": "A test a policy applies: one predicate, or predicates composed with allOf, anyOf and not. A predicate reads a path off one subject and compares it with a value. The grammar is closed. It has no expressions, scripts or queries, and nothing in it names a business. target is the resource acted on, actor is who is acting, context is the time and environment supplied to the evaluator, and input is the arguments the Action was called with. A role names a reusable condition over actor, kept in the access document.",
+  "description": "A test a policy applies: one predicate, a group, or a relation, or these composed with allOf, anyOf and not. A predicate reads a path off one subject and compares it with a literal value or with a reference to another path. The grammar is closed. It has no expressions, scripts or queries, and nothing in it names a business. target is the record acted on, actor is who is acting, context is the time and environment supplied to the evaluator, and input is the arguments the Action was called with. A group names a reusable condition over a principal, kept in the organization access document. A relation holds when a structure relationship connects two values.",
   "oneOf": [
     { "$ref": "#/$defs/predicate" },
     {
@@ -26,23 +26,67 @@
     },
     {
       "type": "object",
-      "required": ["role"],
+      "required": ["group"],
       "additionalProperties": false,
-      "description": "A named role: a reusable condition over actor, defined once in the workspace's access document. Using a role is the same as writing its condition in place.",
+      "description": "A named group: a reusable condition over a principal, defined once in the organization access document. Using a group is the same as writing its condition in place.",
       "properties": {
-        "role": {
+        "group": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
-          "description": "The id of a role in the access document. A domain cannot define a role."
+          "description": "The id of a group in the organization access document. A workspace or a domain cannot define a group."
         },
         "principal": {
           "enum": ["actor", "actingFor"],
-          "description": "Which principal the role is tested on. actor, the default, is who is acting. actingFor is the person or organization an agent acts for, read at actor.actingFor, so a grant can test an agent and the principal it acts for separately."
+          "description": "Which principal the group is tested on. actor, the default, is who is acting. actingFor is the person or organization an agent acts for, read at actor.actingFor, so a policy can test an agent and the principal it acts for separately."
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["related", "from", "to"],
+      "additionalProperties": false,
+      "description": "A relation: holds when the named structure relationship connects from to to, read in the relationship's own direction, from its from end to its to end. It states membership and ownership, such as the actor on a deal team or the shopper who placed an order, without a rule per record.",
+      "properties": {
+        "related": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "domain/relationship: the id of a relationship declared in that structure domain."
+        },
+        "from": {
+          "$ref": "#/$defs/reference",
+          "description": "The value at the relationship's from end."
+        },
+        "to": {
+          "$ref": "#/$defs/reference",
+          "description": "The value at the relationship's to end."
         }
       }
     }
   ],
   "$defs": {
+    "reference": {
+      "type": "object",
+      "required": ["subject"],
+      "additionalProperties": false,
+      "description": "A value read from a subject in place of a literal. With a path, it is the value at that path. Without one, it is the subject itself: the record for target, the principal for actor. A path is never empty: a bare subject omits it, and a reference compared in a predicate always names one.",
+      "properties": {
+        "subject": {
+          "enum": ["target", "actor", "context", "input"],
+          "description": "Which subject the value is read from."
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9]*(\\.[a-zA-Z][a-zA-Z0-9]*)*$",
+          "description": "A dotted property path on that subject, such as requestedBy or forumDailyCap."
+        },
+        "principal": {
+          "enum": ["actor", "actingFor"],
+          "description": "Which principal the actor subject is read from: actor, the default, or actingFor, the person or organization an agent acts for. Allowed on the actor subject alone."
+        }
+      },
+      "if": { "required": ["principal"] },
+      "then": { "properties": { "subject": { "const": "actor" } } }
+    },
     "predicate": {
       "type": "object",
       "required": ["subject", "path", "op", "value"],
@@ -59,21 +103,26 @@
         },
         "op": {
           "enum": ["lt", "lte", "gt", "gte", "eq", "neq", "in", "notIn"],
-          "description": "The comparison. in and notIn compare against a list."
+          "description": "The comparison. in and notIn compare against a list, written literally or read through a reference."
         },
         "value": {
           "oneOf": [
             { "type": "number" },
             { "type": "string" },
-            { "type": "array", "minItems": 1, "items": { "type": ["number", "string"] } }
+            { "type": "array", "minItems": 1, "items": { "type": ["number", "string"] } },
+            {
+              "$ref": "#/$defs/reference",
+              "required": ["path"],
+              "description": "A path reference, compared as if its value were written here: the actor is the record's owner, or the approver is not the requester."
+            }
           ]
         }
       },
       "allOf": [
         {
           "if": { "properties": { "op": { "enum": ["in", "notIn"] } }, "required": ["op"] },
-          "then": { "properties": { "value": { "type": "array" } } },
-          "else": { "properties": { "value": { "type": ["number", "string"] } } }
+          "then": { "properties": { "value": { "type": ["array", "object"] } } },
+          "else": { "properties": { "value": { "type": ["number", "string", "object"] } } }
         }
       ]
     }

@@ -1,10 +1,10 @@
 {
   "dna": "access/v1",
-  "id": "origination-access",
-  "name": "Origination access",
-  "description": "Who may do what in the lender's origination workspace. It was governed before orientation existed, so it stays most privilege until an owner opts in: whatever no policy denies proceeds, as it did through v4.",
-  "orientation": { "workspace": "most-privilege" },
-  "roles": [
+  "id": "origination-organization-access",
+  "name": "Harbor Lending organization access",
+  "description": "Harbor Lending's groups, and its administrator. A new workspace of the lender denies what no policy governs; the origination workspace, governed before defaults existed, declares its own allow.",
+  "home": "organization",
+  "groups": [
     {
       "id": "loan-officer",
       "description": "A loan officer at Harbor Lending.",
@@ -17,7 +17,7 @@
     },
     {
       "id": "lending-admin",
-      "description": "The person who administers Harbor Lending's workspace.",
+      "description": "The person who administers Harbor Lending's workspaces.",
       "when": {
         "allOf": [
           { "subject": "actor", "path": "organization", "op": "eq", "value": "harbor-lending" },
@@ -26,13 +26,13 @@
       }
     }
   ],
-  "grants": [
+  "defaults": [{ "default": "deny" }],
+  "policies": [
     {
       "id": "lending-admin-administers",
-      "description": "The lending administrator administers grants across the organization, and reads and changes its model.",
-      "scope": { "level": "organization" },
-      "rights": ["administer", "design:read", "design:write"],
-      "when": { "role": "lending-admin" },
+      "description": "The lending administrator administers policies across the organization, and reads and changes its model.",
+      "actions": ["administer", "design:read", "design:write"],
+      "when": { "group": "lending-admin" },
       "effect": { "effect": "allow" }
     }
   ]

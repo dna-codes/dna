@@ -3,7 +3,7 @@
   "$id": "https://dna.codes/schemas/behaviour/behaviour/v1",
   "version": "v1",
   "title": "Behaviour",
-  "description": "What a business does with the structure one domain describes: its Actions, the Operations that say who performs them on what, the workflows that sequence those Operations, and the policies and grants that decide them. It names its domain and never changes it, so a business can be modelled structure first and given behaviour later. A set holds at most one behaviour document per domain.",
+  "description": "What a business does with the structure one domain describes: its Actions, the Operations that say who performs them on what, the workflows that sequence those Operations, the policies that decide them, and the defaults for what no policy governs. It names its domain and never changes it, so a business can be modelled structure first and given behaviour later. A set holds at most one behaviour document per domain. Its home is its domain: its policies and defaults target the domain or an entity in it.",
   "type": "object",
   "required": ["dna", "id", "name", "description", "domain"],
   "additionalProperties": false,
@@ -43,26 +43,13 @@
     },
     "policies": {
       "type": "array",
-      "items": { "$ref": "https://dna.codes/schemas/behaviour/policy/v1", "required": ["actions"] },
-      "description": "Policies over named Actions, each at the action scope."
+      "items": { "$ref": "https://dna.codes/schemas/behaviour/policy/v1" },
+      "description": "The domain's policies. A policy with no target applies to the whole domain; a target names the domain or an entity in it, never another domain. Organization and workspace policies belong to their access documents."
     },
-    "grants": {
+    "defaults": {
       "type": "array",
-      "items": {
-        "$ref": "https://dna.codes/schemas/behaviour/policy/v1",
-        "required": ["scope"],
-        "not": { "properties": { "scope": { "properties": { "level": { "enum": ["organization", "workspace"] } } } } }
-      },
-      "description": "Policies over a scope inside this domain: the domain itself, one of its entities, or one of their Actions. Each names its rights. Grants are kept apart from policies so a reader that knows only policies over named Actions reads them unchanged. Organization and workspace grants belong to the workspace's access document."
-    },
-    "orientation": {
-      "$ref": "#/$defs/orientation",
-      "description": "The domain's orientation, for a subject in it that no policy or grant governs. Absent leaves the workspace's orientation in force."
-    },
-    "orientations": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/scopedOrientation" },
-      "description": "Orientations declared at an entity or an Action of this domain. The effective orientation of a subject is the one declared at the narrowest scope that declares one."
+      "items": { "$ref": "#/$defs/default" },
+      "description": "The decision for a request no policy governs, declared at the domain or at an entity in it. The effective default of a request is the one declared at the deepest target that contains it; where the domain declares none, the workspace's applies."
     }
   },
   "$defs": {
@@ -72,21 +59,21 @@
       "description": "Kebab-case. Never changes once written."
     },
     "text": { "type": "string", "minLength": 1 },
-    "orientation": {
-      "enum": ["least-privilege", "most-privilege"],
-      "description": "least-privilege: an ungoverned subject is denied, so only what is allowed proceeds. most-privilege: an ungoverned subject is allowed, so all proceeds except what is denied. A policy reference that does not resolve denies under both."
-    },
-    "scopedOrientation": {
+    "default": {
       "type": "object",
-      "required": ["subject", "orientation"],
+      "required": ["default"],
       "additionalProperties": false,
+      "description": "A default and the target it is declared at.",
       "properties": {
-        "subject": {
+        "target": {
           "type": "string",
-          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*(\\.[a-z][a-z0-9]*(-[a-z0-9]+)*)?$",
-          "description": "entity, or entity.action, in this document's domain."
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*(/[a-z][a-z0-9]*(-[a-z0-9]+)*)?$",
+          "description": "A domain or an entity address, relative to the workspace, as a policy's target. Omitted, it is the document's home."
         },
-        "orientation": { "$ref": "#/$defs/orientation" }
+        "default": {
+          "enum": ["deny", "allow"],
+          "description": "deny: what no policy governs is refused, so only what is allowed proceeds. allow: what no policy governs proceeds, so all proceeds except what is denied. A policy reference that does not resolve denies under both."
+        }
       }
     }
   }

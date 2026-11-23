@@ -541,10 +541,12 @@
     },
     {
       "id": "mortgage-insurance-review",
-      "description": "At or above 80% loan-to-value the file goes to the mortgage-insurance desk before approval.",
+      "description": "At or above 80% loan-to-value the file goes to the mortgage-insurance desk before approval. Its priority puts it ahead of any other route on an application.",
+      "target": "origination/application",
       "actions": ["approve", "approve-with-conditions"],
       "when": { "subject": "input", "path": "loanToValue", "op": "gte", "value": 0.8 },
-      "effect": { "effect": "route", "performer": "position", "refs": ["mortgage-insurance-desk"] }
+      "effect": { "effect": "route", "performer": "position", "refs": ["mortgage-insurance-desk"] },
+      "priority": 10
     },
     {
       "id": "closing-disclosure-wait",
@@ -583,30 +585,19 @@
         ]
       },
       "effect": { "effect": "deny" }
-    }
-  ],
-  "grants": [
-    {
-      "id": "loan-officers-read-applications",
-      "description": "Loan officers read every application and its history.",
-      "scope": { "level": "entity", "subject": "origination/application" },
-      "rights": ["run:read"],
-      "priority": 10,
-      "when": { "role": "loan-officer" },
-      "effect": { "effect": "allow" }
     },
     {
       "id": "loan-officers-lock-rates",
       "description": "A loan officer, or an agent acting for one, locks an application's rate.",
-      "scope": { "level": "action", "subject": "origination/application.lock-rate" },
-      "rights": ["run:write"],
+      "target": "origination/application",
+      "actions": ["lock-rate"],
       "when": {
         "anyOf": [
-          { "role": "loan-officer" },
+          { "group": "loan-officer" },
           {
             "allOf": [
               { "subject": "actor", "path": "kind", "op": "eq", "value": "agent" },
-              { "role": "loan-officer", "principal": "actingFor" }
+              { "group": "loan-officer", "principal": "actingFor" }
             ]
           }
         ]
@@ -614,5 +605,5 @@
       "effect": { "effect": "allow" }
     }
   ],
-  "orientations": [{ "subject": "application.lock-rate", "orientation": "most-privilege" }]
+  "defaults": [{ "target": "origination/application", "default": "allow" }]
 }

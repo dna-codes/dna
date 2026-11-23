@@ -15,11 +15,12 @@ A worked DNA example: cart, order, payment authorization, refund, and who can ap
 
 | Path | What |
 | --- | --- |
-| `dna/structure/access.json` | structure/v1 domain |
 | `dna/structure/commerce.json` | structure/v1 domain |
 | `dna/structure/fulfilment.json` | structure/v1 domain |
+| `dna/structure/organization.access.json` | structure/v1 domain |
 | `dna/structure/parties.json` | structure/v1 domain |
 | `dna/structure/payments.json` | structure/v1 domain |
+| `dna/structure/workspace.access.json` | structure/v1 domain |
 | `dna/behaviour/commerce.behaviour.json` | behaviour/v1: actions, workflows and policies |
 | `dna/behaviour/fulfilment.behaviour.json` | behaviour/v1: actions, workflows and policies |
 | `dna/behaviour/payments.behaviour.json` | behaviour/v1: actions, workflows and policies |

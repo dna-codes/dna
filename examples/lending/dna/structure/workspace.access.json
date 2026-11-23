@@ -1,0 +1,31 @@
+{
+  "dna": "access/v1",
+  "id": "origination-workspace-access",
+  "name": "Origination workspace access",
+  "description": "Who may do what in the lender's origination workspace. It was governed before defaults existed, so it allows what no policy governs until an owner opts in: whatever no policy denies proceeds, as it did through v4.",
+  "home": "workspace",
+  "defaults": [{ "default": "allow" }],
+  "policies": [
+    {
+      "id": "loan-officers-read-applications",
+      "description": "Loan officers read every application and its history.",
+      "target": "origination/application",
+      "actions": ["run:read"],
+      "when": { "group": "loan-officer" },
+      "effect": { "effect": "allow" }
+    },
+    {
+      "id": "borrowers-read-their-applications",
+      "description": "A borrower, or an agent acting for one, reads the applications they made.",
+      "target": "origination/application",
+      "actions": ["run:read"],
+      "when": {
+        "anyOf": [
+          { "related": "origination/borrower-applies", "from": { "subject": "actor" }, "to": { "subject": "target" } },
+          { "related": "origination/borrower-applies", "from": { "subject": "actor", "principal": "actingFor" }, "to": { "subject": "target" } }
+        ]
+      },
+      "effect": { "effect": "allow" }
+    }
+  ]
+}

@@ -3,9 +3,9 @@
   "$id": "https://dna.codes/schemas/behaviour/access/v1",
   "version": "v1",
   "title": "Access",
-  "description": "Who may do what across one workspace: the organization's roles, the grants at the organization and workspace scopes, and the orientation of each. A workspace holds at most one access document, beside its structure and behaviour documents, and it names no domain. Domain, entity and Action grants are written in the domain's behaviour document, and use the roles defined here by name. Roles are defined here alone: a behaviour document cannot define one.",
+  "description": "Who may do what at one home, the organization or one workspace: its policies and its defaults, and at the organization its groups. An organization holds one organization access document, and each of its workspaces one workspace access document beside its structure and behaviour documents. Neither names a domain. A domain's own policies and defaults are written in its behaviour document. A policy lives in the document whose home contains its target, and its target cannot reach outside that home. Groups are defined in the organization access document alone: a workspace or a domain cannot define one.",
   "type": "object",
-  "required": ["dna", "id", "name", "description"],
+  "required": ["dna", "id", "name", "description", "home"],
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
@@ -19,29 +19,32 @@
     },
     "name": { "$ref": "#/$defs/text" },
     "description": { "$ref": "#/$defs/text" },
-    "orientation": {
-      "type": "object",
-      "additionalProperties": false,
-      "description": "The orientation declared at the organization and at this workspace. A new workspace declares least-privilege. A domain, entity or Action may declare its own in its behaviour document; the narrowest declaration decides.",
-      "properties": {
-        "organization": { "$ref": "#/$defs/orientation" },
-        "workspace": { "$ref": "#/$defs/orientation" }
-      }
+    "home": {
+      "enum": ["organization", "workspace"],
+      "description": "The home this document governs: the organization it belongs to, or the workspace it sits in. A policy or default with no target applies to the whole home."
     },
-    "roles": {
+    "groups": {
       "type": "array",
-      "items": { "$ref": "#/$defs/role" },
-      "description": "The organization's named roles. Ids are unique. A grant here or in a behaviour document uses one as { \"role\": id } in its when."
+      "items": { "$ref": "#/$defs/group" },
+      "description": "The organization's named groups, in the organization access document alone. Ids are unique. A condition anywhere in the organization uses one as { \"group\": id }."
     },
-    "grants": {
+    "policies": {
       "type": "array",
-      "items": {
-        "$ref": "https://dna.codes/schemas/behaviour/policy/v1",
-        "required": ["scope"],
-        "not": { "properties": { "scope": { "properties": { "level": { "enum": ["domain", "entity", "action"] } } } } }
-      },
-      "description": "Grants at the organization and workspace scopes. Each applies to everything inside its scope, and names its rights."
+      "items": { "$ref": "https://dna.codes/schemas/behaviour/policy/v1" },
+      "description": "Policies at this home. With no target a policy applies to the whole home; a target names a domain or an entity inside it. They usually name the built-in action groups."
+    },
+    "defaults": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/default" },
+      "description": "The decision for a request no policy governs. The effective default of a request is the one declared at the deepest target that contains it. A new workspace declares deny."
     }
+  },
+  "if": {
+    "properties": { "home": { "const": "workspace" } },
+    "required": ["home"]
+  },
+  "then": {
+    "not": { "required": ["groups"] }
   },
   "$defs": {
     "id": {
@@ -50,24 +53,37 @@
       "description": "Kebab-case. Never changes once written."
     },
     "text": { "type": "string", "minLength": 1 },
-    "orientation": {
-      "enum": ["least-privilege", "most-privilege"],
-      "description": "least-privilege: an ungoverned subject is denied, so only what is allowed proceeds. most-privilege: an ungoverned subject is allowed, so all proceeds except what is denied. A policy reference that does not resolve denies under both."
-    },
-    "role": {
+    "group": {
       "type": "object",
       "required": ["id", "description", "when"],
       "additionalProperties": false,
-      "description": "A named, reusable condition over actor. A role check is an attribute check.",
+      "description": "A named, reusable condition over a principal: a set of people and agents, not a bundle of permissions. Testing a group is an attribute check.",
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "description": {
           "$ref": "#/$defs/text",
-          "description": "Who holds the role."
+          "description": "Who is in the group."
         },
         "when": {
           "$ref": "https://dna.codes/schemas/behaviour/condition/v1",
-          "description": "The condition, over the actor subject alone. It uses no other role."
+          "description": "The condition, over the actor subject alone. It uses no other group."
+        }
+      }
+    },
+    "default": {
+      "type": "object",
+      "required": ["default"],
+      "additionalProperties": false,
+      "description": "A default and the target it is declared at.",
+      "properties": {
+        "target": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*(/[a-z][a-z0-9]*(-[a-z0-9]+)*)?$",
+          "description": "A domain or an entity address, relative to the workspace, as a policy's target. Omitted, it is the document's home."
+        },
+        "default": {
+          "enum": ["deny", "allow"],
+          "description": "deny: what no policy governs is refused, so only what is allowed proceeds. allow: what no policy governs proceeds, so all proceeds except what is denied. A policy reference that does not resolve denies under both."
         }
       }
     }

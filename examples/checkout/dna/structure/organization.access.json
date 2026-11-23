@@ -1,0 +1,20 @@
+{
+  "dna": "access/v1",
+  "id": "checkout-organization-access",
+  "name": "Checkout organization access",
+  "description": "The store's organization: who its merchandisers and shoppers are. It was governed before defaults existed, and allows what no policy governs, as it did through v4.",
+  "home": "organization",
+  "groups": [
+    {
+      "id": "merchandiser",
+      "description": "Store staff who arrange what is sold.",
+      "when": { "subject": "actor", "path": "role", "op": "eq", "value": "merchandiser" }
+    },
+    {
+      "id": "shopper",
+      "description": "A person buying from the store.",
+      "when": { "subject": "actor", "path": "role", "op": "eq", "value": "shopper" }
+    }
+  ],
+  "defaults": [{ "default": "allow" }]
+}

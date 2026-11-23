@@ -15,10 +15,11 @@ A worked DNA example: loan application, underwriting, approval authority, condit
 
 | Path | What |
 | --- | --- |
-| `dna/structure/access.json` | structure/v1 domain |
+| `dna/structure/organization.access.json` | structure/v1 domain |
 | `dna/structure/origination.json` | structure/v1 domain |
 | `dna/structure/parties.json` | structure/v1 domain |
 | `dna/structure/property.json` | structure/v1 domain |
+| `dna/structure/workspace.access.json` | structure/v1 domain |
 | `dna/behaviour/origination.behaviour.json` | behaviour/v1: actions, workflows and policies |
 | `.mcp.json` | The remote DNA MCP server, with environment references only |
 | `AGENTS.md` | The rule that sends an agent to DNA before it changes these rules |

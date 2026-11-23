@@ -1,0 +1,29 @@
+{
+  "dna": "access/v1",
+  "id": "diligence-organization-access",
+  "name": "Harbor buyer organization access",
+  "description": "The buyer's groups and its guardrail on agents. A new workspace of the buyer denies what no policy governs; the diligence workspace, governed before defaults existed, declares its own allow.",
+  "home": "organization",
+  "groups": [
+    {
+      "id": "deal-lead",
+      "description": "The buyer's deal lead at Harbor.",
+      "when": {
+        "allOf": [
+          { "subject": "actor", "path": "organization", "op": "eq", "value": "harbor-buyer" },
+          { "subject": "actor", "path": "role", "op": "eq", "value": "deal-lead" }
+        ]
+      }
+    }
+  ],
+  "defaults": [{ "default": "deny" }],
+  "policies": [
+    {
+      "id": "no-agent-administers",
+      "description": "No agent creates, changes or removes a policy anywhere in the organization, whoever it acts for. A person does that.",
+      "actions": ["administer"],
+      "when": { "subject": "actor", "path": "kind", "op": "eq", "value": "agent" },
+      "effect": { "effect": "deny" }
+    }
+  ]
+}

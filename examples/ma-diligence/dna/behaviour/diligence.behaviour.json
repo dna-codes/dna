@@ -391,35 +391,39 @@
         ]
       },
       "effect": { "effect": "require_approval", "performer": "position", "refs": ["board"] }
-    }
-  ],
-  "grants": [
-    {
-      "id": "deal-lead-administers-diligence",
-      "description": "The buyer's deal lead administers grants on the diligence domain and inside it, and reads its model and records.",
-      "scope": { "level": "domain", "subject": "diligence" },
-      "rights": ["administer", "design:read", "run:read"],
-      "when": { "role": "deal-lead" },
-      "effect": { "effect": "allow" }
     },
     {
       "id": "deal-lead-sets-closing-target",
       "description": "The deal lead, or an agent acting for the deal lead, sets a deal's closing target.",
-      "scope": { "level": "action", "subject": "diligence/deal.set-closing-target" },
-      "rights": ["set-closing-target"],
+      "target": "diligence/deal",
+      "actions": ["set-closing-target"],
       "when": {
         "anyOf": [
-          { "role": "deal-lead" },
+          { "group": "deal-lead" },
           {
             "allOf": [
               { "subject": "actor", "path": "kind", "op": "eq", "value": "agent" },
-              { "role": "deal-lead", "principal": "actingFor" }
+              { "group": "deal-lead", "principal": "actingFor" }
             ]
           }
         ]
       },
       "effect": { "effect": "allow" }
+    },
+    {
+      "id": "second-person-reviews",
+      "description": "A finding is reviewed by someone other than its author: the reviewer named is not the author, and the author cannot review it, alone or through an agent acting for them.",
+      "target": "diligence/finding",
+      "actions": ["review-finding"],
+      "when": {
+        "anyOf": [
+          { "subject": "target", "path": "author", "op": "eq", "value": { "subject": "input", "path": "reviewer" } },
+          { "subject": "target", "path": "author", "op": "eq", "value": { "subject": "actor", "path": "id", "principal": "actor" } },
+          { "subject": "target", "path": "author", "op": "eq", "value": { "subject": "actor", "path": "id", "principal": "actingFor" } }
+        ]
+      },
+      "effect": { "effect": "deny" }
     }
   ],
-  "orientation": "most-privilege"
+  "defaults": [{ "default": "allow" }]
 }

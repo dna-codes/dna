@@ -269,25 +269,20 @@
       "actions": ["cancel"],
       "when": { "subject": "target", "path": "amount", "op": "gt", "value": 250 },
       "effect": { "effect": "require_approval", "performer": "position" }
-    }
-  ],
-  "grants": [
-    {
-      "id": "merchandisers-design-commerce",
-      "description": "Merchandisers read and change the commerce model. It gives them no right to act on carts or orders.",
-      "scope": { "level": "domain", "subject": "commerce" },
-      "rights": ["design:read", "design:write"],
-      "when": { "role": "merchandiser" },
-      "effect": { "effect": "allow" }
     },
     {
       "id": "shoppers-apply-coupons",
-      "description": "A shopper may apply a coupon to an order.",
-      "scope": { "level": "action", "subject": "commerce/order.apply-coupon" },
-      "rights": ["apply-coupon"],
-      "when": { "role": "shopper", "principal": "actor" },
+      "description": "A shopper may apply a coupon to an order they placed.",
+      "target": "commerce/order",
+      "actions": ["apply-coupon"],
+      "when": {
+        "allOf": [
+          { "group": "shopper", "principal": "actor" },
+          { "related": "commerce/shopper-places-order", "from": { "subject": "actor" }, "to": { "subject": "target" } }
+        ]
+      },
       "effect": { "effect": "allow" }
     }
   ],
-  "orientation": "most-privilege"
+  "defaults": [{ "default": "allow" }]
 }

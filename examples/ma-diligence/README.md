@@ -15,9 +15,10 @@ A worked DNA example: diligence request, finding, risk rating and sign-off autho
 
 | Path | What |
 | --- | --- |
-| `dna/structure/access.json` | structure/v1 domain |
 | `dna/structure/diligence.json` | structure/v1 domain |
+| `dna/structure/organization.access.json` | structure/v1 domain |
 | `dna/structure/parties.json` | structure/v1 domain |
+| `dna/structure/workspace.access.json` | structure/v1 domain |
 | `dna/behaviour/diligence.behaviour.json` | behaviour/v1: actions, workflows and policies |
 | `.mcp.json` | The remote DNA MCP server, with environment references only |
 | `AGENTS.md` | The rule that sends an agent to DNA before it changes these rules |
