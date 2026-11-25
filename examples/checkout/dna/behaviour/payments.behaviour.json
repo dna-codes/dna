@@ -19,6 +19,11 @@
       "id": "customer-care-lead",
       "name": "Customer care lead",
       "description": "The merchant's person who approves a refund the merchant does not grant on sight."
+    },
+    {
+      "id": "payment-reviewer",
+      "name": "Payment reviewer",
+      "description": "The merchant's person who reviews a large capture before the money is taken. An organization may give the role to an agent in its fleet."
     }
   ],
   "actions": [
@@ -151,10 +156,10 @@
   "policies": [
     {
       "id": "capture-limit",
-      "description": "A capture above 10000 is routed to an agent for review rather than performed, whether or not more shipments follow.",
+      "description": "A capture above 10000 is routed to the payment reviewer rather than performed, whether or not more shipments follow.",
       "actions": ["capture", "capture-final"],
       "when": { "subject": "input", "path": "amount", "op": "gt", "value": 10000 },
-      "effect": { "effect": "route", "performer": "agent" }
+      "effect": { "effect": "route", "performer": "role", "refs": ["payment-reviewer"] }
     },
     {
       "id": "refund-approval",

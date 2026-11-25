@@ -46,7 +46,8 @@
       "id": "grant-delegation",
       "entity": "delegation",
       "name": "Grant delegation",
-      "description": "The target opens its room to an advisor firm, up to a scope and until an expiry.",
+      "description": "The target opens its room to an advisor firm, up to a scope and until an expiry. Only the target grants, so every delegation is the target's.",
+      "actors": ["target"],
       "input": [
         { "name": "grantee", "type": "reference", "entity": "parties/organization" },
         { "name": "room", "type": "reference", "entity": "data-room" },
@@ -61,6 +62,7 @@
       "entity": "delegation",
       "name": "Revoke delegation",
       "description": "The target withdraws a delegation it granted.",
+      "actors": ["target"],
       "input": [{ "name": "reason", "type": "string", "required": false }],
       "transition": { "from": ["granted"], "to": "revoked" }
     },
@@ -76,6 +78,7 @@
       "entity": "delegation",
       "name": "Extend delegation",
       "description": "The target moves a live delegation's expiry without granting it again.",
+      "actors": ["target"],
       "input": [{ "name": "expiresAt", "type": "datetime" }],
       "transition": { "from": ["granted"], "to": "granted" }
     },
@@ -352,16 +355,10 @@
   "policies": [
     {
       "id": "advisor-under-delegation",
-      "description": "An advisor records and cites under a live delegation the target granted, and only within its scope.",
+      "description": "An advisor records and cites under a live delegation, and only within its scope. Only the target grants a delegation, so the rule names no firm.",
       "actions": ["record-finding", "cite"],
       "when": {
         "allOf": [
-          {
-            "subject": "actor",
-            "path": "delegation.grantor",
-            "op": "eq",
-            "value": "northline-target"
-          },
           { "subject": "actor", "path": "delegation.status", "op": "eq", "value": "granted" },
           {
             "subject": "actor",
@@ -375,21 +372,12 @@
     },
     {
       "id": "outsider-refused",
-      "description": "Nobody acts on the target's room who is neither the target nor under its delegation.",
+      "description": "Nobody acts on the target's room who neither fills the target role nor holds a live delegation. A revoked or expired delegation opens nothing.",
       "actions": ["read-document", "record-finding", "cite"],
       "when": {
         "allOf": [
-          {
-            "not": { "subject": "actor", "path": "organization", "op": "eq", "value": "northline-target" }
-          },
-          {
-            "not": {
-              "subject": "actor",
-              "path": "delegation.grantor",
-              "op": "eq",
-              "value": "northline-target"
-            }
-          }
+          { "not": { "role": "target" } },
+          { "not": { "subject": "actor", "path": "delegation.status", "op": "eq", "value": "granted" } }
         ]
       },
       "effect": { "effect": "deny" }
