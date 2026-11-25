@@ -2,7 +2,7 @@
 
 A worked DNA example: diligence request, finding, risk rating and sign-off authority.
 
-<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/diligence/v6. -->
+<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/diligence/v7. -->
 
 ## Start
 

@@ -84,7 +84,7 @@
       "properties": {
         "on": {
           "$ref": "#/$defs/id",
-          "description": "An Operation available in the state, the state's sub-workflow, one of the state's regions, or all, for every Operation of the state. A transition on a region waits until every region has reached a final state; any of the regions may be named, with the same meaning."
+          "description": "An Operation available in the state, the state's sub-workflow, one of the state's regions, or all, for every Operation of the state. A transition on a region without a guard waits until every region has reached a final state; any of the regions may be named, with the same meaning. A transition on a region guarded by when.final leaves as soon as that region reaches that final state, and ends every other region."
         },
         "status": {
           "enum": ["completed", "failed"],
@@ -118,7 +118,7 @@
             "final": { "$ref": "#/$defs/id" },
             "workflow": {
               "$ref": "#/$defs/id",
-              "description": "The sub-workflow or region that ended in final. One of the state's workflows. Defaults to the transition's on."
+              "description": "The sub-workflow or region that ended in final. One of the state's workflows. Defaults to the transition's on. The transition leaves as soon as that region ends in final, without waiting for the other regions, and ends them."
             }
           }
         }

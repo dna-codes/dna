@@ -39,6 +39,13 @@
       "type": "boolean",
       "description": "Reaches outside DNA: a payment, a message, a webhook, a third party. Refused before a sandbox is claimed. Defaults to false."
     },
+    "actors": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/roleRef" },
+      "description": "The roles that can do the Action. Enforced: a principal who fills none of them is refused before any policy runs. Without actors, policies alone decide."
+    },
     "transition": {
       "type": "object",
       "required": ["to"],
@@ -67,6 +74,11 @@
       "type": "string",
       "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
       "description": "An entity id in the described domain, or domain/entity for an entity declared in a domain it uses."
+    },
+    "roleRef": {
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "A role of this behaviour document, or domain/role for one of a domain whose behaviour document this one uses."
     },
     "field": {
       "allOf": [

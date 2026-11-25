@@ -4,6 +4,43 @@
   "name": "Diligence behaviour",
   "description": "How a buyer's advisors review the target under the target's delegation: the grant and its extension, reading the room, recording and citing findings, a second review, red-flag escalation, closing workstreams and the investment committee's decision. Who may act is policy over what the identity adapter resolves the actor to; deciding it is the evaluator's job.",
   "domain": "diligence",
+  "roles": [
+    {
+      "id": "target",
+      "name": "Target",
+      "description": "The company being acquired, which opens its data room to advisors."
+    },
+    {
+      "id": "board",
+      "name": "Board",
+      "description": "The buyer's board, which also approves a large deal or one with red flags still open."
+    },
+    {
+      "id": "scheduler",
+      "name": "Scheduler",
+      "description": "An automation that acts on time, such as a delegation reaching its expiry."
+    },
+    {
+      "id": "advisor",
+      "name": "Advisor",
+      "description": "An outside advisor who reads documents and records findings under a delegation."
+    },
+    {
+      "id": "deal-lead",
+      "name": "Deal lead",
+      "description": "The buyer's lead on the deal, who escalates red flags, accepts findings and closes workstreams."
+    },
+    {
+      "id": "counsel",
+      "name": "Counsel",
+      "description": "Outside counsel who reviews findings."
+    },
+    {
+      "id": "committee",
+      "name": "Investment committee",
+      "description": "The buyer's committee that signs off or declines the deal."
+    }
+  ],
   "actions": [
     {
       "id": "grant-delegation",
@@ -136,6 +173,7 @@
       "entity": "deal",
       "name": "Set closing target",
       "description": "The deal lead sets the date the buyer aims to close by. It moves no state.",
+      "actors": ["deal-lead"],
       "input": [{ "name": "closingTarget", "type": "datetime" }]
     }
   ],
@@ -143,37 +181,37 @@
     {
       "id": "target-grants",
       "name": "Target grants",
-      "description": "Northline opens its room to an advisor.",
+      "description": "The target opens its room to an advisor.",
       "action": "grant-delegation",
-      "actor": { "entity": "parties/organization", "instance": "northline-target" }
+      "actor": "target"
     },
     {
       "id": "target-revokes",
       "name": "Target revokes",
-      "description": "Northline withdraws a delegation.",
+      "description": "The target withdraws a delegation.",
       "action": "revoke-delegation",
-      "actor": { "entity": "parties/organization", "instance": "northline-target" }
+      "actor": "target"
     },
     {
       "id": "delegation-lapses",
       "name": "Delegation lapses",
       "description": "A delegation reaches its expiry.",
       "action": "expire-delegation",
-      "actor": { "entity": "parties/organization", "instance": "northline-target" }
+      "actor": "scheduler"
     },
     {
       "id": "target-extends",
       "name": "Target extends",
-      "description": "Northline extends a delegation.",
+      "description": "The target extends a delegation.",
       "action": "extend-delegation",
-      "actor": { "entity": "parties/organization", "instance": "northline-target" }
+      "actor": "target"
     },
     {
       "id": "advisor-reads",
       "name": "Advisor reads",
       "description": "An advisor opens a document.",
       "action": "read-document",
-      "actor": { "entity": "parties/person" },
+      "actor": "advisor",
       "target": { "entity": "document" }
     },
     {
@@ -181,7 +219,7 @@
       "name": "Advisor records",
       "description": "An advisor records a finding in a workstream.",
       "action": "record-finding",
-      "actor": { "entity": "parties/person", "instance": "renee" },
+      "actor": "advisor",
       "target": { "entity": "workstream" }
     },
     {
@@ -189,54 +227,54 @@
       "name": "Advisor cites",
       "description": "An advisor cites the document a finding rests on.",
       "action": "cite",
-      "actor": { "entity": "parties/person", "instance": "renee" },
+      "actor": "advisor",
       "target": { "entity": "document" }
     },
     {
       "id": "lead-escalates",
       "name": "Lead escalates",
-      "description": "Harbor's deal lead escalates a red flag.",
+      "description": "The deal lead escalates a red flag.",
       "action": "escalate",
-      "actor": { "entity": "parties/organization", "instance": "harbor-buyer" },
+      "actor": "deal-lead",
       "target": { "entity": "finding" }
     },
     {
       "id": "counsel-reviews",
       "name": "Counsel reviews",
-      "description": "Omar at Ledger & Kline reviews a finding.",
+      "description": "Counsel reviews a finding.",
       "action": "review-finding",
-      "actor": { "entity": "parties/person", "instance": "omar" },
+      "actor": "counsel",
       "target": { "entity": "finding" }
     },
     {
       "id": "lead-accepts",
       "name": "Lead accepts",
-      "description": "Harbor's deal lead accepts a finding.",
+      "description": "The deal lead accepts a finding.",
       "action": "accept-finding",
-      "actor": { "entity": "parties/organization", "instance": "harbor-buyer" },
+      "actor": "deal-lead",
       "target": { "entity": "finding" }
     },
     {
       "id": "lead-closes",
       "name": "Lead closes workstreams",
-      "description": "Harbor's deal lead signs off the workstreams.",
+      "description": "The deal lead signs off the workstreams.",
       "action": "close-workstream",
-      "actor": { "entity": "parties/organization", "instance": "harbor-buyer" },
+      "actor": "deal-lead",
       "target": { "entity": "workstream" }
     },
     {
       "id": "committee-signs-off",
       "name": "Committee signs off",
-      "description": "Harbor's investment committee signs off the deal.",
+      "description": "The investment committee signs off the deal.",
       "action": "sign-off-deal",
-      "actor": { "entity": "parties/organization", "instance": "harbor-buyer" }
+      "actor": "committee"
     },
     {
       "id": "committee-declines",
       "name": "Committee declines",
-      "description": "Harbor's investment committee declines the deal.",
+      "description": "The investment committee declines the deal.",
       "action": "decline-deal",
-      "actor": { "entity": "parties/organization", "instance": "harbor-buyer" }
+      "actor": "committee"
     }
   ],
   "workflows": [
@@ -373,13 +411,13 @@
       "description": "Closing a workstream past its due date goes to the deal lead. The evaluator supplies the days past due in context.",
       "actions": ["close-workstream"],
       "when": { "subject": "context", "path": "daysPastDue", "op": "gt", "value": 0 },
-      "effect": { "effect": "route", "performer": "position", "refs": ["deal-lead"] }
+      "effect": { "effect": "route", "performer": "role", "refs": ["deal-lead"] }
     },
     {
       "id": "committee-sign-off",
       "description": "Signing off a deal needs the investment committee's approval.",
       "actions": ["sign-off-deal"],
-      "effect": { "effect": "require_approval", "performer": "position", "refs": ["investment-committee"] }
+      "effect": { "effect": "require_approval", "performer": "role", "refs": ["committee"] }
     },
     {
       "id": "board-sign-off",
@@ -391,25 +429,7 @@
           { "subject": "context", "path": "openRedFlags", "op": "gt", "value": 0 }
         ]
       },
-      "effect": { "effect": "require_approval", "performer": "position", "refs": ["board"] }
-    },
-    {
-      "id": "deal-lead-sets-closing-target",
-      "description": "The deal lead, or an agent acting for the deal lead, sets a deal's closing target.",
-      "target": "diligence/deal",
-      "actions": ["set-closing-target"],
-      "when": {
-        "anyOf": [
-          { "group": "deal-lead" },
-          {
-            "allOf": [
-              { "subject": "actor", "path": "kind", "op": "eq", "value": "agent" },
-              { "group": "deal-lead", "principal": "actingFor" }
-            ]
-          }
-        ]
-      },
-      "effect": { "effect": "allow" }
+      "effect": { "effect": "require_approval", "performer": "role", "refs": ["board"] }
     },
     {
       "id": "second-person-reviews",

@@ -4,6 +4,18 @@
   "name": "Fulfilment behaviour",
   "description": "How a shipment leaves the merchant and reaches the shopper. The carrier's delivery scan is an effect outside the merchant.",
   "domain": "fulfilment",
+  "roles": [
+    {
+      "id": "merchant",
+      "name": "Merchant",
+      "description": "The store that sells, ships and refunds the order."
+    },
+    {
+      "id": "carrier",
+      "name": "Carrier",
+      "description": "The outside firm that delivers shipments."
+    }
+  ],
   "actions": [
     {
       "id": "ship",
@@ -38,16 +50,16 @@
     {
       "id": "merchant-ships",
       "name": "Merchant ships",
-      "description": "Juniper & Pine hands the shipment to the carrier.",
+      "description": "The merchant hands the shipment to the carrier.",
       "action": "ship",
-      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+      "actor": "merchant"
     },
     {
       "id": "carrier-delivers",
       "name": "Carrier delivers",
-      "description": "Swift Parcel scans the shipment as delivered.",
+      "description": "The carrier scans the shipment as delivered.",
       "action": "deliver",
-      "actor": { "entity": "parties/organization", "instance": "swift-parcel" }
+      "actor": "carrier"
     }
   ],
   "workflows": [

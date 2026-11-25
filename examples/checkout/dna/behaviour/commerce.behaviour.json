@@ -5,6 +5,23 @@
   "description": "What a shopper and a merchant do with a cart and an order, and the purchase they both follow from an open cart to a final state. Payment and shipping are performed through the payments and fulfilment behaviour this document uses.",
   "domain": "commerce",
   "uses": ["payments-behaviour", "fulfilment-behaviour"],
+  "roles": [
+    {
+      "id": "shopper",
+      "name": "Shopper",
+      "description": "A person buying from the store."
+    },
+    {
+      "id": "payment-processor",
+      "name": "Payment processor",
+      "description": "The outside firm that authorizes and settles card payments."
+    },
+    {
+      "id": "merchant",
+      "name": "Merchant",
+      "description": "The store that sells, ships and refunds the order."
+    }
+  ],
   "actions": [
     {
       "id": "add-line",
@@ -77,6 +94,7 @@
       "entity": "order",
       "name": "Apply coupon",
       "description": "Record a promotion code on an order. It moves no state.",
+      "actors": ["shopper"],
       "input": [{ "name": "couponCode", "type": "string" }]
     }
   ],
@@ -84,79 +102,79 @@
     {
       "id": "shopper-adds-line",
       "name": "Shopper adds a line",
-      "description": "Ada adds a product to her cart.",
+      "description": "The shopper adds a product to their cart.",
       "action": "add-line",
-      "actor": { "entity": "parties/person", "instance": "ada" }
+      "actor": "shopper"
     },
     {
       "id": "shopper-checks-out",
       "name": "Shopper checks out",
-      "description": "Ada checks out her cart.",
+      "description": "The shopper checks out their cart.",
       "action": "check-out",
-      "actor": { "entity": "parties/person", "instance": "ada" }
+      "actor": "shopper"
     },
     {
       "id": "shopper-abandons",
       "name": "Shopper abandons",
-      "description": "Ada's cart is closed without an order.",
+      "description": "The shopper's cart is closed without an order.",
       "action": "abandon",
-      "actor": { "entity": "parties/person", "instance": "ada" }
+      "actor": "shopper"
     },
     {
       "id": "processor-authorizes",
       "name": "Processor authorizes",
-      "description": "Northwind Pay answers the authorization.",
+      "description": "The payment processor answers the authorization.",
       "action": "payments-behaviour/authorize",
-      "actor": { "entity": "parties/organization", "instance": "northwind-pay" }
+      "actor": "payment-processor"
     },
     {
       "id": "merchant-accepts",
       "name": "Merchant accepts",
-      "description": "Juniper & Pine accepts the order.",
+      "description": "The merchant accepts the order.",
       "action": "accept",
-      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+      "actor": "merchant"
     },
     {
       "id": "merchant-ships",
       "name": "Merchant ships",
-      "description": "Juniper & Pine ships the order.",
+      "description": "The merchant ships the order.",
       "action": "fulfilment-behaviour/ship",
-      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+      "actor": "merchant"
     },
     {
       "id": "merchant-captures",
       "name": "Merchant captures",
-      "description": "Juniper & Pine captures what a shipment carries, with more shipments to follow.",
+      "description": "The merchant captures what a shipment carries, with more shipments to follow.",
       "action": "payments-behaviour/capture",
-      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+      "actor": "merchant"
     },
     {
       "id": "merchant-captures-final",
       "name": "Merchant captures the last shipment",
-      "description": "Juniper & Pine captures what the last shipment carries and closes the authorization.",
+      "description": "The merchant captures what the last shipment carries and closes the authorization.",
       "action": "payments-behaviour/capture-final",
-      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+      "actor": "merchant"
     },
     {
       "id": "merchant-fulfils",
       "name": "Merchant fulfils",
-      "description": "Juniper & Pine closes the order as fulfilled.",
+      "description": "The merchant closes the order as fulfilled.",
       "action": "fulfil",
-      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+      "actor": "merchant"
     },
     {
       "id": "shopper-cancels",
       "name": "Shopper cancels",
-      "description": "Ada cancels before her order has shipped.",
+      "description": "The shopper cancels before their order has shipped.",
       "action": "cancel",
-      "actor": { "entity": "parties/person", "instance": "ada" }
+      "actor": "shopper"
     },
     {
       "id": "merchant-voids",
       "name": "Merchant voids",
-      "description": "Juniper & Pine releases the authorization of a cancelled order.",
+      "description": "The merchant releases the authorization of a cancelled order.",
       "action": "payments-behaviour/void",
-      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+      "actor": "merchant"
     }
   ],
   "workflows": [
@@ -276,22 +294,17 @@
     },
     {
       "id": "large-cancellation-approval",
-      "description": "Cancelling an order above 250 needs a position's approval. The threshold was 500 before split shipments made late cancellations costlier.",
+      "description": "Cancelling an order above 250 needs the merchant's approval. The threshold was 500 before split shipments made late cancellations costlier.",
       "actions": ["cancel"],
       "when": { "subject": "target", "path": "amount", "op": "gt", "value": 250 },
-      "effect": { "effect": "require_approval", "performer": "position" }
+      "effect": { "effect": "require_approval", "performer": "role", "refs": ["merchant"] }
     },
     {
       "id": "shoppers-apply-coupons",
-      "description": "A shopper may apply a coupon to an order they placed.",
+      "description": "A shopper may apply a coupon only to an order they placed.",
       "target": "commerce/order",
       "actions": ["apply-coupon"],
-      "when": {
-        "allOf": [
-          { "group": "shopper", "principal": "actor" },
-          { "related": "commerce/shopper-places-order", "from": { "subject": "actor" }, "to": { "subject": "target" } }
-        ]
-      },
+      "when": { "related": "commerce/shopper-places-order", "from": { "subject": "actor" }, "to": { "subject": "target" } },
       "effect": { "effect": "allow" }
     }
   ],

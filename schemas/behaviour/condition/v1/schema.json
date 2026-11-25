@@ -3,7 +3,7 @@
   "$id": "https://dna.codes/schemas/behaviour/condition/v1",
   "version": "v1",
   "title": "Condition",
-  "description": "A test a policy applies: one predicate, a group, or a relation, or these composed with allOf, anyOf and not. A predicate reads a path off one subject and compares it with a literal value or with a reference to another path. The grammar is closed. It has no expressions, scripts or queries, and nothing in it names a business. target is the record acted on, actor is who is acting, context is the time and environment supplied to the evaluator, and input is the arguments the Action was called with. A group names a reusable condition over a principal, kept in the organization access document. A relation holds when a structure relationship connects two values.",
+  "description": "A test a policy applies: one predicate, a group, a role, or a relation, or these composed with allOf, anyOf and not. A predicate reads a path off one subject and compares it with a literal value or with a reference to another path. The grammar is closed. It has no expressions, scripts or queries, and nothing in it names a business. target is the record acted on, actor is who is acting, context is the time and environment supplied to the evaluator, and input is the arguments the Action was called with. A group names a reusable condition over a principal, kept in the organization access document. A relation holds when a structure relationship connects two values.",
   "oneOf": [
     { "$ref": "#/$defs/predicate" },
     {
@@ -38,6 +38,19 @@
         "principal": {
           "enum": ["actor", "actingFor"],
           "description": "Which principal the group is tested on. actor, the default, is who is acting. actingFor is the person or organization an agent acts for, read at actor.actingFor, so a policy can test an agent and the principal it acts for separately."
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["role"],
+      "additionalProperties": false,
+      "description": "A role: holds when the principal fills the role, such as above a debt-to-income limit unless a senior underwriter acts. The principal's roles come from the organization's fleet, and an evaluator reads them at actor.roles.",
+      "properties": {
+        "role": {
+          "type": "string",
+          "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "A role of the behaviour document the policy is written in, or domain/role for a role of another domain."
         }
       }
     },

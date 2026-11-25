@@ -75,8 +75,8 @@
           "properties": {
             "effect": { "enum": ["route", "require_approval"] },
             "performer": {
-              "enum": ["agent", "position"],
-              "description": "The kind of performer the work goes to."
+              "enum": ["agent", "position", "role"],
+              "description": "The kind of performer the work goes to. role names roles of a domain, so any principal who fills one satisfies the effect; a domain's policies use it. agent and position name the organization's own agents and positions, in its access documents."
             },
             "refs": {
               "type": "array",

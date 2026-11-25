@@ -4,6 +4,23 @@
   "name": "Payments behaviour",
   "description": "Authorizing a payment, capturing it shipment by shipment, voiding it, and refunding part of it. Every effect on the processor is external.",
   "domain": "payments",
+  "roles": [
+    {
+      "id": "shopper",
+      "name": "Shopper",
+      "description": "A person buying from the store."
+    },
+    {
+      "id": "merchant",
+      "name": "Merchant",
+      "description": "The store that sells, ships and refunds the order."
+    },
+    {
+      "id": "customer-care-lead",
+      "name": "Customer care lead",
+      "description": "The merchant's person who approves a refund the merchant does not grant on sight."
+    }
+  ],
   "actions": [
     {
       "id": "authorize",
@@ -84,23 +101,23 @@
     {
       "id": "shopper-requests-refund",
       "name": "Shopper requests a refund",
-      "description": "Ada asks for money back on a shipment.",
+      "description": "The shopper asks for money back on a shipment.",
       "action": "request-refund",
-      "actor": { "entity": "parties/person", "instance": "ada" }
+      "actor": "shopper"
     },
     {
       "id": "merchant-issues-refund",
       "name": "Merchant issues the refund",
-      "description": "Juniper & Pine returns the money.",
+      "description": "The merchant returns the money.",
       "action": "issue-refund",
-      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+      "actor": "merchant"
     },
     {
       "id": "merchant-declines-refund",
       "name": "Merchant declines the refund",
-      "description": "Juniper & Pine refuses the request.",
+      "description": "The merchant refuses the request.",
       "action": "decline-refund",
-      "actor": { "entity": "parties/organization", "instance": "juniper-and-pine" }
+      "actor": "merchant"
     }
   ],
   "workflows": [
@@ -149,7 +166,7 @@
           { "subject": "target", "path": "reason", "op": "notIn", "value": ["damaged", "wrong-item", "not-received"] }
         ]
       },
-      "effect": { "effect": "require_approval", "performer": "position", "refs": ["customer-care-lead"] }
+      "effect": { "effect": "require_approval", "performer": "role", "refs": ["customer-care-lead"] }
     }
   ]
 }

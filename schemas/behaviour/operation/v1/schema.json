@@ -3,7 +3,7 @@
   "$id": "https://dna.codes/schemas/behaviour/operation/v1",
   "version": "v1",
   "title": "Operation",
-  "description": "One Action, performed by one actor on one target. It inherits the Action's contract. A workflow is written over Operations, so the same Action can appear in it twice with different performers.",
+  "description": "One Action, performed by one role on one target. It inherits the Action's contract. A workflow is written over Operations, so the same Action can appear in it twice with different roles.",
   "type": "object",
   "required": ["id", "name", "description", "action", "actor"],
   "additionalProperties": false,
@@ -19,8 +19,9 @@
       "description": "The Action performed."
     },
     "actor": {
-      "$ref": "#/$defs/party",
-      "description": "Who performs it."
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)?[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "The role that performs it at this point: a role of this behaviour document, or domain/role for one of a domain whose behaviour document this one uses. When the Action declares actors, it is one of them. Who fills the role is the organization's business."
     },
     "target": {
       "$ref": "#/$defs/party",

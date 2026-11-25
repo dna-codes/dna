@@ -3,7 +3,7 @@
   "$id": "https://dna.codes/schemas/behaviour/behaviour/v1",
   "version": "v1",
   "title": "Behaviour",
-  "description": "What a business does with the structure one domain describes: its Actions, the Operations that say who performs them on what, the workflows that sequence those Operations, the policies that decide them, and the defaults for what no policy governs. It names its domain and never changes it, so a business can be modelled structure first and given behaviour later. A set holds at most one behaviour document per domain. Its home is its domain: its policies and defaults target the domain or an entity in it.",
+  "description": "What a business does with the structure one domain describes: the roles it expects, its Actions, the Operations that say which role performs them on what, the workflows that sequence those Operations, the policies that decide them, and the defaults for what no policy governs. It names its domain and never changes it, so a business can be modelled structure first and given behaviour later. A set holds at most one behaviour document per domain. Its home is its domain: its policies and defaults target the domain or an entity in it.",
   "type": "object",
   "required": ["dna", "id", "name", "description", "domain"],
   "additionalProperties": false,
@@ -28,6 +28,11 @@
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/id" },
       "description": "Other behaviour documents whose Actions this one refers to."
+    },
+    "roles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/role" },
+      "description": "The kinds of actor this domain expects, such as an underwriter, a credit bureau or a scheduler. A role is the same in every organization that uses the domain; the organization says who fills it. Ids are unique. An Action's actors, an Operation's actor, a role performer and a role condition name a role by its id here, or as domain/role for a role of a domain whose behaviour document this one uses."
     },
     "actions": {
       "type": "array",
@@ -59,6 +64,20 @@
       "description": "Kebab-case. Never changes once written."
     },
     "text": { "type": "string", "minLength": 1 },
+    "role": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "description": "A kind of actor the domain expects. It has no records: people, agents, automations and outside firms fill it.",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id",
+          "description": "Kebab-case. Unique among the roles of its behaviour document."
+        },
+        "name": { "$ref": "#/$defs/text" },
+        "description": { "$ref": "#/$defs/text" }
+      }
+    },
     "default": {
       "type": "object",
       "required": ["default"],
