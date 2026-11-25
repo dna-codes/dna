@@ -56,18 +56,21 @@
       "name": "Shipment",
       "description": "One shipment from the warehouse to the door.",
       "initial": "pending",
+      "mainPath": ["pending", "in-transit", "delivered"],
       "states": [
         {
           "id": "pending",
+          "name": "Dispatch shipment",
           "operations": ["merchant-ships"],
           "transitions": [{ "on": "merchant-ships", "to": "in-transit" }]
         },
         {
           "id": "in-transit",
+          "name": "Deliver shipment",
           "operations": ["carrier-delivers"],
           "transitions": [{ "on": "carrier-delivers", "to": "delivered" }]
         },
-        { "id": "delivered", "final": true }
+        { "id": "delivered", "name": "Delivered", "final": true }
       ]
     }
   ]

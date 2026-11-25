@@ -2,7 +2,7 @@
 
 A worked DNA example: loan application, underwriting, approval authority, conditions and disbursement.
 
-<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/origination/v5. -->
+<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/origination/v6. -->
 
 ## Start
 

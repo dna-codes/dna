@@ -354,56 +354,33 @@
     {
       "id": "origination",
       "name": "Origination",
-      "description": "From a received application to funded, declined, withdrawn or rescinded. A refinance waits out rescission, and pays off the loan it replaces before it is done.",
-      "initial": "received",
+      "description": "From a received application to funded, declined, withdrawn or rescinded. Credit and the appraisal are ordered together, and the loan estimate waits for both. A refinance waits out rescission, and pays off the loan it replaces before it is done.",
+      "initial": "checks",
+      "mainPath": ["checks", "disclosing", "submitting", "underwriting", "clear-to-close", "closing", "funding", "funded"],
       "states": [
         {
-          "id": "received",
-          "name": "Received",
-          "operations": ["bureau-reports-credit", "borrower-withdraws"],
+          "id": "checks",
+          "name": "Run checks",
+          "description": "Credit and the appraisal run at the same time. The borrower can withdraw at any point; otherwise the application waits for both, and is declined when either ends badly.",
+          "workflows": ["credit", "appraisal"],
+          "operations": ["borrower-withdraws"],
           "transitions": [
-            {
-              "on": "bureau-reports-credit",
-              "when": { "field": "usable", "equals": true },
-              "to": "appraising"
-            },
-            {
-              "on": "bureau-reports-credit",
-              "when": { "field": "usable", "equals": false },
-              "to": "declined"
-            },
-            { "on": "bureau-reports-credit", "status": "failed", "to": "received" },
-            { "on": "borrower-withdraws", "to": "withdrawn" }
-          ]
-        },
-        {
-          "id": "appraising",
-          "name": "Appraising",
-          "operations": ["appraiser-appraises", "borrower-withdraws"],
-          "transitions": [
-            {
-              "on": "appraiser-appraises",
-              "when": { "field": "supportsValue", "equals": true },
-              "to": "disclosing"
-            },
-            {
-              "on": "appraiser-appraises",
-              "when": { "field": "supportsValue", "equals": false },
-              "to": "declined"
-            },
-            { "on": "borrower-withdraws", "to": "withdrawn" }
+            { "on": "borrower-withdraws", "to": "withdrawn" },
+            { "on": "credit", "when": { "workflow": "credit", "final": "unusable" }, "to": "declined" },
+            { "on": "credit", "when": { "workflow": "appraisal", "final": "unsupported" }, "to": "declined" },
+            { "on": "credit", "to": "disclosing" }
           ]
         },
         {
           "id": "disclosing",
-          "name": "Loan estimate",
+          "name": "Issue loan estimate",
           "description": "The loan estimate goes out before underwriting starts.",
           "operations": ["lender-issues-loan-estimate"],
           "transitions": [{ "on": "lender-issues-loan-estimate", "to": "submitting" }]
         },
         {
           "id": "submitting",
-          "name": "Ready for underwriting",
+          "name": "Submit for underwriting",
           "operations": ["lender-submits", "borrower-withdraws"],
           "transitions": [
             { "on": "lender-submits", "to": "underwriting" },
@@ -412,7 +389,7 @@
         },
         {
           "id": "underwriting",
-          "name": "Underwriting",
+          "name": "Underwrite application",
           "operations": ["underwriter-approves", "underwriter-conditions", "underwriter-declines", "borrower-withdraws"],
           "transitions": [
             { "on": "underwriter-approves", "to": "clear-to-close" },
@@ -423,7 +400,7 @@
         },
         {
           "id": "conditional",
-          "name": "Conditionally approved",
+          "name": "Clear conditions",
           "operations": [
             "underwriter-clears-condition",
             "underwriter-signs-off",
@@ -439,7 +416,7 @@
         },
         {
           "id": "clear-to-close",
-          "name": "Clear to close",
+          "name": "Issue closing disclosure",
           "operations": ["lender-issues-closing-disclosure", "borrower-withdraws"],
           "transitions": [
             { "on": "lender-issues-closing-disclosure", "to": "closing" },
@@ -448,7 +425,7 @@
         },
         {
           "id": "closing",
-          "name": "Closing",
+          "name": "Close loan",
           "operations": ["title-closes"],
           "transitions": [
             { "on": "title-closes", "when": { "field": "rescindable", "equals": true }, "to": "rescission" },
@@ -457,7 +434,7 @@
         },
         {
           "id": "rescission",
-          "name": "Right of rescission",
+          "name": "Wait out rescission",
           "description": "Three business days in which the borrower may rescind a refinance.",
           "operations": ["borrower-rescinds", "lender-records-lapse"],
           "transitions": [
@@ -467,7 +444,7 @@
         },
         {
           "id": "funding",
-          "name": "Funding",
+          "name": "Fund loan",
           "operations": ["lender-funds"],
           "transitions": [
             { "on": "lender-funds", "when": { "field": "retiresLoan", "equals": true }, "to": "paying-off" },
@@ -477,7 +454,7 @@
         },
         {
           "id": "paying-off",
-          "name": "Paying off the old loan",
+          "name": "Pay off old loan",
           "workflow": "payoff",
           "transitions": [{ "on": "payoff", "when": { "final": "paid" }, "to": "funded" }]
         },
@@ -492,22 +469,23 @@
       "name": "Payoff",
       "description": "Retiring the loan a refinance replaces.",
       "initial": "requesting",
+      "mainPath": ["requesting", "quoted", "paying", "retiring", "paid"],
       "states": [
         {
           "id": "requesting",
-          "name": "Requesting",
+          "name": "Request payoff",
           "operations": ["lender-requests-payoff"],
           "transitions": [{ "on": "lender-requests-payoff", "to": "quoted" }]
         },
         {
           "id": "quoted",
-          "name": "Awaiting the statement",
+          "name": "Obtain payoff statement",
           "operations": ["servicer-quotes-payoff"],
           "transitions": [{ "on": "servicer-quotes-payoff", "to": "paying" }]
         },
         {
           "id": "paying",
-          "name": "Paying",
+          "name": "Pay off loan",
           "operations": ["lender-pays-off"],
           "transitions": [
             { "on": "lender-pays-off", "status": "completed", "to": "retiring" },
@@ -516,11 +494,68 @@
         },
         {
           "id": "retiring",
-          "name": "Retiring",
+          "name": "Retire loan",
           "operations": ["lender-retires-loan"],
           "transitions": [{ "on": "lender-retires-loan", "to": "paid" }]
         },
         { "id": "paid", "name": "Paid", "final": true }
+      ]
+    },
+    {
+      "id": "credit",
+      "name": "Credit",
+      "description": "The credit pull, a region of checks. A failed pull is tried again.",
+      "initial": "pulling",
+      "mainPath": ["pulling", "usable"],
+      "states": [
+        {
+          "id": "pulling",
+          "name": "Pull credit",
+          "operations": ["bureau-reports-credit"],
+          "transitions": [
+            {
+              "on": "bureau-reports-credit",
+              "when": { "field": "usable", "equals": true },
+              "to": "usable"
+            },
+            {
+              "on": "bureau-reports-credit",
+              "when": { "field": "usable", "equals": false },
+              "to": "unusable"
+            },
+            { "on": "bureau-reports-credit", "status": "failed", "to": "pulling" }
+          ]
+        },
+        { "id": "usable", "name": "Credit usable", "final": true },
+        { "id": "unusable", "name": "Credit unusable", "final": true }
+      ]
+    },
+    {
+      "id": "appraisal",
+      "name": "Appraisal",
+      "description": "The appraisal, a region of checks.",
+      "initial": "ordering",
+      "mainPath": ["ordering", "supported"],
+      "states": [
+        {
+          "id": "ordering",
+          "name": "Appraise property",
+          "operations": ["appraiser-appraises"],
+          "transitions": [
+            {
+              "on": "appraiser-appraises",
+              "when": { "field": "supportsValue", "equals": true },
+              "to": "supported"
+            },
+            {
+              "on": "appraiser-appraises",
+              "when": { "field": "supportsValue", "equals": false },
+              "to": "unsupported"
+            }
+          ]
+        },
+        { "id": "supported", "name": "Value supported", "final": true },
+        { "id": "unsupported", "name": "Value not supported", "final": true }
       ]
     }
   ],

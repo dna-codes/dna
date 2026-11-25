@@ -245,17 +245,18 @@
       "name": "Diligence",
       "description": "From the target's grant to the committee's decision.",
       "initial": "granting",
+      "mainPath": ["granting", "reviewing", "committee", "signed-off"],
       "states": [
         {
           "id": "granting",
-          "name": "Granting access",
+          "name": "Grant access",
           "description": "No advisor acts until the target grants a delegation.",
           "operations": ["target-grants"],
           "transitions": [{ "on": "target-grants", "to": "reviewing" }]
         },
         {
           "id": "reviewing",
-          "name": "Reviewing",
+          "name": "Review findings",
           "description": "Advisors read, record and cite under their delegations.",
           "operations": [
             "advisor-reads",
@@ -291,14 +292,14 @@
         },
         {
           "id": "red-flag",
-          "name": "Red flag",
+          "name": "Resolve red flag",
           "description": "A material finding waits for the deal lead. Review resumes only once it is escalated.",
           "operations": ["lead-escalates"],
           "transitions": [{ "on": "lead-escalates", "to": "reviewing" }]
         },
         {
           "id": "committee",
-          "name": "Investment committee",
+          "name": "Decide at committee",
           "operations": ["committee-signs-off", "committee-declines"],
           "transitions": [
             { "on": "committee-signs-off", "to": "signed-off" },

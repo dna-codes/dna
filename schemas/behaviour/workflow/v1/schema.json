@@ -3,7 +3,7 @@
   "$id": "https://dna.codes/schemas/behaviour/workflow/v1",
   "version": "v1",
   "title": "Workflow",
-  "description": "A state machine over Operations. A run starts in initial. In each state, its Operations may run any number of times; only a transition moves the run, when the Operation it names completes or fails, optionally guarded by a value in that Operation's output or by the final state a sub-workflow ended in. A final state ends the run and has no transitions.",
+  "description": "A state machine over Operations. A run starts in initial. In each state, its Operations may run any number of times; only a transition moves the run, when the Operation it names completes or fails, optionally guarded by a value in that Operation's output or by the final state a sub-workflow ended in. A state may run one sub-workflow, or two or more workflows at the same time as parallel regions. A final state ends the run and has no transitions.",
   "type": "object",
   "required": ["id", "name", "description", "initial", "states"],
   "additionalProperties": false,
@@ -17,6 +17,12 @@
     "initial": {
       "$ref": "#/$defs/id",
       "description": "The state a run starts in. One of states."
+    },
+    "mainPath": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/id" },
+      "description": "The usual path, as an ordered list of state ids. It starts at initial, each state has a transition to the next (on an Operation, or waiting for its regions), and no state repeats. It may end at any state, final or not. A sub-workflow and a region declare their own. Optional; without it a reader may derive one."
     },
     "states": {
       "type": "array",
@@ -35,9 +41,13 @@
       "type": "object",
       "required": ["id"],
       "additionalProperties": false,
+      "not": { "required": ["workflow", "workflows"] },
       "properties": {
         "id": { "$ref": "#/$defs/id" },
-        "name": { "$ref": "#/$defs/text" },
+        "name": {
+          "$ref": "#/$defs/text",
+          "description": "A state that is not final names the work done in it, as a verb and a noun, such as Review findings. A final state names the outcome, such as Signed off. A record's status is its entity's state, not the workflow state's name."
+        },
         "description": { "$ref": "#/$defs/text" },
         "operations": {
           "type": "array",
@@ -49,6 +59,13 @@
         "workflow": {
           "$ref": "#/$defs/id",
           "description": "A workflow of this behaviour document this state runs."
+        },
+        "workflows": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" },
+          "description": "Workflows of this behaviour document this state runs at the same time, each as a region with its own states from its own initial. The state's own Operations stay available while the regions run, and a transition on one of them leaves the state at once and ends every region. A region's transitions stay inside the region. A state has workflow or workflows, never both."
         },
         "final": {
           "type": "boolean",
@@ -67,7 +84,7 @@
       "properties": {
         "on": {
           "$ref": "#/$defs/id",
-          "description": "An Operation available in the state, the state's sub-workflow, or all, for every Operation of the state."
+          "description": "An Operation available in the state, the state's sub-workflow, one of the state's regions, or all, for every Operation of the state. A transition on a region waits until every region has reached a final state; any of the regions may be named, with the same meaning."
         },
         "status": {
           "enum": ["completed", "failed"],
@@ -96,8 +113,14 @@
           "type": "object",
           "required": ["final"],
           "additionalProperties": false,
-          "description": "The final state the state's sub-workflow ended in.",
-          "properties": { "final": { "$ref": "#/$defs/id" } }
+          "description": "The final state the state's sub-workflow, or one of its regions, ended in.",
+          "properties": {
+            "final": { "$ref": "#/$defs/id" },
+            "workflow": {
+              "$ref": "#/$defs/id",
+              "description": "The sub-workflow or region that ended in final. One of the state's workflows. Defaults to the transition's on."
+            }
+          }
         }
       ]
     }

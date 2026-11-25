@@ -2,7 +2,7 @@
 
 A worked DNA example: cart, order, payment authorization, refund, and who can approve a refund.
 
-<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/checkout/v5. -->
+<!-- Generated from dna-codes-platform. Do not edit here: the next sync overwrites it. Source: packages/schemas/examples/checkout/v6. -->
 
 ## Start
 

@@ -109,22 +109,25 @@
       "name": "Refund",
       "description": "One refund, from the shopper's request to issued or declined, run on its own after the purchase has ended.",
       "initial": "requesting",
+      "mainPath": ["requesting", "reviewing", "issued"],
       "states": [
         {
           "id": "requesting",
+          "name": "Request refund",
           "operations": ["shopper-requests-refund"],
           "transitions": [{ "on": "shopper-requests-refund", "to": "reviewing" }]
         },
         {
           "id": "reviewing",
+          "name": "Review refund",
           "operations": ["merchant-issues-refund", "merchant-declines-refund"],
           "transitions": [
             { "on": "merchant-issues-refund", "to": "issued" },
             { "on": "merchant-declines-refund", "to": "declined" }
           ]
         },
-        { "id": "issued", "final": true },
-        { "id": "declined", "final": true }
+        { "id": "issued", "name": "Issued", "final": true },
+        { "id": "declined", "name": "Declined", "final": true }
       ]
     }
   ],
