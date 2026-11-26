@@ -13,6 +13,7 @@
         {
           "name": "promisedAt",
           "type": "datetime",
+          "key": true,
           "description": "When the shipment is promised. A deadline is a datetime attribute."
         },
         {
@@ -21,10 +22,11 @@
           "states": ["pending", "shipped", "delivered"],
           "initial": "pending"
         },
-        { "name": "order", "type": "reference", "entity": "commerce/order" },
+        { "name": "order", "type": "reference", "key": true, "entity": "commerce/order" },
         {
           "name": "trackingNumber",
           "type": "string",
+          "key": true,
           "required": false,
           "description": "The carrier's tracking number, once the shipment has one."
         }

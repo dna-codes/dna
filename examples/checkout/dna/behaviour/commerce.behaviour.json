@@ -237,6 +237,7 @@
         {
           "id": "shipping",
           "name": "Ship order",
+          "within": "P2D",
           "operations": ["merchant-ships", "shopper-cancels"],
           "transitions": [
             { "on": "merchant-ships", "to": "capturing" },
@@ -246,6 +247,7 @@
         {
           "id": "capturing",
           "name": "Capture payment",
+          "within": "P1D",
           "operations": ["merchant-captures", "merchant-captures-final"],
           "transitions": [
             { "on": "all", "status": "failed", "to": "voiding" },

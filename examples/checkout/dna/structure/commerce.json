@@ -34,8 +34,8 @@
       "name": "Cart line",
       "description": "A cart line is an entity because the connection between a cart and a product carries a variant, a quantity, and a price. A relationship cannot hold those.",
       "attributes": [
-        { "name": "variant", "type": "string", "description": "The chosen variant." },
-        { "name": "quantity", "type": "integer", "description": "How many of that variant." },
+        { "name": "variant", "type": "string", "key": true, "description": "The chosen variant." },
+        { "name": "quantity", "type": "integer", "key": true, "description": "How many of that variant." },
         { "name": "unitAmount", "type": "number", "description": "The price of one unit." },
         { "name": "currency", "type": "string", "description": "The currency of unitAmount." },
         { "name": "cart", "type": "reference", "entity": "cart" },
@@ -65,9 +65,9 @@
           "states": ["submitted", "accepted", "fulfilled", "cancelled"],
           "initial": "submitted"
         },
-        { "name": "amount", "type": "number", "description": "The order total." },
+        { "name": "amount", "type": "number", "key": true, "description": "The order total." },
         { "name": "currency", "type": "string", "description": "The currency of amount." },
-        { "name": "shopper", "type": "reference", "entity": "parties/person" },
+        { "name": "shopper", "type": "reference", "key": true, "entity": "parties/person" },
         { "name": "cart", "type": "reference", "entity": "cart" },
         { "name": "shipTo", "type": "reference", "entity": "address" },
         { "name": "billTo", "type": "reference", "entity": "address" },

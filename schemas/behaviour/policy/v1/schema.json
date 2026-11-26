@@ -14,7 +14,7 @@
     },
     "description": {
       "$ref": "#/$defs/text",
-      "description": "What the policy decides and why. A refusal cites it."
+      "description": "What the policy decides and why, written for the person it refuses: it is shown to the person the policy refuses, in a refusal and in a record's unavailable list. Say what they cannot do and why, in their terms, and keep internal reasoning out of it."
     },
     "target": {
       "type": "string",

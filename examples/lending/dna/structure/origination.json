@@ -10,7 +10,7 @@
       "name": "Application",
       "description": "A request for a loan. Money is an amount plus a currency. The borrower and the home are references into other vocabularies.",
       "attributes": [
-        { "name": "amount", "type": "number", "description": "The amount requested." },
+        { "name": "amount", "type": "number", "key": true, "description": "The amount requested." },
         { "name": "currency", "type": "string", "description": "The currency of amount." },
         {
           "name": "status",
@@ -19,7 +19,7 @@
           "states": ["received", "underwriting", "conditional", "clear-to-close", "funded", "declined", "withdrawn", "rescinded"],
           "initial": "received"
         },
-        { "name": "borrower", "type": "reference", "entity": "parties/person" },
+        { "name": "borrower", "type": "reference", "key": true, "entity": "parties/person" },
         {
           "name": "coBorrowers",
           "type": "reference",
@@ -34,7 +34,7 @@
           "values": ["purchase", "rate-and-term-refinance", "cash-out-refinance"],
           "description": "Why the loan is wanted. A refinance is a purpose and a reference to the existing loan, not a second kind of application."
         },
-        { "name": "home", "type": "reference", "entity": "property/home" },
+        { "name": "home", "type": "reference", "key": true, "entity": "property/home" },
         { "name": "creditScore", "type": "integer", "required": false, "description": "The borrower's score from the credit pull. Absent until credit is pulled." },
         { "name": "debtToIncome", "type": "number", "required": false, "description": "Monthly debt over monthly income, as a ratio such as 0.38." },
         { "name": "appraisedValue", "type": "number", "required": false, "description": "The home's value from the appraisal, in currency." },
@@ -59,14 +59,14 @@
       "name": "Condition",
       "description": "A condition is an entity because the connection between an application and what still must be done carries wording and a status. A relationship cannot hold those.",
       "attributes": [
-        { "name": "wording", "type": "string", "description": "What must be satisfied." },
+        { "name": "wording", "type": "string", "key": true, "description": "What must be satisfied." },
         {
           "name": "status",
           "type": "state",
           "states": ["open", "cleared", "waived"],
           "initial": "open"
         },
-        { "name": "application", "type": "reference", "entity": "application" }
+        { "name": "application", "type": "reference", "key": true, "entity": "application" }
       ]
     },
     {
@@ -74,10 +74,11 @@
       "name": "Document",
       "description": "Evidence filed with an application. Credit, appraisal, and disclosure are values of one enum, not three entities.",
       "attributes": [
-        { "name": "title", "type": "string" },
+        { "name": "title", "type": "string", "key": true },
         {
           "name": "kind",
           "type": "enum",
+          "key": true,
           "values": ["credit", "appraisal", "disclosure", "loan-estimate", "closing-disclosure", "signed-note"],
           "description": "Which kind of evidence this document is. The loan estimate and the closing disclosure are the two disclosures a borrower must receive, each with its own deadline."
         },
@@ -91,7 +92,7 @@
       "name": "Loan",
       "description": "The loan that exists once an application is funded.",
       "attributes": [
-        { "name": "amount", "type": "number" },
+        { "name": "amount", "type": "number", "key": true },
         { "name": "currency", "type": "string" },
         {
           "name": "status",
@@ -100,7 +101,7 @@
           "initial": "active"
         },
         { "name": "application", "type": "reference", "entity": "application" },
-        { "name": "borrower", "type": "reference", "entity": "parties/person" }
+        { "name": "borrower", "type": "reference", "key": true, "entity": "parties/person" }
       ]
     },
     {
@@ -108,9 +109,9 @@
       "name": "Payoff",
       "description": "A payoff is an entity because the connection between a refinance application and the loan it retires carries an amount and a date. The refinanced-by edge says which loan; it cannot hold how much was paid to close it.",
       "attributes": [
-        { "name": "amount", "type": "number", "description": "The amount that retires the existing loan." },
+        { "name": "amount", "type": "number", "key": true, "description": "The amount that retires the existing loan." },
         { "name": "currency", "type": "string", "description": "The currency of amount." },
-        { "name": "goodThrough", "type": "datetime", "description": "The date the payoff amount is good through." },
+        { "name": "goodThrough", "type": "datetime", "key": true, "description": "The date the payoff amount is good through." },
         {
           "name": "status",
           "type": "state",
@@ -119,7 +120,7 @@
           "initial": "requested"
         },
         { "name": "application", "type": "reference", "entity": "application" },
-        { "name": "loan", "type": "reference", "entity": "loan", "description": "The existing loan this payoff retires." }
+        { "name": "loan", "type": "reference", "key": true, "entity": "loan", "description": "The existing loan this payoff retires." }
       ]
     }
   ],

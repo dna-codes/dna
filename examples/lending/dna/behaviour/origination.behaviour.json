@@ -434,6 +434,7 @@
         {
           "id": "disclosing",
           "name": "Issue loan estimate",
+          "within": "P3D",
           "description": "The loan estimate goes out before underwriting starts.",
           "operations": ["lender-issues-loan-estimate"],
           "transitions": [{ "on": "lender-issues-loan-estimate", "to": "submitting" }]
@@ -450,6 +451,7 @@
         {
           "id": "underwriting",
           "name": "Underwrite application",
+          "within": "P3D",
           "operations": ["underwriter-approves", "underwriter-conditions", "underwriter-declines", "borrower-withdraws"],
           "transitions": [
             { "on": "underwriter-approves", "to": "clear-to-close" },
@@ -505,6 +507,7 @@
         {
           "id": "funding",
           "name": "Fund loan",
+          "within": "P2D",
           "operations": ["lender-funds"],
           "transitions": [
             { "on": "lender-funds", "when": { "field": "retiresLoan", "equals": true }, "to": "paying-off" },
@@ -540,12 +543,14 @@
         {
           "id": "quoted",
           "name": "Obtain payoff statement",
+          "within": "P9D",
           "operations": ["servicer-quotes-payoff"],
           "transitions": [{ "on": "servicer-quotes-payoff", "to": "paying" }]
         },
         {
           "id": "paying",
           "name": "Pay off loan",
+          "within": "P1D",
           "operations": ["lender-pays-off"],
           "transitions": [
             { "on": "lender-pays-off", "status": "completed", "to": "retiring" },
@@ -600,6 +605,7 @@
         {
           "id": "ordering",
           "name": "Appraise property",
+          "within": "P2W",
           "operations": ["appraiser-appraises"],
           "transitions": [
             {

@@ -73,12 +73,14 @@
         {
           "id": "pending",
           "name": "Dispatch shipment",
+          "within": "P2D",
           "operations": ["merchant-ships"],
           "transitions": [{ "on": "merchant-ships", "to": "in-transit" }]
         },
         {
           "id": "in-transit",
           "name": "Deliver shipment",
+          "within": "P1W",
           "operations": ["carrier-delivers"],
           "transitions": [{ "on": "carrier-delivers", "to": "delivered" }]
         },

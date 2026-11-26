@@ -71,6 +71,11 @@
           "type": "boolean",
           "description": "Ends the run. Defaults to false."
         },
+        "within": {
+          "type": "string",
+          "pattern": "^P(\\d+W|\\d+D(T\\d+H(\\d+M)?|T\\d+M)?|T(\\d+H(\\d+M)?|\\d+M))$",
+          "description": "How long the work in this state should take, counted from when a record entered it: an ISO 8601 duration in calendar time of weeks (P1W), days (P2D), hours (PT4H) or minutes (PT30M), or days with hours and minutes (P1DT12H). Months and years are refused, because their length varies. It labels the work as due or overdue; it changes no transition, no Operation's availability and no escalation. A state that is not final may declare it; a final state never does."
+        },
         "transitions": {
           "type": "array",
           "items": { "$ref": "#/$defs/transition" }

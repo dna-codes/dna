@@ -142,6 +142,7 @@
         {
           "id": "reviewing",
           "name": "Review refund",
+          "within": "P14D",
           "operations": ["merchant-issues-refund", "merchant-declines-refund"],
           "transitions": [
             { "on": "merchant-issues-refund", "to": "issued" },

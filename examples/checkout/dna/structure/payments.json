@@ -10,7 +10,7 @@
       "name": "Payment",
       "description": "Money authorized and captured against an order. Amount and currency are two attributes; how much has been captured so far is a third.",
       "attributes": [
-        { "name": "amount", "type": "number", "description": "How much was authorized." },
+        { "name": "amount", "type": "number", "key": true, "description": "How much was authorized." },
         { "name": "currency", "type": "string", "description": "The currency of amount." },
         { "name": "capturedAmount", "type": "number", "description": "How much of amount has been captured, across the order's shipments." },
         {
@@ -20,7 +20,7 @@
           "states": ["authorized", "voided", "partially-captured", "captured", "refunded"],
           "initial": "authorized"
         },
-        { "name": "order", "type": "reference", "entity": "commerce/order" },
+        { "name": "order", "type": "reference", "key": true, "entity": "commerce/order" },
         {
           "name": "processor",
           "type": "reference",
@@ -34,9 +34,9 @@
       "name": "Refund",
       "description": "Money returned against a captured payment. A payment can have several, each for part of what was captured.",
       "attributes": [
-        { "name": "amount", "type": "number", "description": "How much is returned." },
+        { "name": "amount", "type": "number", "key": true, "description": "How much is returned." },
         { "name": "currency", "type": "string", "description": "The currency of amount." },
-        { "name": "reason", "type": "enum", "values": ["damaged", "wrong-item", "not-received", "changed-mind"] },
+        { "name": "reason", "type": "enum", "key": true, "values": ["damaged", "wrong-item", "not-received", "changed-mind"] },
         {
           "name": "status",
           "type": "state",
@@ -44,7 +44,7 @@
           "states": ["requested", "issued", "declined"],
           "initial": "requested"
         },
-        { "name": "payment", "type": "reference", "entity": "payment" }
+        { "name": "payment", "type": "reference", "key": true, "entity": "payment" }
       ]
     }
   ],

@@ -10,7 +10,7 @@
       "name": "Deal",
       "description": "The acquisition. Buyer and target are two relationships to the same organization entity.",
       "attributes": [
-        { "name": "codename", "type": "string" },
+        { "name": "codename", "type": "string", "key": true },
         {
           "name": "status",
           "type": "state",
@@ -20,12 +20,14 @@
         {
           "name": "buyer",
           "type": "reference",
+          "key": true,
           "entity": "parties/organization",
           "description": "The acquiring firm. An instance such as Harbor."
         },
         {
           "name": "target",
           "type": "reference",
+          "key": true,
           "entity": "parties/organization",
           "description": "The firm being acquired. An instance such as Northline."
         },
@@ -73,10 +75,11 @@
       "name": "Workstream",
       "description": "A line of review over the data room. Its deadline is a datetime.",
       "attributes": [
-        { "name": "name", "type": "string" },
+        { "name": "name", "type": "string", "key": true },
         {
           "name": "due",
           "type": "datetime",
+          "key": true,
           "description": "When the workstream is due. A deadline is a datetime."
         },
         {
@@ -93,10 +96,11 @@
       "name": "Finding",
       "description": "Something the review found. Materiality is an enum, and so is its confidentiality tier: a finding drawn from a clean-team document is clean-team itself. The page it rests on lives on a citation, because that connection has a page.",
       "attributes": [
-        { "name": "statement", "type": "string" },
+        { "name": "statement", "type": "string", "key": true },
         {
           "name": "materiality",
           "type": "enum",
+          "key": true,
           "values": ["minor", "material"],
           "description": "How material the finding is."
         },
@@ -112,7 +116,7 @@
           "states": ["submitted", "escalated", "reviewed", "accepted"],
           "initial": "submitted"
         },
-        { "name": "workstream", "type": "reference", "entity": "workstream" },
+        { "name": "workstream", "type": "reference", "key": true, "entity": "workstream" },
         { "name": "author", "type": "reference", "entity": "parties/person" },
         {
           "name": "delegation",
@@ -178,6 +182,7 @@
         {
           "name": "grantee",
           "type": "reference",
+          "key": true,
           "entity": "parties/organization",
           "description": "The advisor firm the access is granted to."
         },
@@ -191,10 +196,11 @@
         {
           "name": "scope",
           "type": "enum",
+          "key": true,
           "values": ["read", "cite", "record-findings"],
           "description": "The widest act the delegation allows. Each scope includes the ones before it."
         },
-        { "name": "expiresAt", "type": "datetime" },
+        { "name": "expiresAt", "type": "datetime", "key": true },
         {
           "name": "status",
           "type": "state",

@@ -43,6 +43,10 @@
     "initial": {
       "$ref": "#/$defs/id",
       "description": "The state a new instance starts in. One of states."
+    },
+    "key": {
+      "type": "boolean",
+      "description": "Marks a fact that identifies a record of this entity at a glance, such as an order number, or a loan's amount and borrower. An entity may mark any number; a card shows the first three marked, in the order they are declared. A state attribute is never key: a record's status is shown on its own. Defaults to false."
     }
   },
   "allOf": [

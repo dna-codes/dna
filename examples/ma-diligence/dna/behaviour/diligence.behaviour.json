@@ -298,6 +298,7 @@
         {
           "id": "reviewing",
           "name": "Review findings",
+          "within": "P45D",
           "description": "Advisors read, record and cite under their delegations.",
           "operations": [
             "advisor-reads",
@@ -341,6 +342,7 @@
         {
           "id": "committee",
           "name": "Decide at committee",
+          "within": "P1W",
           "operations": ["committee-signs-off", "committee-declines"],
           "transitions": [
             { "on": "committee-signs-off", "to": "signed-off" },
