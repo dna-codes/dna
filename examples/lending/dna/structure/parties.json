@@ -23,12 +23,13 @@
       "name": "Person",
       "description": "A person. The borrower, a co-borrower, and the lender's underwriter are instances, not three kinds of person.",
       "attributes": [
-        { "name": "fullName", "type": "string" }
+        { "name": "fullName", "type": "string" },
+        { "name": "signIn", "type": "string", "required": false, "principal": true, "description": "The subject of the person's sign-in. A relation that reads the actor reads the person whose signIn holds it." }
       ],
       "instances": [
-        { "id": "sam", "name": "Sam", "values": { "fullName": "Sam Rivera" } },
-        { "id": "jo", "name": "Jo", "description": "Co-borrows with Sam on the refinance.", "values": { "fullName": "Jo Rivera" } },
-        { "id": "lee", "name": "Lee", "description": "Underwrites for Harbor Lending.", "values": { "fullName": "Lee Okafor" } }
+        { "id": "sam", "name": "Sam", "values": { "fullName": "Sam Rivera", "signIn": "user_sam" } },
+        { "id": "jo", "name": "Jo", "description": "Co-borrows with Sam on the refinance.", "values": { "fullName": "Jo Rivera", "signIn": "user_jo" } },
+        { "id": "lee", "name": "Lee", "description": "Underwrites for Harbor Lending.", "values": { "fullName": "Lee Okafor", "signIn": "user_lee" } }
       ]
     }
   ],

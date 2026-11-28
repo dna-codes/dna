@@ -47,6 +47,10 @@
     "key": {
       "type": "boolean",
       "description": "Marks a fact that identifies a record of this entity at a glance, such as an order number, or a loan's amount and borrower. An entity may mark any number; a card shows the first three marked, in the order they are declared. A state attribute is never key: a record's status is shown on its own. Defaults to false."
+    },
+    "principal": {
+      "type": "boolean",
+      "description": "Marks the attribute that holds the sign-in a record stands for: the subject of a person's sign-in or of an agent credential. A relation condition that reads the actor reads the records whose principal attribute holds the caller's subject. Only on a string attribute. With many, a record stands for each sign-in it holds. Defaults to false."
     }
   },
   "allOf": [
@@ -64,6 +68,10 @@
       "if": { "properties": { "type": { "const": "state" } }, "required": ["type"] },
       "then": { "required": ["states"] },
       "else": { "not": { "anyOf": [{ "required": ["states"] }, { "required": ["initial"] }] } }
+    },
+    {
+      "if": { "properties": { "principal": { "const": true } }, "required": ["principal"] },
+      "then": { "properties": { "type": { "const": "string" } } }
     }
   ],
   "$defs": {

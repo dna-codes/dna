@@ -22,10 +22,11 @@
       "name": "Person",
       "description": "A person. A shopper is an instance of person, not a separate kind.",
       "attributes": [
-        { "name": "fullName", "type": "string", "description": "The person's name." }
+        { "name": "fullName", "type": "string", "description": "The person's name." },
+        { "name": "signIn", "type": "string", "required": false, "principal": true, "description": "The subject of the person's sign-in. A relation that reads the actor reads the person whose signIn holds it." }
       ],
       "instances": [
-        { "id": "ada", "name": "Ada", "values": { "fullName": "Ada Lovelace" } }
+        { "id": "ada", "name": "Ada", "values": { "fullName": "Ada Lovelace", "signIn": "user_ada" } }
       ]
     }
   ],

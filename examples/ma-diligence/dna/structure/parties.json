@@ -28,11 +28,12 @@
       "name": "Person",
       "description": "A person who acts for one of the firms.",
       "attributes": [
-        { "name": "fullName", "type": "string" }
+        { "name": "fullName", "type": "string" },
+        { "name": "signIn", "type": "string", "required": false, "principal": true, "description": "The subject of the person's sign-in. A relation that reads the actor reads the person whose signIn holds it." }
       ],
       "instances": [
-        { "id": "renee", "name": "Renee", "description": "An advisor at Vale.", "values": { "fullName": "Renee Cho" } },
-        { "id": "omar", "name": "Omar", "description": "Counsel at Ledger & Kline.", "values": { "fullName": "Omar Haddad" } }
+        { "id": "renee", "name": "Renee", "description": "An advisor at Vale.", "values": { "fullName": "Renee Cho", "signIn": "user_renee" } },
+        { "id": "omar", "name": "Omar", "description": "Counsel at Ledger & Kline.", "values": { "fullName": "Omar Haddad", "signIn": "user_omar" } }
       ]
     },
     {
